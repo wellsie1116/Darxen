@@ -1,0 +1,36 @@
+# Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+lib_LTLIBRARIES = libdarxen.la
+libdarxen_la_SOURCES = libdarxen.h \
+	DarxenConversions.c DarxenConversions.h \
+	DarxenDataStructs.c DarxenDataStructs.h \
+	DarxenParser.c DarxenParser.h \
+	DarxenParserLevel3.c DarxenParserLevel3.h \
+	libdarxenClient.c libdarxenClient.h \
+	libdarxenFileSupport.c libdarxenFileSupport.h \
+	libdarxeninit.c libdarxeninit.h \
+	libdarxenRenderingCommon.c libdarxenRenderingCommon.h \
+	libdarxenShapefileRenderer.c libdarxenShapefileRenderer.h \
+	libdarxenShapefiles.c libdarxenShapefiles.h \
+	libdarxenXml.c libdarxenXml.h \
+	libdarxenRadarSites.c libDarxenRadarSites.h \
+	libdarxenCommon.h
+libdarxen_la_LDFLAGS = -g -version-info 1:1:0
+libdarxen_la_CFLAGS = $(glib_CFLAGS) $(pango_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(gtkglext_CFLAGS)
+libdarxen_la_LIBADD = $(glib_LIBS) $(pango_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(gtkglext_LIBS)
+
+#../shared/libdarxenshared.la
+
+#AM_LDFLAGS = -export-dynamic
+
+EXTRA_DIST = 
+

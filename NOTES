@@ -1,0 +1,62 @@
+
+Level 2 Http Site: http://mesonet.agron.iastate.edu/data/nexrd2/raw/
+Level 3 FTP Site:  ftp://tgftp.nws.noaa.gov/SL.us008001/DF.of/DC.radar/
+Warning Boxes:     http://www.weather.gov/regsci/gis/shapefiles/
+Shapefiles:        http://www.weather.gov/geodata/     http://www.srh.noaa.gov/ridge/Overlays/shapefiles/
+
+Found this after it would have been useful: http://www.weather.gov/mdl/iwt/88dicd.htm
+
+A quick rundown of the user directory structure
+.darxen
+-Settings.xml
+-Archives
+--Level 2
+--Level 3
+---KLOT
+----N0R (Product code from WMO Header)
+-----20080728_1318 [YYYYMMDD_HHMM]
+
+==Data IDs==
+YYYYMMDDHHMM - The time that the data was taken
+
+
+
+==Restful URL methods==
+
+All requests other than GET client require Basic HTTP Authentication with the supplied session ID and password
+
+GET client
+ Return new client session ID and a password for that session
+DELETE client
+ Destroy resources associated with client
+
+PUT pollers/site/product
+ Setup a radar poller for site and product
+DELETE pollers/site/product
+ Remove an existing radar poller for site and product
+GET pollers
+ Retrieve information on which pollers are active
+
+HEAD  data/method
+ Retrieve stored data information
+ @method - short/long - the method to use to retrieve data
+GET data/count
+ Retrieve metainformation on available data
+ @count - the maximum number of records to retrieve
+GET data/site/product/id
+ Retrieve cached data
+ @site - the radar site
+ @product - the product for that site
+ @id - the internal id for the data (time information)
+
+PUT cache/site/product/startid/endid
+ Search through cached data; returns search id and number of records
+ @startid/endid - the start/end ids representing start and end times to search
+DELETE cache/id
+ Delete the search based on the id
+GET cache/id/start/count
+ Retrieve search result records
+ @id - the search id
+ @start - the index to start with
+ @end - the number of records to retrieve
+

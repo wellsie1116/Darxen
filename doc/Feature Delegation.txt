@@ -1,0 +1,76 @@
+###darxend###
+Client Sessions
+ - Allow clients to connect/disconnect/timeout
+ - register/unregister radar pollers
+ - search through archived data
+ - download archived data
+ - notify clients when new live data is available
+ - allow clients to download new live data
+Data Polling
+ - Check for new and archive data requested by clients
+
+###libdarxen###
+parse data files into structures
+OpenGL Rendering
+ - radial/raster data
+ - shapefiles
+ - text overlays
+convert polling model of darxend to a signal model
+Views
+ - parameters
+  - site
+  - product(s)
+  - arrangement (single, quad, ...)
+  - smoothing
+  - pan/zoom
+  - shapefiles (over/under/both, opacity, styles)
+  - text overlays
+ - Rendering
+  - Using a given OpenGL context
+  - Optimize rendering with display lists?
+
+###darxen###
+Views
+ - Create/Modify/Delete different data views
+ - Associated with a single site, but multiple products (either raw or derived)
+ - Set views to an enabled or disabled state (enable/disable live data polling and view visibility)
+ - Update live views with data retrieved by libdarxen
+ - Allow user to manipulate view's properties in real time
+
+###darxen-cli###
+Image Generation
+ - Configurable parameters same as for views
+ - Retrieve most recent live data and render to an image
+
+
+
+Data sources:
+Live - live data feed from darxend
+Archive - archived data feed from darxend
+Directory - local folder (sorted by internal datestamps from files)
+
+View Styles:
+Single		- One displayed product
+Quadruple	- Four displayed products (window-pane layout)
+
+
+
+
+
+
+key differences between darxen and darxen-cli:
+darxen stores view preferences in a settings file, darxen-cli has no persistent settings
+
+
+
+
+Shapefiles:
+Overlay/underlay
+varying render orders for both overlay/underlay
+varying opacities for both overlay/underlay
+various attributes that should be treated as different shapefiles
+shapefiles should be limited to a particular regsion around the given site
+
+
+TODO:
+when requesting a radar data poller with darxend, include a number of frames to download initially.  Darxend should then start downloading any needed frames and return them in reverse chronological order so that the client receives the most recent data first.

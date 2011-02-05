@@ -1,0 +1,23 @@
+
+List of features to complete before first release:
+
+1.  Shapefiles
+	Display shapefiles in radar view
+	Allow customizable layers
+	
+2.  Radar Products
+	Finish structures for radar products
+	Allow rendering of all radar products
+	Here are some additional classes needed:
+		Renderer: render all radar products to a context given by RadarViewer or CLI (not in this version)
+	
+3.  Data sources
+	Make gui for selecting and displaying various sources
+	
+4.  Web Access
+	Allow for access to web for source data
+	Here's the structure for this feature:
+		FtpConnection - class to hold a single connection to a single server
+		DataArchiver - class to hold multiple connections, time updates, and download updates
+	
+5.  

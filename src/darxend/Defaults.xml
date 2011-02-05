@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings>
+	<Pollers>
+		<Site id="klot">
+			<Product>N0R</Product>
+		</Site>
+		<Site id="kilx">
+			<Product>N0R</Product>
+		</Site>
+	</Pollers>
+</Settings>

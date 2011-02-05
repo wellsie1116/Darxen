@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings version="0.208">
+	<RadarViewer>
+		<FrameStepInterval>150</FrameStepInterval>
+	</RadarViewer>
+	<!--
+	<Darxend type="local">
+		<Autostart>1</Autostart>
+	</Darxend>
+	-->
+	<Palettes>
+		<Palette>
+			<Products>
+				<Product>N0R</Product>
+				<Product>N1R</Product>
+			</Products>
+			<Path>palettes/reflectivity.xml</Path>
+			<VCPs>
+				<VCP>11</VCP>
+				<VCP>211</VCP>
+				<VCP>12</VCP>
+				<VCP>212</VCP>
+				<VCP>121</VCP>
+				<VCP>21</VCP>
+				<VCP>221</VCP>
+			</VCPs>
+		</Palette>
+		<Palette>
+			<Products>
+				<Product>N0R</Product>
+				<Product>N1R</Product>
+			</Products>
+			<Path>palettes/reflectivity_cleanair.xml</Path>
+			<VCPs>
+				<VCP>31</VCP>
+				<VCP>32</VCP>
+			</VCPs>
+		</Palette>
+	</Palettes>
+	<Darxend type="remote">
+		<Address>http://127.0.0.1:4888/DarxenService</Address>
+	</Darxend>
+	<Sites>
+		<Site id="klot">
+			<Views>
+				<View>
+					<Name>Directory Reflectivity</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Directory">
+						<Path>radardata/radarloop</Path>
+					</Source>
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+				<View>
+					<Name>Directory Reflectivity (Smooth)</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Directory">
+						<Path>radardata/radarloop</Path>
+					</Source>
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>1</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+				<View>
+					<Name>Archived Reflectivity</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Archives">
+						<DateTime type="start">
+							<Date>
+								<Year>2008</Year>
+								<Month>7</Month>
+								<Day>20</Day>
+							</Date>
+							<Time>
+								<H>5</H>
+								<M>15</M>
+							</Time>
+						</DateTime>
+						<DateTime type="end">
+							<Date>
+								<Year>2008</Year>
+								<Month>7</Month>
+								<Day>20</Day>
+							</Date>
+							<Time>
+								<H>15</H>
+								<M>30</M>
+							</Time>
+						</DateTime>
+					</Source>
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+								<Shapefile id="Cities" visible="true">
+									<TextLabels visible="true" />
+									<Points visible="false" />
+								</Shapefile>
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+				<View>
+					<Name>Live Feed</Name>
+					<Enabled>0</Enabled>
+					<Style>Quad</Style>
+					<Source type="Live" />
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+							</Overlays>
+						</Product>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>1</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+						<Product>
+							<Code>N0S</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+							</Overlays>
+						</Product>
+						<Product>
+							<Code>N0S</Code>
+							<Smoothing>1</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+			</Views>
+		</Site>
+		<Site id="kdvn">
+			<Views>
+				<View>
+					<Name>Live Reflectivity</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Live" />
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="true" />
+								<Shapefile id="Cities" visible="true">
+									<TextLabels visible="true" />
+									<Points visible="true" />
+								</Shapefile>
+								<Shapefile id="Sites" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+			</Views>
+		</Site>
+		<Site id="kilx">
+			<Views>
+				<View>
+					<Name>Live Reflectivity</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Live" />
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="false" />
+								<Shapefile id="Sites" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+			</Views>
+		</Site>
+		<Site id="keax">
+			<Views>
+				<View>
+					<Name>Live Reflectivity (0.5)</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Live" />
+					<Products>
+						<Product>
+							<Code>N0R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="false" />
+								<Shapefile id="Sites" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+				<View>
+					<Name>Live Reflectivity (1.0)</Name>
+					<Enabled>1</Enabled>
+					<Style>Single</Style>
+					<Source type="Live" />
+					<Products>
+						<Product>
+							<Code>N1R</Code>
+							<Smoothing>0</Smoothing>
+							<Shapefiles>
+								<Shapefile id="Counties" visible="true" />
+								<Shapefile id="States" visible="true" />
+								<Shapefile id="Lakes" visible="true" />
+								<Shapefile id="Rivers" visible="false" />
+								<Shapefile id="Sites" visible="true" />
+							</Shapefiles>
+							<Overlays>
+								<Overlay type="legend" location="top-left" />
+								<Overlay type="VCP" location="top-left" />
+								<Overlay type="MX" location="top-left" />
+								<Overlay type="datetime" location="bottom-right" />
+							</Overlays>
+						</Product>
+					</Products>
+				</View>
+			</Views>
+		</Site>
+	</Sites>
+</Settings>
