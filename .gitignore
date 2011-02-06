@@ -1,2 +1,15 @@
 libtool
 bin
+aclocal.m4
+config.h.in
+config
+configure
+autom4te.cache
+Makefile*
+config.*
+stamp-h1
+.deps
+*.o
+*.lo
+.libs
+*.la
