@@ -166,11 +166,12 @@ static int handle_request(  void* cls,
 	{
 		gchar** params = g_strsplit(url+1, "/", -1);
 		guint len = g_strv_length(params); 
-		if (!strcmp(params[0], "pollers") && len==3)
+		if (len==3 && !strcmp(params[0], "pollers"))
 		{
 			char* site = params[1];
 			char* product = params[2];
 			darxend_client_add_poller(client, site, product);
+			//TODO: handle errors (and raise them)
 			ret = handle_success(connection);
 		}
 		else
@@ -181,7 +182,9 @@ static int handle_request(  void* cls,
 	}
 	else if (!strcmp(method, "DELETE"))
 	{
-		if (!strcmp(url, "/client"))
+		gchar** params = g_strsplit(url+1, "/", -1);
+		guint len = g_strv_length(params); 
+		if (len==1 && !strcmp(params[0], "client"))
 		{
 			int res = client_manager_kill_client(client->ID);
 
@@ -196,10 +199,19 @@ static int handle_request(  void* cls,
 				ret = handle_success(connection);
 			}
 		}
+		else if (len==3 && !strcmp(params[0], "pollers"))
+		{
+			char* site = params[1];
+			char* product = params[2];
+			darxend_client_remove_poller(client, site, product);
+			//TODO: handle errors (and raise them)
+			ret = handle_success(connection);
+		}
 		else
 		{
 			ret = handle_fail(connection);
 		}
+		g_strfreev(params);
 	}
 	else
 	{
