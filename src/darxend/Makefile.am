@@ -24,8 +24,8 @@ darxend_SOURCES = darxendWebServiceImp.c \
 	soap.h \
 	darxend.c
 
-darxend_CFLAGS = -Wall $(glib_CFLAGS) $(gobject_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(curl_CFLAGS)
-darxend_LDADD = $(glib_LIBS) $(gobject_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(curl_LIBS) $(net_LIBS) -lpthread -lmicrohttpd # -lwsock32
+darxend_CFLAGS = -g -Wall $(glib_CFLAGS) $(gobject_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(curl_CFLAGS) $(json_CFLAGS)
+darxend_LDADD = $(glib_LIBS) $(gobject_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(curl_LIBS) $(net_LIBS) $(json_LIBS) -lpthread -lmicrohttpd # -lwsock32
 # ../shared/libdarxenshared.la
 
 #AM_LDFLAGS = -export-dynamic

@@ -68,17 +68,18 @@ client_manager_validate_client(int ID)
 	return TRUE;
 }
 
-void
+int
 client_manager_kill_client(int ID)
 {
 	DarxendClient* client = client_manager_get_client(ID);
 	if (!client)
 	{
 		g_warning("Unable to find client to kill: %i", ID);
-		return;
+		return 1;
 	}
 	darxend_client_invalidate(client);
 	pruneClient(client, NULL);
+	return 0;
 }
 
 DarxendClient*
@@ -96,7 +97,10 @@ client_manager_get_client(int ID)
 	}
 
 	if (!pclients)
+	{
+		pthread_mutex_unlock(&lockClients);
 		return NULL;
+	}
 	DarxendClient* res = (DarxendClient*)pclients->data;
 
 	darxend_client_validate(res);

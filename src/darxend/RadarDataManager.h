@@ -27,11 +27,13 @@
 #include "Client.h"
 #include "FtpConnection.h"
 
+typedef void(*PollerIterFunc)(char* site, char* product, void* data);
 
 void		radar_data_manager_init					();
 
 void 		radar_data_manager_add_poller			(DarxendClient* client, char* site, char* product);
 void		radar_data_manager_remove_poller		(DarxendClient* client, char* site, char* product);
+void		radar_data_manager_iter_pollers			(DarxendClient* client, PollerIterFunc callback, void* data);
 
 int			radar_data_manager_search_past_data		(char* site, char* product, int frames);
 

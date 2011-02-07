@@ -28,6 +28,7 @@
 //TODO: threading locks (poller list)
 
 #include <glib.h>
+#include <json-glib/json-glib.h>
 #include <time.h>
 
 #define PRUNE_TIME (60 * 5)
@@ -50,6 +51,7 @@ struct _DarxendClientPrivate
 	pthread_cond_t condQueue;
 };
 
+static void client_poller_iter_next(char* site, char* product, gpointer data);
 static gboolean watch_key_value_remove(gpointer key, gpointer value, gpointer data);
 
 static void
@@ -302,6 +304,43 @@ darxend_client_read_queue(DarxendClient* self, int count)
 	pthread_mutex_unlock(&priv->lockQueue);
 
 	return result;
+}
+
+gchar*
+darxend_client_serialize_pollers(DarxendClient* self, gsize* size)
+{
+	JsonArray* array = json_array_new();
+	radar_data_manager_iter_pollers(self, client_poller_iter_next, array);
+
+	JsonNode* node = json_node_new(JSON_NODE_ARRAY);
+	json_node_set_array(node, array);
+
+	JsonGenerator* gen = json_generator_new();
+	json_generator_set_root(gen, node);
+	gchar* dat = json_generator_to_data(gen, size);
+
+	g_object_unref(gen);
+	json_node_free(node);
+	json_array_unref(array);
+
+	return dat;
+}
+
+void
+client_poller_iter_next(char* site, char* product, gpointer data)
+{
+	JsonArray* array = (JsonArray*)data;
+
+	JsonObject* poller = json_object_new();
+	json_object_set_string_member(poller, "Site", site);
+	json_object_set_string_member(poller, "Product", product);
+
+	JsonNode* node = json_node_new(JSON_NODE_OBJECT);
+	json_node_set_object(node, poller);
+
+	json_array_add_element(array, node); //does not ref node
+
+	json_object_unref(poller);
 }
 
 gboolean

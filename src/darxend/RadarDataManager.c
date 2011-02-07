@@ -157,6 +157,51 @@ radar_data_manager_remove_poller(DarxendClient* client, char* site, char* produc
 	printPollers();
 }
 
+void
+radar_data_manager_iter_pollers(DarxendClient* client, PollerIterFunc callback, void* data)
+{
+	pthread_mutex_lock(&lockSites);
+	if (!sites)
+		return;
+	GList* sitesKeys = g_hash_table_get_keys(sites);
+	GList* psitesKeys = sitesKeys;
+	while (psitesKeys)
+	{
+		char* site = (char*)psitesKeys->data;
+		SitePollers* siteInfo = (SitePollers*)g_hash_table_lookup(sites, site);
+		pthread_mutex_lock(&siteInfo->lockProducts);
+		GList* products = g_hash_table_get_keys(siteInfo->products);
+		GList* pproducts = products;
+		while (pproducts)
+		{
+			char* product = (char*)pproducts->data;
+			SiteProductPollers* productInfo = (SiteProductPollers*)g_hash_table_lookup(siteInfo->products, product);
+			pthread_mutex_lock(&productInfo->lockClients);
+			{
+				GList* clients = productInfo->clients;
+				while (clients)
+				{
+					DarxendClient* other = (DarxendClient*)clients->data;
+					if (other && other->ID == client->ID)
+					{
+						callback(site, product, data);
+						break;
+					}
+					clients = clients->next;
+				}
+			}
+			pthread_mutex_unlock(&productInfo->lockClients);
+			pproducts = pproducts->next;
+		}
+		g_list_free(products);
+		pthread_mutex_unlock(&siteInfo->lockProducts);
+
+		psitesKeys = psitesKeys->next;
+	}
+	g_list_free(sitesKeys);
+	pthread_mutex_unlock(&lockSites);
+}
+
 int
 radar_data_manager_search_past_data(char* site, char* product, int frames)
 {

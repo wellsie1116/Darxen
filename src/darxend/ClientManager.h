@@ -28,7 +28,7 @@
 void			client_manager_init				();
 DarxendClient*	client_manager_create_client	();
 gboolean		client_manager_validate_client	(int ID);
-void			client_manager_kill_client		(int ID);
+int				client_manager_kill_client		(int ID);
 DarxendClient*	client_manager_get_client		(int ID);
 
 #endif /*CLIENTMANAGER_H_*/

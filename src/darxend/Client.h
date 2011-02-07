@@ -81,6 +81,8 @@ int				darxend_client_get_queue_length		(DarxendClient* self);
 int				darxend_client_wait_queue_length	(DarxendClient* self);
 struct RadarDataInfo*	darxend_client_read_queue			(DarxendClient* self, int count);
 
+gchar*			darxend_client_serialize_pollers	(DarxendClient* self, gsize* size);
+
 GQuark			darxend_client_error_quark	();
 
 G_END_DECLS

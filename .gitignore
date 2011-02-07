@@ -13,3 +13,4 @@ stamp-h1
 *.lo
 .libs
 *.la
+*.vim

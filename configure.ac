@@ -90,6 +90,8 @@ PKG_CHECK_MODULES(gsoappp, gsoap++ >= 2.7)
 PKG_CHECK_MODULES(gsoap, gsoap >= 2.7)
 
 PKG_CHECK_MODULES(curl, libcurl >= 7.18)
+PKG_CHECK_MODULES(libmicrohttpd, libmicrohttpd >= 0.4.4)
+PKG_CHECK_MODULES(json, json-glib-1.0 >= 0.7.6)
 
 #net_LIBS='-lwsock32'
 net_LIBS=
