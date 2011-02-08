@@ -18,9 +18,6 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//TODO: None of this is tested
-
-
 #include "libdarxenRestfulClient.h"
 
 #include <glib.h>
@@ -50,7 +47,7 @@ typedef struct {
 } ResponseBody;
 
 static void darxen_restful_client_finalize(GObject* gobject);
-static CURL* create_curl_client(const char* url, const char* method, ResponseBody* body);
+static CURL* create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body);
 static size_t mem_read(void *ptr, size_t size, size_t nmemb, void *stream);
 
 static void
@@ -104,7 +101,7 @@ darxen_restful_client_connect(DarxenRestfulClient* self, GError** error)
 	long http_code;
 	USING_PRIVATE(self);
 
-	CURL* curl = create_curl_client("http://localhost/client", "GET", &body);
+	CURL* curl = create_curl_client("GET", "/client", NULL, &body);
 	g_assert(curl);
 	if (curl_easy_perform(curl) != CURLE_OK)
 	{
@@ -154,10 +151,35 @@ darxen_restful_client_connect(DarxenRestfulClient* self, GError** error)
 int
 darxen_restful_client_disconnect(DarxenRestfulClient* self, GError** error)
 {
-	g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
-				DARXEN_RESTFUL_CLIENT_ERROR,
-				"Not implemented");
-	return 1;
+	USING_PRIVATE(self);
+	long http_code;
+
+	CURL* curl = create_curl_client("DELETE", "/client", priv->auth_token, NULL);
+	g_assert(curl);
+	if (curl_easy_perform(curl) != CURLE_OK)
+	{
+		curl_easy_cleanup(curl);
+		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
+					DARXEN_RESTFUL_CLIENT_ERROR_CURL,
+					"Could not delete client");
+		return 1;
+	}
+
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+	curl_easy_cleanup(curl);
+	int code_class = http_code / 100;
+	if (code_class != 2)
+	{
+		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
+					DARXEN_RESTFUL_CLIENT_ERROR_SERVER_RESPONSE,
+					"Server returned error status");
+		return 1;
+	}
+	priv->ID = 0;
+	g_free(priv->password); priv->password = NULL;
+	g_free(priv->auth_token); priv->auth_token = NULL;
+
+	return 0;
 }
 
 GQuark
@@ -171,12 +193,19 @@ darxen_restful_client_error_quark()
  *********************/
 
 static CURL*
-create_curl_client(const char* url, const char* method, ResponseBody* body)
+create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body)
 {
 	CURL* curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_URL, url);
+	gchar* full_url = g_strdup_printf("http://%s%s", "localhost", url);
+	curl_easy_setopt(curl, CURLOPT_URL, full_url);
 	curl_easy_setopt(curl, CURLOPT_PORT, 4889);
+	if (auth_token)
+	{
+		curl_easy_setopt(curl, CURLOPT_USERPWD, auth_token);
+		curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	}
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	g_free(full_url);
 	if (body)
 	{
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_read);
