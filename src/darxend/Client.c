@@ -1,4 +1,4 @@
-/* Client.cc
+/* Client.c
  *
  * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
  *

@@ -1,6 +1,6 @@
-/* libdarxeninit.c
- * 
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+/* TestingCommon.h
+ *
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -18,12 +18,7 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "libdarxeninit.h"
+void testing_common_init();
 
-#include <curl/curl.h>
+void testing_restful_client_init();
 
-void
-libdarxen_init()
-{
-	curl_global_init(CURL_GLOBAL_ALL);
-}

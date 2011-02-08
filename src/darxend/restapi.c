@@ -42,7 +42,7 @@
 
 static struct MHD_Daemon* d;
 
-static inline int handle_authenticate(struct MHD_Connection* connection)
+static inline int respond_authenticate(struct MHD_Connection* connection)
 {
 	struct MHD_Response* response;
 	int ret;
@@ -52,7 +52,7 @@ static inline int handle_authenticate(struct MHD_Connection* connection)
 	return ret;
 }
 
-static inline int handle_success(struct MHD_Connection* connection)
+static inline int respond_success(struct MHD_Connection* connection)
 {
 	struct MHD_Response* response;
 	int ret;
@@ -62,7 +62,7 @@ static inline int handle_success(struct MHD_Connection* connection)
 	return ret;
 }
 
-static inline int handle_fail(struct MHD_Connection* connection)
+static inline int respond_fail(struct MHD_Connection* connection)
 {
 	struct MHD_Response* response;
 	int ret;
@@ -105,7 +105,7 @@ static int handle_request(  void* cls,
 		//TODO: password authentication
 		//TODO: reauthenticate
 		printf("Reauthenticating...%s\n", user);
-		return handle_authenticate(connection);
+		return respond_authenticate(connection);
 		}
 	}
 
@@ -144,7 +144,7 @@ static int handle_request(  void* cls,
 	}
 
 	if (!user)
-		return handle_authenticate(connection);
+		return respond_authenticate(connection);
 
 	if (!strcmp(method, "GET"))
 	{
@@ -159,7 +159,7 @@ static int handle_request(  void* cls,
 		}
 		else
 		{
-			ret = handle_fail(connection);
+			ret = respond_fail(connection);
 		}
 	}
 	else if (!strcmp(method, "PUT"))
@@ -172,11 +172,11 @@ static int handle_request(  void* cls,
 			char* product = params[2];
 			darxend_client_add_poller(client, site, product);
 			//TODO: handle errors (and raise them)
-			ret = handle_success(connection);
+			ret = respond_success(connection);
 		}
 		else
 		{
-			ret = handle_fail(connection);
+			ret = respond_fail(connection);
 		}
 		g_strfreev(params);
 	}
@@ -196,7 +196,7 @@ static int handle_request(  void* cls,
 			}
 			else
 			{
-				ret = handle_success(connection);
+				ret = respond_success(connection);
 			}
 		}
 		else if (len==3 && !strcmp(params[0], "pollers"))
@@ -205,17 +205,20 @@ static int handle_request(  void* cls,
 			char* product = params[2];
 			darxend_client_remove_poller(client, site, product);
 			//TODO: handle errors (and raise them)
-			ret = handle_success(connection);
+			ret = respond_success(connection);
 		}
 		else
 		{
-			ret = handle_fail(connection);
+			ret = respond_fail(connection);
 		}
 		g_strfreev(params);
 	}
+	else if (!strcmp(method, "HEAD"))
+	{
+	}
 	else
 	{
-		ret = handle_fail(connection);
+		ret = respond_fail(connection);
 	}
 
 	return ret;
