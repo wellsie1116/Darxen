@@ -72,6 +72,17 @@ static inline int respond_fail(struct MHD_Connection* connection)
 	return ret;
 }
 
+static inline int respond_json(struct MHD_Connection* connection, gchar* json, gsize len)
+{
+	struct MHD_Response* response;
+	int ret;
+	response = MHD_create_response_from_buffer(len, json, MHD_RESPMEM_MUST_COPY);
+	MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "application/json");
+	ret =  MHD_queue_response(connection, MHD_HTTP_OK, response);
+	MHD_destroy_response(response);
+	return ret;
+}
+
 static int handle_request(  void* cls,
 							struct MHD_Connection* connection,
 							const char* url,
@@ -134,28 +145,47 @@ static int handle_request(  void* cls,
 		json_object_unref(auth);
 
 		//send client info
-		response = MHD_create_response_from_buffer(size, dat, MHD_RESPMEM_MUST_COPY);
-		ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-		MHD_destroy_response(response);
-
-		//cleanup
+		ret = respond_json(connection, dat, size);
 		g_free(dat);
+		
 		return ret;
 	}
 
 	if (!user)
 		return respond_authenticate(connection);
 
+	gchar** params = g_strsplit(url+1, "/", -1);
+	guint len = g_strv_length(params); 
 	if (!strcmp(method, "GET"))
 	{
-		if (!strcmp(url, "/pollers"))
+		if (len==1 && !strcmp(params[0], "pollers"))
 		{
 			gsize size;
 			gchar* res = darxend_client_serialize_pollers(client, &size);
-			response = MHD_create_response_from_buffer(size, res, MHD_RESPMEM_MUST_COPY);
-			ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-			MHD_destroy_response(response);
+			ret = respond_json(connection, res, size);
 			g_free(res);
+		}
+		else if (len==2 && !strcmp(params[0], "data"))
+		{
+			int count = atoi(params[1]);
+			//TODO: implement
+			ret = respond_fail(connection);
+		}
+		else if (len==4 && !strcmp(params[0], "data"))
+		{
+			char* site = params[1];
+			char* product = params[2];
+			char* id = params[3];
+			//TODO: implement
+			ret = respond_fail(connection);
+		}
+		else if (len==4 && !strcmp(params[0], "cache"))
+		{
+			int id = atoi(params[1]);
+			int start = atoi(params[2]);
+			int end = atoi(params[3]);
+			//TODO: implement
+			ret = respond_fail(connection);
 		}
 		else
 		{
@@ -164,26 +194,29 @@ static int handle_request(  void* cls,
 	}
 	else if (!strcmp(method, "PUT"))
 	{
-		gchar** params = g_strsplit(url+1, "/", -1);
-		guint len = g_strv_length(params); 
 		if (len==3 && !strcmp(params[0], "pollers"))
 		{
 			char* site = params[1];
 			char* product = params[2];
 			darxend_client_add_poller(client, site, product);
-			//TODO: handle errors (and raise them)
 			ret = respond_success(connection);
+		}
+		else if (len==5 && !strcmp(params[0], "cache"))
+		{
+			char* site = params[1];
+			char* product = params[2];
+			char* startid = params[3];
+			char* endid = params[3];
+			//TODO: implement
+			ret = respond_fail(connection);
 		}
 		else
 		{
 			ret = respond_fail(connection);
 		}
-		g_strfreev(params);
 	}
 	else if (!strcmp(method, "DELETE"))
 	{
-		gchar** params = g_strsplit(url+1, "/", -1);
-		guint len = g_strv_length(params); 
 		if (len==1 && !strcmp(params[0], "client"))
 		{
 			int res = client_manager_kill_client(client->ID);
@@ -204,22 +237,37 @@ static int handle_request(  void* cls,
 			char* site = params[1];
 			char* product = params[2];
 			darxend_client_remove_poller(client, site, product);
-			//TODO: handle errors (and raise them)
 			ret = respond_success(connection);
+		}
+		else if (len==2 && !strcmp(params[0], "cache"))
+		{
+			int id = atoi(params[1]);
+			//TODO: implement
+			ret = respond_fail(connection);
 		}
 		else
 		{
 			ret = respond_fail(connection);
 		}
-		g_strfreev(params);
 	}
 	else if (!strcmp(method, "HEAD"))
 	{
+		if (len==2 && !strcmp(params[0], "data"))
+		{
+			char* method = params[1];
+			//TODO: implement
+			ret = respond_fail(connection);
+		}
+		else
+		{
+			ret = respond_fail(connection);
+		}
 	}
 	else
 	{
 		ret = respond_fail(connection);
 	}
+	g_strfreev(params);
 
 	return ret;
 

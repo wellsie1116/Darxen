@@ -145,6 +145,9 @@ void
 darxend_client_add_poller(DarxendClient* self, char* site, char* product)
 {
 	USING_PRIVATE(self);
+	site = g_ascii_strdown(site, -1);
+	product = g_ascii_strup(product, -1);
+
 	gpointer data = g_hash_table_lookup(priv->table, site);
 	GSList* products = (GSList*)data;
 	products = g_slist_append(products, strdup(product));
@@ -175,12 +178,17 @@ darxend_client_add_poller(DarxendClient* self, char* site, char* product)
 	radar_data_manager_free_search(searchID);
 
 	radar_data_manager_add_poller(self, site, product);
+
+	g_free(site);
+	g_free(product);
 }
 
 void
 darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 {
 	USING_PRIVATE(self)
+	site = g_ascii_strdown(site, -1);
+	product = g_ascii_strup(product, -1);
 
 	gpointer data = g_hash_table_lookup(priv->table, site);
 	GSList* products = (GSList*)data;
@@ -188,6 +196,8 @@ darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 	if (!data)
 	{
 		g_warning("Client attempted to remove an invalid poller: %s/%s", site, product);
+		g_free(site);
+		g_free(product);
 		return;
 	}
 
@@ -202,9 +212,11 @@ darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 	}
 	else if (products != data)
 	{
-		g_hash_table_insert(priv->table, site, products);
+		g_hash_table_insert(priv->table, strdup(site), products);
 	}
 	radar_data_manager_remove_poller(self, site, product);
+	g_free(site);
+	g_free(product);
 }
 
 void

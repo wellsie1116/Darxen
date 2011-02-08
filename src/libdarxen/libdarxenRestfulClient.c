@@ -47,8 +47,11 @@ typedef struct {
 } ResponseBody;
 
 static void darxen_restful_client_finalize(GObject* gobject);
-static CURL* create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body);
-static size_t mem_read(void *ptr, size_t size, size_t nmemb, void *stream);
+
+static CURL*		create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body);
+static inline int	validate_response(CURL* curl, GError** error);
+static inline int	go_curl(CURL* curl, GError** error);
+static size_t		mem_read(void *ptr, size_t size, size_t nmemb, void *stream);
 
 static void
 darxen_restful_client_class_init(DarxenRestfulClientClass* klass)
@@ -98,34 +101,13 @@ int
 darxen_restful_client_connect(DarxenRestfulClient* self, GError** error)
 {
 	ResponseBody body = {0,};
-	long http_code;
 	USING_PRIVATE(self);
 
 	CURL* curl = create_curl_client("GET", "/client", NULL, &body);
 	g_assert(curl);
-	if (curl_easy_perform(curl) != CURLE_OK)
-	{
-		curl_easy_cleanup(curl);
-		if (body.data)
-			free(body.data);
-		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
-					DARXEN_RESTFUL_CLIENT_ERROR_CURL,
-					"Could not create new client");
-		return 0;
-	}
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-	curl_easy_cleanup(curl);
-	int code_class = http_code / 100;
-	if (code_class != 2)
-	{
-		if (body.data)
-			free(body.data);
-		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
-					DARXEN_RESTFUL_CLIENT_ERROR_SERVER_RESPONSE,
-					"Server returned error status");
+	if (go_curl(curl, error))
 		return 0;
 
-	}
 	//parse json
 	JsonParser* parser = json_parser_new();
 	if (!json_parser_load_from_data(parser, body.data, body.len, error))
@@ -152,32 +134,47 @@ int
 darxen_restful_client_disconnect(DarxenRestfulClient* self, GError** error)
 {
 	USING_PRIVATE(self);
-	long http_code;
 
 	CURL* curl = create_curl_client("DELETE", "/client", priv->auth_token, NULL);
 	g_assert(curl);
-	if (curl_easy_perform(curl) != CURLE_OK)
-	{
-		curl_easy_cleanup(curl);
-		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
-					DARXEN_RESTFUL_CLIENT_ERROR_CURL,
-					"Could not delete client");
+	if (go_curl(curl, error))
 		return 1;
-	}
 
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-	curl_easy_cleanup(curl);
-	int code_class = http_code / 100;
-	if (code_class != 2)
-	{
-		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
-					DARXEN_RESTFUL_CLIENT_ERROR_SERVER_RESPONSE,
-					"Server returned error status");
-		return 1;
-	}
 	priv->ID = 0;
 	g_free(priv->password); priv->password = NULL;
 	g_free(priv->auth_token); priv->auth_token = NULL;
+
+	return 0;
+}
+
+int
+darxen_restful_client_add_poller(DarxenRestfulClient* self, char* site, char* product, GError** error)
+{
+	USING_PRIVATE(self);
+
+	gchar* url = g_strdup_printf("/pollers/%s/%s", site, product);
+	CURL* curl = create_curl_client("PUT", url, priv->auth_token, NULL);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return 1;
+
+	return 0;
+}
+
+int
+darxen_restful_client_remove_poller(DarxenRestfulClient* self, char* site, char* product, GError** error)
+{
+	USING_PRIVATE(self);
+
+	gchar* url = g_strdup_printf("/pollers/%s/%s", site, product);
+	CURL* curl = create_curl_client("DELETE", url, priv->auth_token, NULL);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return 1;
 
 	return 0;
 }
@@ -227,6 +224,39 @@ create_curl_client(const char* method, const char* url, const char* auth_token, 
 		return NULL;
 	}
 	return curl;
+}
+
+static inline int
+validate_response(CURL* curl, GError** error)
+{
+	long http_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+	int code_class = http_code / 100;
+	if (code_class != 2)
+	{
+		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
+					DARXEN_RESTFUL_CLIENT_ERROR_SERVER_RESPONSE,
+					"Server returned error code: %ld", http_code);
+		return 1;
+	}
+	return 0;
+}
+
+static inline int
+go_curl(CURL* curl, GError** error)
+{
+	CURLcode code;
+	if ((code = curl_easy_perform(curl)) != CURLE_OK)
+	{
+		curl_easy_cleanup(curl);
+		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
+					DARXEN_RESTFUL_CLIENT_ERROR_CURL,
+					"CURL returned error code: %d", code);
+		return 1;
+	}
+	int res = validate_response(curl, error);
+	curl_easy_cleanup(curl);
+	return res;
 }
 
 static size_t

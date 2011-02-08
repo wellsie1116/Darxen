@@ -58,6 +58,11 @@ DarxenRestfulClient*	darxen_restful_client_new		();
 int						darxen_restful_client_connect		(DarxenRestfulClient* self, GError** error);
 int						darxen_restful_client_disconnect	(DarxenRestfulClient* self, GError** error);
 
+int						darxen_restful_client_add_poller	(DarxenRestfulClient* self, char* site, char* product, GError** error);
+int						darxen_restful_client_remove_poller	(DarxenRestfulClient* self, char* site, char* product, GError** error);
+//int						darxen_restful_client_list_pollers	(DarxenRestfulClient* self, GError** error);
+
+
 GQuark			darxen_restful_client_error_quark	();
 
 G_END_DECLS

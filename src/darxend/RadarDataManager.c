@@ -105,6 +105,7 @@ radar_data_manager_add_poller(DarxendClient* client, char* site, char* product)
 		}
 		pthread_mutex_lock(&productInfo->lockClients);
 		{
+			//FIXME: We should really validate that the product is valid...
 			productInfo->clients = g_list_prepend(productInfo->clients, client);
 		}
 		pthread_mutex_unlock(&productInfo->lockClients);

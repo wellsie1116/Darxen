@@ -26,33 +26,83 @@ typedef struct {
 	DarxenRestfulClient* client;
 } RestfulClientFixture;
 
-
-static void test_setup(RestfulClientFixture* fix, gconstpointer testdata) {
+static void test_construct_setup(RestfulClientFixture* fix, gconstpointer testdata)
+{
 	fix->client = darxen_restful_client_new();
 }
 
-static void test_teardown(RestfulClientFixture* fix, gconstpointer testdata) {
+static void test_construct_teardown(RestfulClientFixture* fix, gconstpointer testdata)
+{
 	g_object_unref(G_OBJECT(fix->client));
 }
 
-static void test_construct(RestfulClientFixture* fix, gconstpointer testdata) {
+static void test_setup(RestfulClientFixture* fix, gconstpointer testdata)
+{
+	GError* error = NULL;
+
+	fix->client = darxen_restful_client_new();
+	int res = darxen_restful_client_connect(fix->client, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, >, 0);
+}
+
+static void test_teardown(RestfulClientFixture* fix, gconstpointer testdata)
+{
+	GError* error = NULL;
+	int res;
+
+	res = darxen_restful_client_disconnect(fix->client, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
+	g_object_unref(G_OBJECT(fix->client));
+}
+
+static void test_construct(RestfulClientFixture* fix, gconstpointer testdata) 
+{
 	g_assert(fix->client);
 }
 
-static void test_connect(RestfulClientFixture* fix, gconstpointer testdata) {
+static void test_connection(RestfulClientFixture* fix, gconstpointer testdata)
+{
 	GError* error = NULL;
+
 	int res = darxen_restful_client_connect(fix->client, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(res, >, 0);
 	g_message("Client ID: %d", res);
+
+	res = darxen_restful_client_disconnect(fix->client, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
 }
 
-static void test_disconnect(RestfulClientFixture* fix, gconstpointer testdata) {
+static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
+{
+	//TODO: verify GET /pollers
+	int res;
 	GError* error = NULL;
-	int res = darxen_restful_client_connect(fix->client, &error);
+
+	res = darxen_restful_client_add_poller(fix->client, "klot", "N0R", &error);
 	g_assert_no_error(error);
-	g_assert_cmpint(res, >, 0);
-	res = darxen_restful_client_disconnect(fix->client, &error);
+	g_assert_cmpint(res, ==, 0);
+
+	res = darxen_restful_client_add_poller(fix->client, "klot", "N1R", &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
+	
+	res = darxen_restful_client_add_poller(fix->client, "kilx", "N0R", &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
+
+	res = darxen_restful_client_remove_poller(fix->client, "klot", "N0R", &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
+
+	res = darxen_restful_client_remove_poller(fix->client, "klot", "N1R", &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(res, ==, 0);
+	
+	res = darxen_restful_client_remove_poller(fix->client, "kilx", "N0R", &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(res, ==, 0);
 }
@@ -60,8 +110,12 @@ static void test_disconnect(RestfulClientFixture* fix, gconstpointer testdata) {
 void
 testing_restful_client_init()
 {
-	g_test_add("/libdarxen/RestfulClient/construct", RestfulClientFixture, NULL, test_setup, test_construct, test_teardown);
-	g_test_add("/libdarxen/RestfulClient/connect", RestfulClientFixture, NULL, test_setup, test_connect, test_teardown);
-	g_test_add("/libdarxen/RestfulClient/disconnect", RestfulClientFixture, NULL, test_setup, test_disconnect, test_teardown);
+	g_test_add("/libdarxen/RestfulClient/construct", RestfulClientFixture, NULL,
+		   test_construct_setup, test_construct, test_construct_teardown);
+	g_test_add("/libdarxen/RestfulClient/connection", RestfulClientFixture, NULL,
+		   test_construct_setup, test_connection, test_construct_teardown);
+
+	g_test_add("/libdarxen/RestfulClient/pollers", RestfulClientFixture, NULL,
+		   test_setup, test_pollers, test_teardown);
 }
 
