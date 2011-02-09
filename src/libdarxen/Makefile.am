@@ -23,7 +23,7 @@ libdarxen_la_SOURCES = libdarxen.h \
 	libdarxenShapefileRenderer.c libdarxenShapefileRenderer.h \
 	libdarxenShapefiles.c libdarxenShapefiles.h \
 	libdarxenXml.c libdarxenXml.h \
-	libdarxenRadarSites.c libDarxenRadarSites.h \
+	libdarxenRadarSites.c libdarxenRadarSites.h \
 	libdarxenCommon.h
 libdarxen_la_LDFLAGS = -g -version-info 1:1:0
 libdarxen_la_CFLAGS = $(glib_CFLAGS) $(pango_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(gtkglext_CFLAGS) $(json_CFLAGS)

@@ -14,3 +14,4 @@ stamp-h1
 .libs
 *.la
 *.vim
+TAGS

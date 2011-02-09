@@ -78,13 +78,30 @@ static void test_connection(RestfulClientFixture* fix, gconstpointer testdata)
 
 static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
 {
-	//TODO: verify GET /pollers
 	int res;
 	GError* error = NULL;
+	
+	RadarPoller* pollers;
+	int pollerCount;
+	
+	pollers = darxen_restful_client_list_pollers(fix->client, &pollerCount, &error);
+	g_assert_no_error(error);
+	g_assert(pollers);
+	g_assert_cmpint(pollerCount, ==, 0);
+	g_assert(!pollers[0].site && !pollers[0].product);
+	free(pollers);
 
 	res = darxen_restful_client_add_poller(fix->client, "klot", "N0R", &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(res, ==, 0);
+	
+	pollers = darxen_restful_client_list_pollers(fix->client, &pollerCount, &error);
+	g_assert_no_error(error);
+	g_assert(pollers);
+	g_assert_cmpint(pollerCount, ==, 1);
+	g_assert_cmpstr(pollers[0].site, ==, "klot");
+	g_assert_cmpstr(pollers[0].product, ==, "N0R");
+	free(pollers);
 
 	res = darxen_restful_client_add_poller(fix->client, "klot", "N1R", &error);
 	g_assert_no_error(error);
@@ -101,10 +118,25 @@ static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
 	res = darxen_restful_client_remove_poller(fix->client, "klot", "N1R", &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(res, ==, 0);
+
+	pollers = darxen_restful_client_list_pollers(fix->client, &pollerCount, &error);
+	g_assert_no_error(error);
+	g_assert(pollers);
+	g_assert_cmpint(pollerCount, ==, 1);
+	g_assert_cmpstr(pollers[0].site, ==, "kilx");
+	g_assert_cmpstr(pollers[0].product, ==, "N0R");
+	free(pollers);
 	
 	res = darxen_restful_client_remove_poller(fix->client, "kilx", "N0R", &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(res, ==, 0);
+
+	pollers = darxen_restful_client_list_pollers(fix->client, &pollerCount, &error);
+	g_assert_no_error(error);
+	g_assert(pollers);
+	g_assert_cmpint(pollerCount, ==, 0);
+	g_assert(!pollers[0].site && !pollers[0].product);
+	free(pollers);
 }
 
 void

@@ -106,7 +106,10 @@ darxen_restful_client_connect(DarxenRestfulClient* self, GError** error)
 	CURL* curl = create_curl_client("GET", "/client", NULL, &body);
 	g_assert(curl);
 	if (go_curl(curl, error))
+	{
+		free(body.data);
 		return 0;
+	}
 
 	//parse json
 	JsonParser* parser = json_parser_new();
@@ -177,6 +180,52 @@ darxen_restful_client_remove_poller(DarxenRestfulClient* self, char* site, char*
 		return 1;
 
 	return 0;
+}
+
+RadarPoller*
+darxen_restful_client_list_pollers(DarxenRestfulClient* self, int* size, GError** error)
+{
+	USING_PRIVATE(self);
+	ResponseBody body = {0,};
+
+	gchar* url = g_strdup_printf("/pollers");
+	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return NULL;
+
+	//parse json
+	JsonParser* parser = json_parser_new();
+	if (!json_parser_load_from_data(parser, body.data, body.len, error))
+	{
+		free(body.data);
+		g_object_unref(G_OBJECT(parser));
+		return NULL;
+	}
+	
+	JsonNode* root = json_parser_get_root(parser);
+	JsonArray* array = json_node_get_array(root);
+	int len = json_array_get_length(array);
+	if (size)
+		*size = len;
+	RadarPoller* pollers = (RadarPoller*)calloc(len+1, sizeof(RadarPoller));
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		JsonObject* poller = json_array_get_object_element(array, i);
+		g_assert(json_object_has_member(poller, "Site"));
+		pollers[i].site = g_strdup(json_object_get_string_member(poller, "Site"));
+		g_assert(json_object_has_member(poller, "Product"));
+		pollers[i].product = g_strdup(json_object_get_string_member(poller, "Product"));
+	}
+	pollers[i].site = NULL;
+	pollers[i].product = NULL;
+	
+	free(body.data);
+	g_object_unref(G_OBJECT(parser));
+	return pollers;
 }
 
 GQuark
