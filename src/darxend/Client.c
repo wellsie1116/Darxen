@@ -288,8 +288,20 @@ darxend_client_wait_queue_length(DarxendClient* self)
 
 	int length;
 	pthread_mutex_lock(&priv->lockQueue);
-	while (darxend_client_is_valid(self) && ((length = g_queue_get_length(priv->pollQueue)) == 0))
-		pthread_cond_wait(&priv->condQueue, &priv->lockQueue);
+	{
+		struct timeval now;
+		struct timespec timeout;
+		int retcode;
+
+		gettimeofday(&now, NULL);
+		timeout.tv_sec = now.tv_sec + 30; //30 seconds
+		timeout.tv_nsec = now.tv_usec * 1000;
+		retcode = 0;
+		while (darxend_client_is_valid(self) && ((length = g_queue_get_length(priv->pollQueue)) == 0) && retcode != ETIMEDOUT)
+		{
+			retcode = pthread_cond_timedwait(&priv->condQueue, &priv->lockQueue, &timeout);
+		}
+	}
 	pthread_mutex_unlock(&priv->lockQueue);
 	return length;
 }

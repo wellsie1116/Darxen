@@ -62,6 +62,31 @@ static inline int respond_success(struct MHD_Connection* connection)
 	return ret;
 }
 
+static inline int respond_success_with_headers(struct MHD_Connection* connection, ...)
+{
+	va_list ap;
+	struct MHD_Response* response;
+	int ret;
+	response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
+
+	va_start(ap, connection);
+	{
+		char* key;
+		char* val;
+
+		while ((key = va_arg(ap, char*)))
+		{
+			val = va_arg(ap, char*);
+			MHD_add_response_header(response, key, val);
+		}
+	}
+	va_end(ap);
+
+	ret = MHD_queue_response(connection, MHD_HTTP_NO_CONTENT, response);
+	MHD_destroy_response(response);
+	return ret;
+}
+
 static inline int respond_fail(struct MHD_Connection* connection)
 {
 	struct MHD_Response* response;
@@ -255,8 +280,24 @@ static int handle_request(  void* cls,
 		if (len==2 && !strcmp(params[0], "data"))
 		{
 			char* method = params[1];
-			//TODO: implement
-			ret = respond_fail(connection);
+			if (!strcmp(method, "short"))
+			{
+				int count = darxend_client_get_queue_length(client);
+				gchar* len = g_strdup_printf("%d", count);
+				ret = respond_success_with_headers(connection, "Queue-Length", len, NULL);
+				g_free(len);
+			}
+			else if (!strcmp(method, "long"))
+			{
+				int count = darxend_client_wait_queue_length(client);
+				gchar* len = g_strdup_printf("%d", count);
+				ret = respond_success_with_headers(connection, "Queue-Length", len, NULL);
+				g_free(len);
+			}
+			else
+			{
+				ret = respond_fail(connection);
+			}
 		}
 		else
 		{
@@ -269,6 +310,8 @@ static int handle_request(  void* cls,
 	}
 	g_strfreev(params);
 
+	if (ret != MHD_YES)
+		g_warning("Restful request(%s) failed", url);
 	return ret;
 
 }
@@ -281,6 +324,7 @@ int restapi_init()
 						NULL,
 						&handle_request,
 						NULL, //PAGE,
+						// MHD_OPTION_CONNECTION_TIMEOUT, 30,
 						MHD_OPTION_END);
   return d == NULL;
 }
