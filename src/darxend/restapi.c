@@ -20,18 +20,24 @@
 
 #include "restapi.h"
 
+#include "RadarDataManager.h"
 #include "ClientManager.h"
 #include "Client.h"
 
 #include <json-glib/json-glib.h>
 
-#include <curl/curl.h> //FIXME: include something less
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <stdarg.h>
 #include <stdint.h>
-#include <microhttpd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <microhttpd.h>
+
+#include <curl/curl.h> //FIXME: include something less
 
 #define PORT 4889
 #define PAGE "<html><head><title>libmicrohttpd demo</title>"\
@@ -39,6 +45,7 @@
 
 #define PAGE_AUTHENTICATE "<html><body>Please authenticate</body></html>"
 #define PAGE_FAIL "<html><body>This isn't the server you are looking for</body></html>"
+#define PAGE_INTERNAL_FAIL "<html><body><h1>503 Internal Server Error</h1></body></html>"
 
 static struct MHD_Daemon* d;
 
@@ -83,6 +90,8 @@ static inline int respond_success_with_headers(struct MHD_Connection* connection
 	va_end(ap);
 
 	ret = MHD_queue_response(connection, MHD_HTTP_NO_CONTENT, response);
+	if (!response)
+		return MHD_NO;
 	MHD_destroy_response(response);
 	return ret;
 }
@@ -92,7 +101,40 @@ static inline int respond_fail(struct MHD_Connection* connection)
 	struct MHD_Response* response;
 	int ret;
 	response = MHD_create_response_from_buffer(strlen(PAGE_FAIL), PAGE_FAIL, MHD_RESPMEM_PERSISTENT);
+	if (!response)
+		return MHD_NO;
 	ret =  MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, response);
+	MHD_destroy_response(response);
+	return ret;
+}
+
+static inline int respond_internal_fail(struct MHD_Connection* connection)
+{
+	struct MHD_Response* response;
+	int ret;
+	response = MHD_create_response_from_buffer(strlen(PAGE_INTERNAL_FAIL), PAGE_INTERNAL_FAIL, MHD_RESPMEM_PERSISTENT);
+	if (!response)
+		return MHD_NO;
+	ret =  MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
+	MHD_destroy_response(response);
+	return ret;
+}
+
+static inline int respond_file(struct MHD_Connection* connection, FILE* fin)
+{
+	struct MHD_Response* response;
+	int ret;
+	int fd = dup(fileno(fin));
+	struct stat sbuf;
+	fclose(fin);
+	if (fstat(fd, &sbuf))
+		return respond_internal_fail(connection);
+
+	response = MHD_create_response_from_fd(sbuf.st_size, fd);
+	if (!response)
+		return MHD_NO;
+	MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "application/octet-stream");
+	ret =  MHD_queue_response(connection, MHD_HTTP_OK, response);
 	MHD_destroy_response(response);
 	return ret;
 }
@@ -102,6 +144,8 @@ static inline int respond_json(struct MHD_Connection* connection, gchar* json, g
 	struct MHD_Response* response;
 	int ret;
 	response = MHD_create_response_from_buffer(len, json, MHD_RESPMEM_MUST_COPY);
+	if (!response)
+		return MHD_NO;
 	MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "application/json");
 	ret =  MHD_queue_response(connection, MHD_HTTP_OK, response);
 	MHD_destroy_response(response);
@@ -193,16 +237,67 @@ static int handle_request(  void* cls,
 		else if (len==2 && !strcmp(params[0], "data"))
 		{
 			int count = atoi(params[1]);
-			//TODO: implement
-			ret = respond_fail(connection);
+			RadarDataInfo* infos = count ? darxend_client_read_queue(client, count) : NULL;
+
+			if (infos)
+			{
+				JsonArray* array = json_array_new();
+				JsonNode* node;
+				gsize size;
+				int i;
+				for (i = 0; i < count; i++)
+				{
+					JsonObject* info = json_object_new();
+					gchar* id = g_strdup_printf("%04d%02d%02d%02d%02d",
+							infos[i].date.date.year, infos[i].date.date.month, infos[i].date.date.day,
+							infos[i].date.time.hour, infos[i].date.time.minute);
+					json_object_set_string_member(info, "Site", infos[i].site);
+					json_object_set_string_member(info, "Product", infos[i].product);
+					json_object_set_string_member(info, "ID", id);
+					g_free(id);
+
+					node = json_node_new(JSON_NODE_OBJECT);
+					json_node_set_object(node, info);
+					json_array_add_element(array, node);
+				}
+
+				node = json_node_new(JSON_NODE_ARRAY);
+				json_node_set_array(node, array);
+
+				JsonGenerator* gen = json_generator_new();
+				json_generator_set_root(gen, node);
+				gchar* dat = json_generator_to_data(gen, &size);
+
+				g_object_unref(gen);
+				json_node_free(node);
+				json_array_unref(array);
+				free(infos);
+
+				ret = respond_json(connection, dat, size);
+				g_free(dat);
+			}
+			else
+			{
+				ret = respond_fail(connection);
+			}
 		}
 		else if (len==4 && !strcmp(params[0], "data"))
 		{
 			char* site = params[1];
 			char* product = params[2];
 			char* id = params[3];
-			//TODO: implement
-			ret = respond_fail(connection);
+			DateTime dt;
+			int count;
+			count = sscanf(id, "%4d%2d%2d%2d%2d", &dt.date.year, &dt.date.month, &dt.date.day, &dt.time.hour, &dt.time.minute);
+			FILE* fin;
+			if (count == 5 && (fin = radar_data_manager_read_data_file(site, product, dt)))
+			{
+				ret = respond_file(connection, fin);
+			}
+			else
+			{
+				ret = respond_fail(connection);
+			}
 		}
 		else if (len==4 && !strcmp(params[0], "cache"))
 		{

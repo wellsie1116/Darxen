@@ -18,5 +18,33 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef RESTAPI_DTS0FMGJ
+
+#define RESTAPI_DTS0FMGJ
+
+typedef struct {
+	int year;
+	int month;
+	int day;
+} Date ;
+
+typedef struct {
+	int hour;
+	int minute;
+} Time;
+
+typedef struct {
+	Date date;
+	Time time;
+} DateTime;
+
+typedef struct {
+	char* site;
+	char* product;
+	DateTime date;
+} RadarDataInfo;
+
 int restapi_init();
 int restapi_shutdown();
+
+#endif /* end of include guard: RESTAPI_DTS0FMGJ */

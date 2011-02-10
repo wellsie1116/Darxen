@@ -20,16 +20,18 @@
 
 
 #include "Client.h"
-#include "soap.h"
 #include "ClientManager.h"
 #include "RadarDataManager.h"
 #include "Callbacks.h"
 
 //TODO: threading locks (poller list)
 
+#include <errno.h>
 #include <glib.h>
 #include <json-glib/json-glib.h>
 #include <time.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define PRUNE_TIME (60 * 5)
 
@@ -238,7 +240,7 @@ darxend_client_is_valid(DarxendClient* self)
 }
 
 int
-darxend_client_search(DarxendClient* self, char* site, char* product, struct DateTime* start, struct DateTime* end)
+darxend_client_search(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end)
 {
 	USING_PRIVATE(self)
 
