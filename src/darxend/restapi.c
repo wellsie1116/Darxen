@@ -49,6 +49,9 @@
 
 static struct MHD_Daemon* d;
 
+static inline int id_to_datetime(char* id, DateTime* res);
+static inline int datetime_to_id(DateTime dt, gchar** res);
+
 static inline int respond_authenticate(struct MHD_Connection* connection)
 {
 	struct MHD_Response* response;
@@ -139,14 +142,29 @@ static inline int respond_file(struct MHD_Connection* connection, FILE* fin)
 	return ret;
 }
 
-static inline int respond_json(struct MHD_Connection* connection, gchar* json, gsize len)
+static inline int respond_json(struct MHD_Connection* connection, gchar* json, gsize len, ...)
 {
+	va_list ap;
 	struct MHD_Response* response;
 	int ret;
 	response = MHD_create_response_from_buffer(len, json, MHD_RESPMEM_MUST_COPY);
 	if (!response)
 		return MHD_NO;
 	MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "application/json");
+
+	va_start(ap, len);
+	{
+		char* key;
+		char* val;
+
+		while ((key = va_arg(ap, char*)))
+		{
+			val = va_arg(ap, char*);
+			MHD_add_response_header(response, key, val);
+		}
+	}
+	va_end(ap);
+
 	ret =  MHD_queue_response(connection, MHD_HTTP_OK, response);
 	MHD_destroy_response(response);
 	return ret;
@@ -214,7 +232,7 @@ static int handle_request(  void* cls,
 		json_object_unref(auth);
 
 		//send client info
-		ret = respond_json(connection, dat, size);
+		ret = respond_json(connection, dat, size, NULL);
 		g_free(dat);
 		
 		return ret;
@@ -231,7 +249,7 @@ static int handle_request(  void* cls,
 		{
 			gsize size;
 			gchar* res = darxend_client_serialize_pollers(client, &size);
-			ret = respond_json(connection, res, size);
+			ret = respond_json(connection, res, size, NULL);
 			g_free(res);
 		}
 		else if (len==2 && !strcmp(params[0], "data"))
@@ -248,9 +266,8 @@ static int handle_request(  void* cls,
 				for (i = 0; i < count; i++)
 				{
 					JsonObject* info = json_object_new();
-					gchar* id = g_strdup_printf("%04d%02d%02d%02d%02d",
-							infos[i].date.date.year, infos[i].date.date.month, infos[i].date.date.day,
-							infos[i].date.time.hour, infos[i].date.time.minute);
+					gchar* id;
+					datetime_to_id(infos[i].date, &id);
 					json_object_set_string_member(info, "Site", infos[i].site);
 					json_object_set_string_member(info, "Product", infos[i].product);
 					json_object_set_string_member(info, "ID", id);
@@ -273,7 +290,7 @@ static int handle_request(  void* cls,
 				json_array_unref(array);
 				free(infos);
 
-				ret = respond_json(connection, dat, size);
+				ret = respond_json(connection, dat, size, NULL);
 				g_free(dat);
 			}
 			else
@@ -287,10 +304,8 @@ static int handle_request(  void* cls,
 			char* product = params[2];
 			char* id = params[3];
 			DateTime dt;
-			int count;
-			count = sscanf(id, "%4d%2d%2d%2d%2d", &dt.date.year, &dt.date.month, &dt.date.day, &dt.time.hour, &dt.time.minute);
 			FILE* fin;
-			if (count == 5 && (fin = radar_data_manager_read_data_file(site, product, dt)))
+			if (!id_to_datetime(id, &dt) && (fin = radar_data_manager_read_data_file(site, product, dt)))
 			{
 				ret = respond_file(connection, fin);
 			}
@@ -328,6 +343,12 @@ static int handle_request(  void* cls,
 			char* startid = params[3];
 			char* endid = params[3];
 			//TODO: implement
+//int				darxend_client_search			(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end);
+			//DateTime startDt, endDt;
+			//if (!id_to_datetime(startid, &startDt) && !id_to_datetime(endid, &endDt))
+			//{
+			//	int id = darxend_client_search(client, site, product, startDt, endDt);
+			//}
 			ret = respond_fail(connection);
 		}
 		else
@@ -427,6 +448,23 @@ int restapi_init()
 int restapi_shutdown()
 {
 	MHD_stop_daemon(d);
+	return 0;
+}
+
+static inline int id_to_datetime(char* id, DateTime* res)
+{
+	return (sscanf(id, "%4d%2d%2d%2d%2d", &res->date.year, &res->date.month, &res->date.day, &res->time.hour, &res->time.minute) != 5);
+}
+
+static inline int datetime_to_id(DateTime dt, gchar** res)
+{
+	*res = g_strdup_printf("%04d%02d%02d%02d%02d", dt.date.year, dt.date.month, dt.date.day, dt.time.hour, dt.time.minute);
+	if (strlen(*res) != 12)
+	{
+		g_free(*res);
+		*res = NULL;
+		return 1;
+	}
 	return 0;
 }
 
