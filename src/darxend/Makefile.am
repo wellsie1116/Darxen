@@ -29,6 +29,7 @@ darxend_SOURCES = $(SOURCES) darxend.c
 darxend_CFLAGS = -g -Wall $(glib_CFLAGS) $(gobject_CFLAGS) $(libxml_CFLAGS) $(curl_CFLAGS) $(json_CFLAGS)
 darxend_LDADD = $(glib_LIBS) $(gobject_LIBS) $(libxml_LIBS) $(curl_LIBS) $(net_LIBS) $(json_LIBS) -lpthread -lmicrohttpd # -lwsock32
 # ../shared/libdarxenshared.la
+darxend_LDFLAGS = -g -Wall
 
 darxend_test_CFLAGS=$(darxend_CFLAGS)
 darxend_test_LDADD=$(darxend_LDADD)

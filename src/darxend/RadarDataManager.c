@@ -308,7 +308,7 @@ gboolean
 radar_data_manager_free_search(int searchID)
 {
 	pthread_mutex_lock(&lockSearches);
-	GSList* data = (GSList*)g_tree_lookup(results, &searchID);
+	GSList* data = (GSList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
 	if (!data)
 	{
 		pthread_mutex_unlock(&lockSearches);
@@ -519,8 +519,8 @@ searchDay(int year, int month, int day, const gchar* path, DateTime* start, Date
 			if (strlen(fileName) == 4 && sscanf(fileName, "%02d%02d", &hour, &minute) == 2)
 			{
 				if ((hour > startHour && hour < endHour) ||
-					(hour == startHour && minute > startMinute) ||
-					(hour == endHour && minute < endMinute))
+					(hour == startHour && minute >= startMinute) ||
+					(hour == endHour && minute <= endMinute))
 				{
 					DateTime* entry = (DateTime*)malloc(sizeof(DateTime));
 					entry->date.year = year;

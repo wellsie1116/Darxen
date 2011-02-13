@@ -247,7 +247,19 @@ darxend_client_search(DarxendClient* self, char* site, char* product, DateTime* 
 	int result = radar_data_manager_search(site, product, start, end);
 	priv->searches = g_slist_prepend(priv->searches, GINT_TO_POINTER(result));
 	return result;
-	//FIXME: searches not cleared through client requests
+}
+
+gboolean
+darxend_client_search_free(DarxendClient* self, int id)
+{
+	USING_PRIVATE(self);
+
+	//stop clients from deleting others' searches
+	if (!g_slist_find(priv->searches, GINT_TO_POINTER(id)))
+		return FALSE;
+
+	priv->searches = g_slist_remove(priv->searches, GINT_TO_POINTER(id));
+	return radar_data_manager_free_search(id);
 }
 
 void

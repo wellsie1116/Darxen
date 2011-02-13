@@ -65,14 +65,15 @@ typedef enum
 GType			darxend_client_get_type	() G_GNUC_CONST;
 DarxendClient*	darxend_client_new		(int id);
 
-void			darxend_client_add_poller		(DarxendClient* self, char* site, char* product);
-void			darxend_client_remove_poller	(DarxendClient* self, char* site, char* product);
+void			darxend_client_add_poller			(DarxendClient* self, char* site, char* product);
+void			darxend_client_remove_poller		(DarxendClient* self, char* site, char* product);
 
-void			darxend_client_validate			(DarxendClient* self);
-void			darxend_client_invalidate		(DarxendClient* self);
-gboolean		darxend_client_is_valid			(DarxendClient* self);
+void			darxend_client_validate				(DarxendClient* self);
+void			darxend_client_invalidate			(DarxendClient* self);
+gboolean		darxend_client_is_valid				(DarxendClient* self);
 
-int				darxend_client_search			(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end);
+int				darxend_client_search				(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end);
+gboolean		darxend_client_search_free			(DarxendClient* self, int id);
 
 void			darxend_client_add_to_queue			(DarxendClient* self, char* site, char* product, int year, int month, int day, int hour, int minute);
 int				darxend_client_get_queue_length		(DarxendClient* self);
@@ -81,7 +82,7 @@ RadarDataInfo*	darxend_client_read_queue			(DarxendClient* self, int count);
 
 gchar*			darxend_client_serialize_pollers	(DarxendClient* self, gsize* size);
 
-GQuark			darxend_client_error_quark	();
+GQuark			darxend_client_error_quark			();
 
 G_END_DECLS
 

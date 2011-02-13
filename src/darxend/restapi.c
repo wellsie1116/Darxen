@@ -45,6 +45,7 @@
 
 #define PAGE_AUTHENTICATE "<html><body>Please authenticate</body></html>"
 #define PAGE_FAIL "<html><body>This isn't the server you are looking for</body></html>"
+#define PAGE_CLIENT_FAIL "<html><body>There was an error processing your request: %s</body></html>"
 #define PAGE_INTERNAL_FAIL "<html><body><h1>503 Internal Server Error</h1></body></html>"
 
 static struct MHD_Daemon* d;
@@ -95,6 +96,20 @@ static inline int respond_success_with_headers(struct MHD_Connection* connection
 	ret = MHD_queue_response(connection, MHD_HTTP_NO_CONTENT, response);
 	if (!response)
 		return MHD_NO;
+	MHD_destroy_response(response);
+	return ret;
+}
+
+static inline int respond_client_fail(struct MHD_Connection* connection, const char* msg)
+{
+	struct MHD_Response* response;
+	int ret;
+	gchar* responseData = g_strdup_printf(PAGE_CLIENT_FAIL, msg);
+	response = MHD_create_response_from_buffer(strlen(responseData), responseData, MHD_RESPMEM_MUST_COPY);
+	g_free(responseData);
+	if (!response)
+		return MHD_NO;
+	ret =  MHD_queue_response(connection, MHD_HTTP_FORBIDDEN, response);
 	MHD_destroy_response(response);
 	return ret;
 }
@@ -311,16 +326,48 @@ static int handle_request(  void* cls,
 			}
 			else
 			{
-				ret = respond_fail(connection);
+				ret = respond_client_fail(connection, "Invalid ID or file not found");
 			}
 		}
 		else if (len==4 && !strcmp(params[0], "cache"))
 		{
 			int id = atoi(params[1]);
 			int start = atoi(params[2]);
-			int end = atoi(params[3]);
-			//TODO: implement
-			ret = respond_fail(connection);
+			int count = atoi(params[3]);
+			DateTime* records = radar_data_manager_get_search_records(id, start, count);
+
+			if (records)
+			{
+				JsonArray* array = json_array_new();
+				int i;
+				for (i = 0; i < count; i++)
+				{
+					gchar* timeval;
+					datetime_to_id(records[i], &timeval);
+					g_assert(timeval);
+					json_array_add_string_element(array, timeval);
+					g_free(timeval);
+				}
+
+				JsonNode* node = json_node_new(JSON_NODE_ARRAY);
+				json_node_set_array(node, array);
+
+				JsonGenerator* gen = json_generator_new();
+				json_generator_set_root(gen, node);
+				gsize size;
+				gchar* dat = json_generator_to_data(gen, &size);
+
+				g_object_unref(gen);
+				json_array_unref(array);
+
+				ret = respond_json(connection, dat, size, NULL);
+				g_free(dat);
+				free(records);
+			}
+			else
+			{
+				ret = respond_client_fail(connection, "Invalid range");
+			}
 		}
 		else
 		{
@@ -341,15 +388,22 @@ static int handle_request(  void* cls,
 			char* site = params[1];
 			char* product = params[2];
 			char* startid = params[3];
-			char* endid = params[3];
-			//TODO: implement
-//int				darxend_client_search			(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end);
-			//DateTime startDt, endDt;
-			//if (!id_to_datetime(startid, &startDt) && !id_to_datetime(endid, &endDt))
-			//{
-			//	int id = darxend_client_search(client, site, product, startDt, endDt);
-			//}
-			ret = respond_fail(connection);
+			char* endid = params[4];
+			DateTime startDt, endDt;
+			if (!id_to_datetime(startid, &startDt) && !id_to_datetime(endid, &endDt))
+			{
+				int id = darxend_client_search(client, site, product, &startDt, &endDt);
+				int size = radar_data_manager_get_search_size(id);
+				gchar* sId = g_strdup_printf("%d", id);
+				gchar* sSize = g_strdup_printf("%d", size);
+				ret = respond_success_with_headers(connection, "SearchID", sId, "SearchSize", sSize, NULL);
+				g_free(sId);
+				g_free(sSize);
+			}
+			else
+			{
+				ret = respond_client_fail(connection, "Invalid file ID");
+			}
 		}
 		else
 		{
@@ -383,8 +437,15 @@ static int handle_request(  void* cls,
 		else if (len==2 && !strcmp(params[0], "cache"))
 		{
 			int id = atoi(params[1]);
-			//TODO: implement
-			ret = respond_fail(connection);
+
+			if (darxend_client_search_free(client, id))
+			{
+				ret = respond_success(connection);
+			}
+			else
+			{
+				ret = respond_client_fail(connection, "No search by that ID exists for current user");
+			}
 		}
 		else
 		{
