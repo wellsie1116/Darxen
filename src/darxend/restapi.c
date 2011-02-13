@@ -1,6 +1,6 @@
 /* restapi.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <microhttpd.h>
 
-#include <curl/curl.h> //FIXME: include something less
+#include <curl/curl.h>
 
 #define PORT 4889
 #define PAGE "<html><head><title>libmicrohttpd demo</title>"\

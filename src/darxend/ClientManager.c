@@ -1,6 +1,6 @@
 /* ClientManager.cc
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -119,7 +119,6 @@ pruneClients(gpointer data)
 {
 	pthread_mutex_lock(&lockClients);
 
-	g_message("Pruning clients");
 	g_slist_foreach(clients, pruneClient, NULL);
 
 	pthread_mutex_unlock(&lockClients);
@@ -139,14 +138,3 @@ pruneClient(gpointer pclient, gpointer data)
 	g_object_unref(G_OBJECT(client));
 }
 
-/*static gint
-idClientComparer(gconstpointer a, gconstpointer b)
-{
-	int aID = ((DarxendClient*)a)->ID;
-	int bID = ((DarxendClient*)b)->ID;
-	if (aID == bID)
-		return 0;
-	if (aID < bID)
-		return -1;
-	return 1;
-}*/

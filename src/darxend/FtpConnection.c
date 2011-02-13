@@ -1,6 +1,6 @@
-/* FtpConnection.cc
+/* FtpConnection.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
