@@ -47,6 +47,8 @@ struct _DarxendClient
 
 	int ID;
 	long int intTime;
+
+	gchar* password;
 };
 
 struct _DarxendClientClass

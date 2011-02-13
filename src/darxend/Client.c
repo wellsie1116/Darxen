@@ -27,6 +27,7 @@
 //TODO: threading locks (poller list)
 
 #include <errno.h>
+#include <ctype.h>
 #include <glib.h>
 #include <json-glib/json-glib.h>
 #include <time.h>
@@ -73,6 +74,8 @@ darxend_client_init(DarxendClient* self)
 	priv->table = NULL;
 	priv->pollQueue = NULL;
 	priv->searches = NULL;
+
+	self->password = NULL;
 }
 
 static void
@@ -89,6 +92,8 @@ darxend_client_finalize(GObject* gobject)
 		list = list->next;
 	}
 	g_slist_free(priv->searches);
+
+	g_free(self->password);
 
 	pthread_mutex_destroy(&priv->lockQueue);
 	pthread_cond_destroy(&priv->condQueue);
@@ -111,6 +116,15 @@ darxend_client_new(int id)
 	priv->table = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
 	priv->searches = NULL;
 	priv->pollQueue = g_queue_new();
+
+	int i;
+	self->password = g_strdup("xxxxxxxx");
+	for (i = 0; i < 8; i++)
+	{
+		self->password[i] = g_random_int_range('a', 'z'+1);
+		if (g_random_boolean())
+			self->password[i] = toupper(self->password[i]);
+	}
 
 	pthread_mutex_init(&priv->lockQueue, NULL);
 	pthread_cond_init(&priv->condQueue, NULL);

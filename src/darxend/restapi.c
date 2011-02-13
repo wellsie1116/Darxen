@@ -213,12 +213,10 @@ static int handle_request(  void* cls,
 	if (user)
 	{
 		client = client_manager_get_client(atoi(user));
-		if (!client)
+		if (!client || strcmp(pass, client->password))
 		{
-		//TODO: password authentication
-		//TODO: reauthenticate
-		printf("Reauthenticating...%s\n", user);
-		return respond_authenticate(connection);
+			printf("Reauthenticating...%s\n", user);
+			return respond_authenticate(connection);
 		}
 	}
 
@@ -232,7 +230,7 @@ static int handle_request(  void* cls,
 		//serialize client info
 		JsonObject* auth = json_object_new();
 		json_object_set_int_member(auth, "ID", client->ID);
-		json_object_set_string_member(auth, "Password", "PASSWORD");
+		json_object_set_string_member(auth, "Password", client->password);
 
 		JsonNode* node = json_node_new(JSON_NODE_OBJECT);
 		json_node_set_object(node, auth);
