@@ -9,5 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = 
-SUBDIRS = darxend libdarxen darxen-cli darxen-cgi darxen
+SUBDIRS = darxend libdarxen darxen-cli darxen-cgi darxen darxen-tablet
 

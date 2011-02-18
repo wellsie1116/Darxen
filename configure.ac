@@ -115,6 +115,8 @@ AC_CONFIG_FILES([
    src/darxen-cli/Makefile
    src/darxen-cgi/Makefile
    src/darxen/Makefile
+   src/darxen-tablet/Makefile
+   src/darxen-tablet/gltk/Makefile
    src/soap/Makefile
 ])
 
