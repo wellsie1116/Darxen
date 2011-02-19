@@ -22,6 +22,10 @@
 #define GLTK_H_C0Y0X5CZ
 
 #include <gltk/gltkwindow.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+//void gltk_init(
 
 #endif
 

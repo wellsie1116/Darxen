@@ -21,7 +21,53 @@
 #ifndef GLTKWINDOW_H_IHO82B7B
 #define GLTKWINDOW_H_IHO82B7B
 
+#include <glib-object.h>
 
+#include "gltkwidget.h"
+
+G_BEGIN_DECLS
+
+#define GLTK_WINDOW_ERROR gltk_window_error_quark()
+
+#define GLTK_TYPE_WINDOW				(gltk_window_get_type())
+#define GLTK_WINDOW(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), GLTK_TYPE_WINDOW, GltkWindow))
+#define GLTK_WINDOW_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), GLTK_TYPE_WINDOW, GltkWindowClass))
+#define GLTK_IS_WINDOW(obj)				(G_TYPE_CHECK_INSTANCE_TYPE((obj), GLTK_TYPE_WINDOW))
+#define GLTK_IS_WINDOW_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_WINDOW))
+#define GLTK_WINDOW_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_WINDOW, GltkWindowClass))
+
+typedef struct _GltkWindow			GltkWindow;
+typedef struct _GltkWindowClass		GltkWindowClass;
+
+struct _GltkWindow
+{
+	GObject parent;
+};
+
+struct _GltkWindowClass
+{
+	GObjectClass parent_class;
+	
+	/* signals */
+	/* virtual funcs */
+};
+
+typedef enum
+{
+	GLTK_WINDOW_ERROR_FAILED
+} GltkWindowError;
+
+GType			gltk_window_get_type	() G_GNUC_CONST;
+GltkWindow*		gltk_window_new			();
+
+/* Public functions here */
+void			gltk_window_set_size	(GltkWindow* window, int width, int height);
+void			gltk_window_render		(GltkWindow* window);
+void			gltk_window_set_root	(GltkWindow* window, GltkWidget* widget);
+
+GQuark			gltk_window_error_quark	();
+
+G_END_DECLS
 
 #endif
 

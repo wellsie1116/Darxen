@@ -10,17 +10,17 @@
 
 
 bin_PROGRAMS=darxen-tablet
-darxen_SOURCES = DarxenCommon.c DarxenCommon.h \
-	darxen-tablet.c \
+darxen_tablet_SOURCES = darxen-tablet.c \
 	../soap/client/soapC.c \
 	../soap/client/soapClient.c \
 	../libdarxen/libdarxen.la
 
-darxen_CFLAGS = -Wall -g -I../libdarxen $(gtkglext_CFLAGS) $(gsoap_CFLAGS)
-darxen_LDADD = $(gtkglext_LIBS) $(gsoap_LIBS) ../libdarxen/libdarxen.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
-darxen_LDFLAGS = -g
+darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(gtkglext_CFLAGS) $(gsoap_CFLAGS)
+darxen_tablet_LDADD = $(gtkglext_LIBS) $(gsoap_LIBS) ../libdarxen/libdarxen.la gltk/libgltk.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
+darxen_tablet_LDFLAGS = -g
 
 AM_LDFLAGS = -export-dynamic
 
+SUBDIRS = gltk
 EXTRA_DIST = 
 

@@ -18,10 +18,46 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GKTKWIDGET_H_R2CKXO8I
-#define GKTKWIDGET_H_R2CKXO8I
+#include <glib-object.h>
 
+G_BEGIN_DECLS
 
+#define GLTK_WIDGET_ERROR gltk_widget_error_quark()
 
-#endif
+#define GLTK_TYPE_WIDGET				(gltk_widget_get_type())
+#define GLTK_WIDGET(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), GLTK_TYPE_WIDGET, GltkWidget))
+#define GLTK_WIDGET_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), GLTK_TYPE_WIDGET, GltkWidgetClass))
+#define GLTK_IS_WIDGET(obj)				(G_TYPE_CHECK_INSTANCE_TYPE((obj), GLTK_TYPE_WIDGET))
+#define GLTK_IS_WIDGET_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_WIDGET))
+#define GLTK_WIDGET_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_WIDGET, GltkWidgetClass))
+
+typedef struct _GltkWidget			GltkWidget;
+typedef struct _GltkWidgetClass		GltkWidgetClass;
+
+struct _GltkWidget
+{
+	GObject parent;
+};
+
+struct _GltkWidgetClass
+{
+	GObjectClass parent_class;
+	
+	/* signals */
+	/* virtual funcs */
+};
+
+typedef enum
+{
+	GLTK_WIDGET_ERROR_FAILED
+} GltkWidgetError;
+
+GType			gltk_widget_get_type	() G_GNUC_CONST;
+GltkWidget*		gltk_widget_new			();
+
+/* Public functions here */
+
+GQuark			gltk_widget_error_quark	();
+
+G_END_DECLS
 
