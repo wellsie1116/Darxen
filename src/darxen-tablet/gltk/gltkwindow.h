@@ -39,6 +39,11 @@ G_BEGIN_DECLS
 typedef struct _GltkWindow			GltkWindow;
 typedef struct _GltkWindowClass		GltkWindowClass;
 
+typedef struct
+{
+	void (*request_render)(void);
+} GltkWindowCallbacks;
+
 struct _GltkWindow
 {
 	GObject parent;

@@ -88,6 +88,7 @@ PKG_CHECK_MODULES(gtkglext, gtkglext-1.0 >= 1.0.5)
 PKG_CHECK_MODULES(libxml, libxml-2.0 >= 2.6.27)
 PKG_CHECK_MODULES(gsoappp, gsoap++ >= 2.7)
 PKG_CHECK_MODULES(gsoap, gsoap >= 2.7)
+PKG_CHECK_MODULES(libgrip, libgrip-0.1 >= 0.1.2)
 
 PKG_CHECK_MODULES(curl, libcurl >= 7.18)
 

@@ -34,6 +34,8 @@ struct _GltkWindowPrivate
 	int height;
 
 	GltkWidget* root;
+
+	GltkWindowCallbacks callbacks;
 };
 
 static void
@@ -49,7 +51,12 @@ gltk_window_init(GltkWindow* self)
 {
 	USING_PRIVATE(self);
 
-	/* initialize fields generically here */
+	static GltkWindowCallbacks emptyCallbacks = {0,};
+
+	priv->width = -1;
+	priv->height = -1;
+	priv->root = NULL;
+	priv->callbacks = emptyCallbacks;
 }
 
 static void
@@ -58,17 +65,21 @@ gltk_window_finalize(GObject* gobject)
 	GltkWindow* self = GLTK_WINDOW(gobject);
 	USING_PRIVATE(self);
 
+	if (priv->root)
+		g_object_unref(priv->root);
+
 	/* Chain up to the parent class */
 	G_OBJECT_CLASS(gltk_window_parent_class)->finalize(gobject);
 }
 
 GltkWindow*
-gltk_window_new()
+gltk_window_new(GltkWindowCallbacks callbacks)
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_WINDOW, NULL);
 	GltkWindow* self = GLTK_WINDOW(gobject);
 
 	USING_PRIVATE(self);
+	priv->callbacks = callbacks;
 
 	return (GltkWindow*)gobject;
 }
@@ -79,12 +90,19 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 	USING_PRIVATE(window);
 	priv->width = width;
 	priv->height = height;
+	
+	if (priv->callbacks.request_render)
+		priv->callbacks.request_render();
 }
 
 void
 gltk_window_render(GltkWindow* window)
 {
 	USING_PRIVATE(window);
+
+	if (!priv->root)
+		return;
+	
 }
 
 void
@@ -92,7 +110,12 @@ gltk_window_set_root(GltkWindow* window, GltkWidget* widget)
 {
 	USING_PRIVATE(window);
 
+	g_object_ref(G_OBJECT(widget));
+
 	priv->root = widget;
+
+	if (priv->callbacks.request_render)
+		priv->callbacks.request_render();
 }
 
 GQuark
