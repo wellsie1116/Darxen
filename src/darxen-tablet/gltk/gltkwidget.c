@@ -35,8 +35,7 @@ enum
 typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
 struct _GltkWidgetPrivate
 {
-	GltkSize size;
-
+	GltkAllocation allocation;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -45,7 +44,9 @@ static void gltk_widget_dispose(GObject* gobject);
 static void gltk_widget_finalize(GObject* gobject);
 
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
-static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkSize size);
+static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
+
+static void gltk_widget_render_default(GltkWidget* widget);
 
 static void
 gltk_widget_class_init(GltkWidgetClass* klass)
@@ -54,16 +55,10 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 
 	g_type_class_add_private(klass, sizeof(GltkWidgetPrivate));
 	
-	gobject_class->dispose = gltk_widget_dispose;
-	gobject_class->finalize = gltk_widget_finalize;
-
-	klass->size_request = gltk_widget_real_size_request;
-	klass->size_allocate = gltk_widget_real_size_allocate;
-
 	signals[SIZE_REQUEST] = 
 		g_signal_new(	"size-request",
 						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_LAST,
+						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(GltkWidgetClass, size_request),
 						NULL, NULL,
 						g_cclosure_marshal_VOID__POINTER,
@@ -73,13 +68,21 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	signals[SIZE_ALLOCATE] = 
 		g_signal_new(	"size-allocate",
 						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_LAST,
+						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(GltkWidgetClass, size_allocate),
 						NULL, NULL,
 						g_cclosure_marshal_VOID__POINTER,
 						G_TYPE_NONE, 1,
 						G_TYPE_POINTER);
 	
+	gobject_class->dispose = gltk_widget_dispose;
+	gobject_class->finalize = gltk_widget_finalize;
+
+	klass->size_request = gltk_widget_real_size_request;
+	klass->size_allocate = gltk_widget_real_size_allocate;
+
+	klass->render = gltk_widget_render_default;
+
 }
 
 static void
@@ -87,11 +90,11 @@ gltk_widget_init(GltkWidget* self)
 {
 	USING_PRIVATE(self);
 
-	static GltkSize initialSize = {-1, -1};
+	static GltkAllocation initialAllocation = {0, 0, -1, -1};
 
-	self->parent = NULL;
+	self->parentWidget = NULL;
 
-	priv->size = initialSize;
+	priv->allocation = initialAllocation;
 }
 
 static void
@@ -100,10 +103,10 @@ gltk_widget_dispose(GObject* gobject)
 	GltkWidget* self = GLTK_WIDGET(gobject);
 	USING_PRIVATE(self);
 
-	if (self->parent)
+	if (self->parentWidget)
 	{
-		g_object_unref(G_OBJECT(self->parent));
-		self->parent = NULL;
+		g_object_unref(G_OBJECT(self->parentWidget));
+		self->parentWidget = NULL;
 	}
 
 	G_OBJECT_CLASS(gltk_widget_parent_class)->dispose(gobject);
@@ -132,13 +135,30 @@ gltk_widget_new()
 void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
+	g_message("Emitting size request");
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
 }
 
 void
-gltk_widget_size_allocate(GltkWidget* widget, GltkSize size)
+gltk_widget_size_allocate(GltkWidget* widget, GltkAllocation allocation)
 {
-	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, &size);
+	g_signal_emit(G_OBJECT(widget), signals[SIZE_ALLOCATE], 0, &allocation);
+}
+
+GltkAllocation
+gltk_widget_get_allocation(GltkWidget* widget)
+{
+	USING_PRIVATE(widget);
+
+	return priv->allocation;
+}
+
+void
+gltk_widget_render(GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
+	GLTK_WIDGET_GET_CLASS(widget)->render(widget);
 }
 
 GQuark
@@ -156,14 +176,24 @@ gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	*size = widget->requisition;
+	widget->requisition = *size;
 }
 
 static void
-gltk_widget_real_size_allocate(GltkWidget* widget, GltkSize size)
+gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	USING_PRIVATE(widget);
 
-	priv->size = size;
+	g_message("Allocating widget");
+
+	g_message("Widget allocation: %3d %3d %3d %3d", allocation->x, allocation->y, allocation->width, allocation->height);
+
+	priv->allocation = *allocation;
+}
+
+static void
+gltk_widget_render_default(GltkWidget* widget)
+{
+	g_warning("A widget forgot to override render method");
 }
 

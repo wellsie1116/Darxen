@@ -106,14 +106,14 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 	priv->width = width;
 	priv->height = height;
 	
-	if (priv->callbacks.request_render)
-		priv->callbacks.request_render();
-
 	if (priv->root)
 	{
-		GltkSize size = {width, height};
-		gltk_widget_size_allocate(priv->root, size);
+		GltkAllocation allocation = {0, 0, width, height};
+		gltk_widget_size_allocate(priv->root, allocation);
 	}
+
+	if (priv->callbacks.request_render)
+		priv->callbacks.request_render();
 }
 
 void
@@ -124,8 +124,7 @@ gltk_window_render(GltkWindow* window)
 	if (!priv->root)
 		return;
 	
-	//TODO: draw stuff
-	g_message("should render root here");
+	gltk_widget_render(priv->root);
 }
 
 void

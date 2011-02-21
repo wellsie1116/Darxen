@@ -22,6 +22,7 @@
 #define GLTKLABEL_H_OWJUAREV
 
 #include <glib-object.h>
+#include "gltkwidget.h"
 
 G_BEGIN_DECLS
 
@@ -58,7 +59,7 @@ typedef enum
 GType			gltk_label_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_label_new		(const gchar* text);
 
-void			gltk_label_set_text	(const gchar* text);
+void			gltk_label_set_text	(GltkLabel* label, const gchar* text);
 
 GQuark			gltk_label_error_quark	();
 

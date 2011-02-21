@@ -31,6 +31,14 @@ typedef struct
 	int height;
 } GltkSize;
 
+typedef struct
+{
+	int x;
+	int y;
+	int width;
+	int height;
+} GltkAllocation;
+
 #define GLTK_WIDGET_ERROR gltk_widget_error_quark()
 
 #define GLTK_TYPE_WIDGET				(gltk_widget_get_type())
@@ -45,7 +53,9 @@ typedef struct _GltkWidgetClass		GltkWidgetClass;
 
 struct _GltkWidget
 {
-	GltkWidget* parent;
+	GObject parent;
+
+	GltkWidget* parentWidget;
 
 	GltkSize requisition;
 };
@@ -59,8 +69,9 @@ struct _GltkWidgetClass
 								GltkSize* size);
 
 	void (*size_allocate)	(	GltkWidget* widget,
-								GltkSize size);
+								GltkAllocation* allocation);
 	/* virtual funcs */
+	void (*render)			(	GltkWidget* widget);
 };
 
 typedef enum
@@ -68,14 +79,17 @@ typedef enum
 	GLTK_WIDGET_ERROR_FAILED
 } GltkWidgetError;
 
-GType			gltk_widget_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_widget_new			();
+GType			gltk_widget_get_type		() G_GNUC_CONST;
+GltkWidget*		gltk_widget_new				();
 
 /* Public functions here */
-void			gltk_widget_size_request(GltkWidget* widget, GltkSize* size);
-void			gltk_widget_size_allocate(GltkWidget* widget, GltkSize size);
+void			gltk_widget_size_request	(GltkWidget* widget, GltkSize* size);
+void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation);
+GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);
 
-GQuark			gltk_widget_error_quark	();
+void			gltk_widget_render			(GltkWidget* widget);
+
+GQuark			gltk_widget_error_quark		();
 
 G_END_DECLS
 

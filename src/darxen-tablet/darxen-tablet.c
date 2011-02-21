@@ -81,16 +81,16 @@ expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 
-	glBegin(GL_TRIANGLES);
-	{
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex2i(50, 50);
-		glColor3f(0.0f, 1.0f, 0.0f);
-		glVertex2i(100, 50);
-		glColor3f(0.0f, 0.0f, 1.0f);
-		glVertex2i(75, 100);
-	}
-	glEnd();
+	// glBegin(GL_TRIANGLES);
+	// {
+	// 	glColor3f(1.0f, 0.0f, 0.0f);
+	// 	glVertex2i(50, 50);
+	// 	glColor3f(0.0f, 1.0f, 0.0f);
+	// 	glVertex2i(100, 50);
+	// 	glColor3f(0.0f, 0.0f, 1.0f);
+	// 	glVertex2i(75, 100);
+	// }
+	// glEnd();
 
 	gltk_window_render(glWindow);
 
@@ -107,6 +107,7 @@ static gboolean
 configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 {
 	g_message("Configure");
+	gltk_window_set_size(glWindow, event->width, event->height);
 
 	GdkGLContext *glcontext = gtk_widget_get_gl_context(darea);
 	GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(darea);
@@ -157,8 +158,8 @@ GltkWindow* create_window()
 	GltkWidget* label3 = gltk_label_new("label 3");
 
 	gltk_hbox_append_widget(GLTK_HBOX(hbox), label1, FALSE, FALSE);
-	gltk_hbox_append_widget(GLTK_HBOX(hbox), label2, TRUE, TRUE);
-	gltk_hbox_append_widget(GLTK_HBOX(hbox), label3, TRUE, FALSE);
+	gltk_hbox_append_widget(GLTK_HBOX(hbox), label2, TRUE, FALSE);
+	gltk_hbox_append_widget(GLTK_HBOX(hbox), label3, TRUE, TRUE);
 
 	gltk_window_set_root(win, hbox);
 
