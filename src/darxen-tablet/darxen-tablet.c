@@ -26,7 +26,7 @@
 
 #include "../soap/client/DarxenService.nsmap"
 
-#include <gltk/gltkwindow.h>
+#include <gltk/gltk.h>
 
 static GtkWidget* window;
 static GtkWidget* darea;
@@ -41,13 +41,27 @@ gesture_callback(	GtkWidget* widget,
 {
 	if (time_type == GRIP_TIME_START)
 	{
-		g_message("Gesture started");
+		switch (event->type)
+		{
+			case GRIP_GESTURE_DRAG:
+				g_message("Gesture started: Drag");
+			break;
+			case GRIP_GESTURE_PINCH:
+				g_message("Gesture started: Pinch");
+			break;
+			case GRIP_GESTURE_ROTATE:
+				g_message("Gesture started: Rotate");
+			break;
+			case GRIP_GESTURE_TAP:
+				g_message("Gesture started: Tap");
+			break;
+		}
 	}
 	else if (time_type == GRIP_TIME_END)
 	{
 		g_message("Gesture ended");
 	}
-	else
+	else // (time_type == GRIP_TIME_UPDATE)
 	{
 	}
 }
@@ -127,11 +141,34 @@ request_render()
 	gtk_widget_queue_draw(darea);
 }
 
+GltkWindow* create_window()
+{
+	GltkWindowCallbacks callbacks;
+	GltkWindow* win;
+
+	callbacks.request_render = request_render;
+
+	win = gltk_window_new(callbacks);
+
+	GltkWidget* hbox = gltk_hbox_new();
+
+	GltkWidget* label1 = gltk_label_new("label 1");
+	GltkWidget* label2 = gltk_label_new("label 2");
+	GltkWidget* label3 = gltk_label_new("label 3");
+
+	gltk_hbox_append_widget(GLTK_HBOX(hbox), label1, FALSE, FALSE);
+	gltk_hbox_append_widget(GLTK_HBOX(hbox), label2, TRUE, TRUE);
+	gltk_hbox_append_widget(GLTK_HBOX(hbox), label3, TRUE, FALSE);
+
+	gltk_window_set_root(win, hbox);
+
+	return win;
+}
+
 int main(int argc, char *argv[])
 {
 	GdkGLConfig* glconfig;
 	GripGestureManager* manager;
-	GltkWindowCallbacks callbacks;
 
 	gtk_init(&argc, &argv);
 	gtk_gl_init(&argc, &argv);
@@ -166,8 +203,7 @@ int main(int argc, char *argv[])
 	g_signal_connect(darea, "configure-event", G_CALLBACK(configure), NULL);
 	g_signal_connect(darea, "expose-event", G_CALLBACK(expose), NULL);
 
-	callbacks.request_render = request_render;
-	glWindow = gltk_window_new(callbacks);
+	glWindow = create_window();
 
 	gtk_widget_show_all(window);
 	gtk_main();

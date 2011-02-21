@@ -25,6 +25,7 @@ G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 #define USING_PRIVATE(obj) GltkWindowPrivate* priv = GLTK_WINDOW_GET_PRIVATE(obj)
 #define GLTK_WINDOW_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_WINDOW, GltkWindowPrivate))
 
+static void gltk_window_dispose(GObject* gobject);
 static void gltk_window_finalize(GObject* gobject);
 
 typedef struct _GltkWindowPrivate		GltkWindowPrivate;
@@ -41,9 +42,12 @@ struct _GltkWindowPrivate
 static void
 gltk_window_class_init(GltkWindowClass* klass)
 {
+	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+
 	g_type_class_add_private(klass, sizeof(GltkWindowPrivate));
 	
-	klass->parent_class.finalize = gltk_window_finalize;
+	gobject_class->dispose = gltk_window_dispose;
+	gobject_class->finalize = gltk_window_finalize;
 }
 
 static void
@@ -60,15 +64,26 @@ gltk_window_init(GltkWindow* self)
 }
 
 static void
-gltk_window_finalize(GObject* gobject)
+gltk_window_dispose(GObject* gobject)
 {
 	GltkWindow* self = GLTK_WINDOW(gobject);
 	USING_PRIVATE(self);
 
 	if (priv->root)
+	{
 		g_object_unref(priv->root);
+		priv->root = NULL;
+	}
 
-	/* Chain up to the parent class */
+	G_OBJECT_CLASS(gltk_window_parent_class)->dispose(gobject);
+}
+
+static void
+gltk_window_finalize(GObject* gobject)
+{
+	GltkWindow* self = GLTK_WINDOW(gobject);
+	USING_PRIVATE(self);
+
 	G_OBJECT_CLASS(gltk_window_parent_class)->finalize(gobject);
 }
 
@@ -93,6 +108,12 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 	
 	if (priv->callbacks.request_render)
 		priv->callbacks.request_render();
+
+	if (priv->root)
+	{
+		GltkSize size = {width, height};
+		gltk_widget_size_allocate(priv->root, size);
+	}
 }
 
 void
@@ -103,6 +124,8 @@ gltk_window_render(GltkWindow* window)
 	if (!priv->root)
 		return;
 	
+	//TODO: draw stuff
+	g_message("should render root here");
 }
 
 void

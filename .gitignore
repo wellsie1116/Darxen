@@ -16,3 +16,4 @@ stamp-h1
 *.la
 *.swp
 TAGS
+Session.vim

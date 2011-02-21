@@ -27,25 +27,59 @@ G_DEFINE_TYPE(GltkWidget, gltk_widget, G_TYPE_OBJECT)
 
 enum
 {
+	SIZE_REQUEST,
+	SIZE_ALLOCATE,
 	LAST_SIGNAL
 };
 
 typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
 struct _GltkWidgetPrivate
 {
+	GltkSize size;
 
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
 
+static void gltk_widget_dispose(GObject* gobject);
 static void gltk_widget_finalize(GObject* gobject);
+
+static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
+static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkSize size);
 
 static void
 gltk_widget_class_init(GltkWidgetClass* klass)
 {
+	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+
 	g_type_class_add_private(klass, sizeof(GltkWidgetPrivate));
 	
-	klass->parent_class.finalize = gltk_widget_finalize;
+	gobject_class->dispose = gltk_widget_dispose;
+	gobject_class->finalize = gltk_widget_finalize;
+
+	klass->size_request = gltk_widget_real_size_request;
+	klass->size_allocate = gltk_widget_real_size_allocate;
+
+	signals[SIZE_REQUEST] = 
+		g_signal_new(	"size-request",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, size_request),
+						NULL, NULL,
+						g_cclosure_marshal_VOID__POINTER,
+						G_TYPE_NONE, 1,
+						G_TYPE_POINTER);
+
+	signals[SIZE_ALLOCATE] = 
+		g_signal_new(	"size-allocate",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, size_allocate),
+						NULL, NULL,
+						g_cclosure_marshal_VOID__POINTER,
+						G_TYPE_NONE, 1,
+						G_TYPE_POINTER);
+	
 }
 
 static void
@@ -53,7 +87,26 @@ gltk_widget_init(GltkWidget* self)
 {
 	USING_PRIVATE(self);
 
-	/* initialize fields generically here */
+	static GltkSize initialSize = {-1, -1};
+
+	self->parent = NULL;
+
+	priv->size = initialSize;
+}
+
+static void
+gltk_widget_dispose(GObject* gobject)
+{
+	GltkWidget* self = GLTK_WIDGET(gobject);
+	USING_PRIVATE(self);
+
+	if (self->parent)
+	{
+		g_object_unref(G_OBJECT(self->parent));
+		self->parent = NULL;
+	}
+
+	G_OBJECT_CLASS(gltk_widget_parent_class)->dispose(gobject);
 }
 
 static void
@@ -62,9 +115,7 @@ gltk_widget_finalize(GObject* gobject)
 	GltkWidget* self = GLTK_WIDGET(gobject);
 	USING_PRIVATE(self);
 
-	/* Chain up to the parent class */
 	G_OBJECT_CLASS(gltk_widget_parent_class)->finalize(gobject);
-
 }
 
 GltkWidget*
@@ -78,6 +129,17 @@ gltk_widget_new()
 	return (GltkWidget*)gobject;
 }
 
+void
+gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
+{
+	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+}
+
+void
+gltk_widget_size_allocate(GltkWidget* widget, GltkSize size)
+{
+	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, &size);
+}
 
 GQuark
 gltk_widget_error_quark()
@@ -88,4 +150,20 @@ gltk_widget_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
+	*size = widget->requisition;
+}
+
+static void
+gltk_widget_real_size_allocate(GltkWidget* widget, GltkSize size)
+{
+	USING_PRIVATE(widget);
+
+	priv->size = size;
+}
 

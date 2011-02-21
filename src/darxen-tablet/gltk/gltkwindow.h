@@ -27,6 +27,12 @@
 
 G_BEGIN_DECLS
 
+//TODO: use proper signals instead
+typedef struct
+{
+	void (*request_render)(void);
+} GltkWindowCallbacks;
+
 #define GLTK_WINDOW_ERROR gltk_window_error_quark()
 
 #define GLTK_TYPE_WINDOW				(gltk_window_get_type())
@@ -38,11 +44,6 @@ G_BEGIN_DECLS
 
 typedef struct _GltkWindow			GltkWindow;
 typedef struct _GltkWindowClass		GltkWindowClass;
-
-typedef struct
-{
-	void (*request_render)(void);
-} GltkWindowCallbacks;
 
 struct _GltkWindow
 {

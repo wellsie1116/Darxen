@@ -20,7 +20,16 @@
 
 #include <glib-object.h>
 
+#ifndef GLTKWIDGET_H_K1ZIAA3N
+#define GLTKWIDGET_H_K1ZIAA3N
+
 G_BEGIN_DECLS
+
+typedef struct
+{
+	int width;
+	int height;
+} GltkSize;
 
 #define GLTK_WIDGET_ERROR gltk_widget_error_quark()
 
@@ -36,7 +45,9 @@ typedef struct _GltkWidgetClass		GltkWidgetClass;
 
 struct _GltkWidget
 {
-	GObject parent;
+	GltkWidget* parent;
+
+	GltkSize requisition;
 };
 
 struct _GltkWidgetClass
@@ -44,6 +55,11 @@ struct _GltkWidgetClass
 	GObjectClass parent_class;
 	
 	/* signals */
+	void (*size_request)	(	GltkWidget* widget,
+								GltkSize* size);
+
+	void (*size_allocate)	(	GltkWidget* widget,
+								GltkSize size);
 	/* virtual funcs */
 };
 
@@ -56,8 +72,12 @@ GType			gltk_widget_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_widget_new			();
 
 /* Public functions here */
+void			gltk_widget_size_request(GltkWidget* widget, GltkSize* size);
+void			gltk_widget_size_allocate(GltkWidget* widget, GltkSize size);
 
 GQuark			gltk_widget_error_quark	();
 
 G_END_DECLS
+
+#endif
 
