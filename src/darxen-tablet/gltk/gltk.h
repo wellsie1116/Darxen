@@ -23,7 +23,9 @@
 
 #include <gltk/gltkwindow.h>
 #include <gltk/gltkwidget.h>
+#include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
+#include <gltk/gltkvbox.h>
 #include <gltk/gltklabel.h>
 
 #include <GL/gl.h>

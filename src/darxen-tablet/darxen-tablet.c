@@ -142,6 +142,21 @@ request_render()
 	gtk_widget_queue_draw(darea);
 }
 
+GltkWidget* create_hbox()
+{
+	GltkWidget* hbox = gltk_hbox_new();
+
+	GltkWidget* label1 = gltk_label_new("red");
+	GltkWidget* label2 = gltk_label_new("green");
+	GltkWidget* label3 = gltk_label_new("blue");
+
+	gltk_box_append_widget(GLTK_BOX(hbox), label1, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(hbox), label2, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(hbox), label3, TRUE, TRUE);
+
+	return hbox;
+}
+
 GltkWindow* create_window()
 {
 	GltkWindowCallbacks callbacks;
@@ -151,17 +166,13 @@ GltkWindow* create_window()
 
 	win = gltk_window_new(callbacks);
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* vbox = gltk_vbox_new();
 
-	GltkWidget* label1 = gltk_label_new("label 1");
-	GltkWidget* label2 = gltk_label_new("label 2");
-	GltkWidget* label3 = gltk_label_new("label 3");
+	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, TRUE);
 
-	gltk_hbox_append_widget(GLTK_HBOX(hbox), label1, FALSE, FALSE);
-	gltk_hbox_append_widget(GLTK_HBOX(hbox), label2, TRUE, FALSE);
-	gltk_hbox_append_widget(GLTK_HBOX(hbox), label3, TRUE, TRUE);
-
-	gltk_window_set_root(win, hbox);
+	gltk_window_set_root(win, vbox);
 
 	return win;
 }

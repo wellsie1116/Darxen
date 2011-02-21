@@ -1,4 +1,4 @@
-/* gltkhbox.h
+/* gltkvbox.h
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,8 +18,8 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GLTKHBOX_H_N3G1RQP6
-#define GLTKHBOX_H_N3G1RQP6
+#ifndef GLTKVBOX_H_N3G1RQP6
+#define GLTKVBOX_H_N3G1RQP6
 
 #include <glib-object.h>
 
@@ -27,24 +27,24 @@
 
 G_BEGIN_DECLS
 
-#define GLTK_HBOX_ERROR				gltk_hbox_error_quark()
+#define GLTK_VBOX_ERROR				gltk_vbox_error_quark()
 
-#define GLTK_TYPE_HBOX				(gltk_hbox_get_type())
-#define GLTK_HBOX(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), GLTK_TYPE_HBOX, GltkHBox))
-#define GLTK_HBOX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), GLTK_TYPE_HBOX, GltkHBoxClass))
-#define GLTK_IS_HBOX(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), GLTK_TYPE_HBOX))
-#define GLTK_IS_HBOX_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_HBOX))
-#define GLTK_HBOX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_HBOX, GltkHBoxClass))
+#define GLTK_TYPE_VBOX				(gltk_vbox_get_type())
+#define GLTK_VBOX(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), GLTK_TYPE_VBOX, GltkVBox))
+#define GLTK_VBOX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), GLTK_TYPE_VBOX, GltkVBoxClass))
+#define GLTK_IS_VBOX(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), GLTK_TYPE_VBOX))
+#define GLTK_IS_VBOX_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_VBOX))
+#define GLTK_VBOX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_VBOX, GltkVBoxClass))
 
-typedef struct _GltkHBox			GltkHBox;
-typedef struct _GltkHBoxClass		GltkHBoxClass;
+typedef struct _GltkVBox			GltkVBox;
+typedef struct _GltkVBoxClass		GltkVBoxClass;
 
-struct _GltkHBox
+struct _GltkVBox
 {
 	GltkBox parent;
 };
 
-struct _GltkHBoxClass
+struct _GltkVBoxClass
 {
 	GltkBoxClass parent_class;
 	
@@ -54,15 +54,15 @@ struct _GltkHBoxClass
 
 typedef enum
 {
-	GLTK_HBOX_ERROR_FAILED
-} GltkHBoxError;
+	GLTK_VBOX_ERROR_FAILED
+} GltkVBoxError;
 
-GType			gltk_hbox_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_hbox_new		();
+GType			gltk_vbox_get_type	() G_GNUC_CONST;
+GltkWidget*		gltk_vbox_new		();
 
 /* Public functions here */
 
-GQuark			gltk_hbox_error_quark	();
+GQuark			gltk_vbox_error_quark	();
 
 G_END_DECLS
 

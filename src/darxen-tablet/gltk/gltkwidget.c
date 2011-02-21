@@ -135,7 +135,6 @@ gltk_widget_new()
 void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
-	g_message("Emitting size request");
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
 }
 
@@ -183,8 +182,6 @@ static void
 gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	USING_PRIVATE(widget);
-
-	g_message("Allocating widget");
 
 	g_message("Widget allocation: %3d %3d %3d %3d", allocation->x, allocation->y, allocation->width, allocation->height);
 

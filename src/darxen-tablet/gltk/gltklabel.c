@@ -140,11 +140,15 @@ gltk_label_render(GltkWidget* label)
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(label));
 
-	g_message("Rendering with allocation: %3d %3d %3d %3d", allocation.x, allocation.y, allocation.width, allocation.height);
-
 	glBegin(GL_QUADS);
 	{
-		glColor3f(1.0f, 0.0f, 0.0f);
+		if (!g_strcmp0(priv->text, "red"))
+			glColor3f(1.0f, 0.0f, 0.0f);
+		else if (!g_strcmp0(priv->text, "green"))
+			glColor3f(0.0f, 1.0f, 0.0f);
+		else
+			glColor3f(0.0f, 0.0f, 1.0f);
+
 		glVertex2i(0, 0);
 		glVertex2i(0, allocation.height);
 		glVertex2i(allocation.width, allocation.height);

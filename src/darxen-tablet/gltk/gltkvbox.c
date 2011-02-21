@@ -1,4 +1,4 @@
-/* gltkhbox.c
+/* gltkvbox.c
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,49 +18,49 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gltkhbox.h"
+#include "gltkvbox.h"
 
-G_DEFINE_TYPE(GltkHBox, gltk_hbox, GLTK_TYPE_BOX)
+G_DEFINE_TYPE(GltkVBox, gltk_vbox, GLTK_TYPE_BOX)
 
-#define USING_PRIVATE(obj) GltkHBoxPrivate* priv = GLTK_HBOX_GET_PRIVATE(obj)
-#define GLTK_HBOX_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_HBOX, GltkHBoxPrivate))
+#define USING_PRIVATE(obj) GltkVBoxPrivate* priv = GLTK_VBOX_GET_PRIVATE(obj)
+#define GLTK_VBOX_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_VBOX, GltkVBoxPrivate))
 
 enum
 {
 	LAST_SIGNAL
 };
 
-typedef struct _GltkHBoxPrivate		GltkHBoxPrivate;
-struct _GltkHBoxPrivate
+typedef struct _GltkVBoxPrivate		GltkVBoxPrivate;
+struct _GltkVBoxPrivate
 {
 	int dummy;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
 
-static void gltk_hbox_dispose(GObject* gobject);
-static void gltk_hbox_finalize(GObject* gobject);
+static void gltk_vbox_dispose(GObject* gobject);
+static void gltk_vbox_finalize(GObject* gobject);
 
-static void gltk_hbox_size_request(GltkWidget* widget, GltkSize* size);
-static void gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
+static void gltk_vbox_size_request(GltkWidget* widget, GltkSize* size);
+static void gltk_vbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 
 static void
-gltk_hbox_class_init(GltkHBoxClass* klass)
+gltk_vbox_class_init(GltkVBoxClass* klass)
 {
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
 	GltkWidgetClass* gltkwidget_class = GLTK_WIDGET_CLASS(klass);
 
-	g_type_class_add_private(klass, sizeof(GltkHBoxPrivate));
+	g_type_class_add_private(klass, sizeof(GltkVBoxPrivate));
 	
-	gobject_class->dispose = gltk_hbox_dispose;
-	gobject_class->finalize = gltk_hbox_finalize;
+	gobject_class->dispose = gltk_vbox_dispose;
+	gobject_class->finalize = gltk_vbox_finalize;
 	
-	gltkwidget_class->size_request = gltk_hbox_size_request;
-	gltkwidget_class->size_allocate = gltk_hbox_size_allocate;
+	gltkwidget_class->size_request = gltk_vbox_size_request;
+	gltkwidget_class->size_allocate = gltk_vbox_size_allocate;
 }
 
 static void
-gltk_hbox_init(GltkHBox* self)
+gltk_vbox_init(GltkVBox* self)
 {
 	USING_PRIVATE(self);
 
@@ -68,32 +68,32 @@ gltk_hbox_init(GltkHBox* self)
 }
 
 static void
-gltk_hbox_dispose(GObject* gobject)
+gltk_vbox_dispose(GObject* gobject)
 {
-	GltkHBox* self = GLTK_HBOX(gobject);
+	GltkVBox* self = GLTK_VBOX(gobject);
 	USING_PRIVATE(self);
 
 	//free and release references
 
-	G_OBJECT_CLASS(gltk_hbox_parent_class)->dispose(gobject);
+	G_OBJECT_CLASS(gltk_vbox_parent_class)->dispose(gobject);
 }
 
 static void
-gltk_hbox_finalize(GObject* gobject)
+gltk_vbox_finalize(GObject* gobject)
 {
-	GltkHBox* self = GLTK_HBOX(gobject);
+	GltkVBox* self = GLTK_VBOX(gobject);
 	USING_PRIVATE(self);
 
 	//free memory
 
-	G_OBJECT_CLASS(gltk_hbox_parent_class)->finalize(gobject);
+	G_OBJECT_CLASS(gltk_vbox_parent_class)->finalize(gobject);
 }
 
 GltkWidget*
-gltk_hbox_new()
+gltk_vbox_new()
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_HBOX, NULL);
-	GltkHBox* self = GLTK_HBOX(gobject);
+	GObject *gobject = g_object_new(GLTK_TYPE_VBOX, NULL);
+	GltkVBox* self = GLTK_VBOX(gobject);
 
 	USING_PRIVATE(self);
 
@@ -102,9 +102,9 @@ gltk_hbox_new()
 
 
 GQuark
-gltk_hbox_error_quark()
+gltk_vbox_error_quark()
 {
-	return g_quark_from_static_string("gltk-hbox-error-quark");
+	return g_quark_from_static_string("gltk-vbox-error-quark");
 }
 
 /*********************
@@ -112,7 +112,7 @@ gltk_hbox_error_quark()
  *********************/
 
 static void
-gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
+gltk_vbox_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
 
@@ -128,27 +128,27 @@ gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 		GltkSize childSize;
 	
 		gltk_widget_size_request(child->widget, &childSize);
-		size->width += childSize.width;
-		size->height = MAX(size->height, childSize.height);
+		size->width = MAX(size->width, childSize.width);
+		size->height += childSize.height;
 	
 		pChildren = pChildren->next;
 	}
-	GLTK_WIDGET_CLASS(gltk_hbox_parent_class)->size_request(widget, size);
+	GLTK_WIDGET_CLASS(gltk_vbox_parent_class)->size_request(widget, size);
 }
 
 static void
-gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
+gltk_vbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	USING_PRIVATE(widget);
 
 	GltkBox* box = GLTK_BOX(widget);
 
-	int x = 0;
+	int y = 0;
 
 	GltkSize requisition;
    	gltk_widget_size_request(widget, &requisition);
 
-	int extraWidth = allocation->width - requisition.width;
+	int extraHeight = allocation->height - requisition.height;
 
 	//allocate space for the children, diving the extra space appropriately
 	GSList* pChildren = box->children;
@@ -157,38 +157,38 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 		GltkSize childSize;
 		gltk_widget_size_request(child->widget, &childSize);
-		GltkAllocation childAllocation = {0, 0, childSize.width, allocation->height};
+		GltkAllocation childAllocation = {0, 0, allocation->width, childSize.height};
 	
 		if (child->expand)
 		{
-			int addWidth = extraWidth / box->expandCount;
+			int addHeight = extraHeight / box->expandCount;
 			
 			if (child->fill)
 			{
-				childAllocation.x = x;
+				childAllocation.y = y;
 
-				childAllocation.width += addWidth;
+				childAllocation.height += addHeight;
 
-				x += childAllocation.width;
+				y += childAllocation.height;
 			}
 			else
 			{
-				childAllocation.x = x + addWidth / 2;
+				childAllocation.y = y + addHeight / 2;
 
-				x += childAllocation.width + addWidth;
+				y += childAllocation.height + addHeight;
 			}
 		}
 		else
 		{
-			childAllocation.x = x;
+			childAllocation.y = y;
 
-			x += childAllocation.width;
+			y += childAllocation.height;
 		}
 
 		gltk_widget_size_allocate(child->widget, childAllocation);
 	
 		pChildren = pChildren->next;
 	}
-	GLTK_WIDGET_CLASS(gltk_hbox_parent_class)->size_allocate(widget, allocation);
+	GLTK_WIDGET_CLASS(gltk_vbox_parent_class)->size_allocate(widget, allocation);
 }
 
