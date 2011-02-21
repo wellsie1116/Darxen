@@ -191,6 +191,6 @@ gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 static void
 gltk_widget_render_default(GltkWidget* widget)
 {
-	g_warning("A widget forgot to override render method");
+	g_warning("A widget forgot to override the render method");
 }
 

@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
 	manager = grip_gesture_manager_get();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title(GTK_WINDOW(window), "Darxen Tablet Edition");
 	gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
 	g_signal_connect(window, "destroy", G_CALLBACK(destroy), NULL);
 
