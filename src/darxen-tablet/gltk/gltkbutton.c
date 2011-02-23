@@ -49,19 +49,22 @@ static void gltk_button_finalize(GObject* gobject);
 static void gltk_button_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_button_render(GltkWidget* widget);
 
+static void gltk_button_clicked(GltkWidget* widget);
+
 static void
 gltk_button_class_init(GltkButtonClass* klass)
 {
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
 	GltkWidgetClass* gltkwidget_class = GLTK_WIDGET_CLASS(klass);
+	GltkButtonClass* gltkbutton_class = GLTK_BUTTON_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(GltkButtonPrivate));
 	
 	signals[CLICKED] = 
-		g_signal_new(	"size-request",
+		g_signal_new(	"clicked",
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
-						G_STRUCT_OFFSET(GltkWidgetClass, size_request),
+						G_STRUCT_OFFSET(GltkButtonClass, clicked),
 						NULL, NULL,
 						g_cclosure_marshal_VOID__VOID,
 						G_TYPE_NONE, 0);
@@ -71,6 +74,8 @@ gltk_button_class_init(GltkButtonClass* klass)
 
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
+
+	gltkbutton_class->clicked = gltk_button_clicked;
 }
 
 static void
@@ -116,6 +121,13 @@ gltk_button_new(gchar* text)
 	return (GltkWidget*)gobject;
 }
 
+const gchar*
+gltk_button_get_text(GltkButton* button)
+{
+	USING_PRIVATE(button);
+	
+	return priv->text;
+}
 
 GQuark
 gltk_button_error_quark()
@@ -155,5 +167,10 @@ gltk_button_render(GltkWidget* widget)
 		glVertex2i(0, 0);
 	}
 	glEnd();
+}
+
+static void gltk_button_clicked(GltkWidget* widget)
+{
+	g_message("A button was clicked...yay");
 }
 

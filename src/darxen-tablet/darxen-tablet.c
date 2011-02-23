@@ -67,6 +67,27 @@ gesture_callback(	GtkWidget* widget,
 }
 
 static gboolean
+button_press_event(GtkWidget* widget, GdkEventButton* event)
+{
+	g_message("Press event");
+	return TRUE;
+}
+
+static gboolean
+button_release_event(GtkWidget* widget, GdkEventButton* event)
+{
+	g_message("Release event");
+	return TRUE;
+}
+
+static gboolean
+motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
+{
+	g_message("motion event");
+	return TRUE;
+}
+
+static gboolean
 expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 {
 	g_message("Expose");
@@ -131,9 +152,16 @@ configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 }
 
 static void
-destroy(GtkWidget *widget, gpointer data)
+destroy(GtkWidget* widget, gpointer data)
 {
     gtk_main_quit();
+}
+
+static void
+button_clicked(GtkWidget* widget, gpointer user_data)
+{
+	const gchar* text = gltk_button_get_text(GLTK_BUTTON(widget));
+	printf("Button Clicked: %s\n", text);
 }
 
 void
@@ -181,6 +209,10 @@ GltkWindow* create_window()
 	gltk_box_append_widget(GLTK_BOX(hbox), button2, TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), button3, TRUE, FALSE);
 
+	g_signal_connect(button1, "clicked", (GCallback)button_clicked, NULL);
+	g_signal_connect(button2, "clicked", (GCallback)button_clicked, NULL);
+	g_signal_connect(button3, "clicked", (GCallback)button_clicked, NULL);
+
 	gltk_box_append_widget(GLTK_BOX(vbox), hbox, TRUE, FALSE);
 	
 	gltk_window_set_root(win, vbox);
@@ -205,7 +237,7 @@ int main(int argc, char *argv[])
 
 	darea = gtk_drawing_area_new();
 	gtk_container_add(GTK_CONTAINER(window), darea);
-	gtk_widget_set_events(darea, GDK_EXPOSURE_MASK);
+	gtk_widget_add_events(darea, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
 
 	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_PINCH,
 										 2, gesture_callback, NULL, NULL);
@@ -215,6 +247,10 @@ int main(int argc, char *argv[])
 										 2, gesture_callback, NULL, NULL);
 	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_TAP,
 										 2, gesture_callback, NULL, NULL);
+
+	g_signal_connect(darea, "button-press-event", (GCallback)button_press_event, NULL);
+	g_signal_connect(darea, "button-release-event", (GCallback)button_release_event, NULL);
+	g_signal_connect(darea, "motion-notify-event", (GCallback)motion_notify_event, NULL);
 
 	glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE);
 	g_assert(glconfig);

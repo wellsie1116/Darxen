@@ -60,7 +60,7 @@ typedef enum
 GType			gltk_button_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_button_new			(gchar* text);
 
-/* Public functions here */
+const gchar*	gltk_button_get_text	(GltkButton* button);
 
 GQuark			gltk_button_error_quark	();
 

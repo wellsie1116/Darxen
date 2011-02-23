@@ -1,4 +1,4 @@
-/* gltk.h
+/* gltkinput.h
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,22 +18,35 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GLTK_H_C0Y0X5CZ
-#define GLTK_H_C0Y0X5CZ
+#ifndef GLTKINPUT_H_SWZAO5AI
+#define GLTKINPUT_H_SWZAO5AI
 
-#include <gltk/gltkinput.h>
-#include <gltk/gltkwindow.h>
-#include <gltk/gltkwidget.h>
-#include <gltk/gltkbox.h>
-#include <gltk/gltkhbox.h>
-#include <gltk/gltkvbox.h>
-#include <gltk/gltklabel.h>
-#include <gltk/gltkbutton.h>
+typedef enum   _GltkTouchEventType		GltkTouchEventType;
+typedef struct _GltkTouchPosition  		GltkTouchPosition;
+typedef struct _GltkTouchInputEvent		GltkTouchInputEvent;
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+enum _GltkTouchEventType
+{
+	TOUCH_BEGIN,
+	TOUCH_MOVE,
+	TOUCH_END
+};
 
-//void gltk_init(
+struct _GltkTouchPosition
+{
+	int x;
+	int y;
+};
+
+struct _GltkTouchInputEvent
+{
+	int id;
+	GltkTouchEventType type;
+	int fingers;
+	GltkTouchPosition* positions;
+};
+
+void	gltk_touch_free_input_event		(GltkTouchInputEvent event);
 
 #endif
 

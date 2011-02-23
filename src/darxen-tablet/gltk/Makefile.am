@@ -17,7 +17,8 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkhbox.c gltkhbox.h \
 			 gltkvbox.c gltkvbox.h \
 			 gltklabel.c gltklabel.h \
-			 gltkbutton.c gltkbutton.h
+			 gltkbutton.c gltkbutton.h \
+			 gltkinput.c gltkinput.h
 
 libgltk_la_LDFLAGS = -g -version-info 1:1:0
 libgltk_la_CFLAGS = $(glib_CFLAGS) -Wall
