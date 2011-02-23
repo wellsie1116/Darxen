@@ -27,6 +27,7 @@
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>
 #include <gltk/gltklabel.h>
+#include <gltk/gltkbutton.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>

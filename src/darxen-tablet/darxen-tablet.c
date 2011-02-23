@@ -172,6 +172,17 @@ GltkWindow* create_window()
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, TRUE);
 
+	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* button1 = gltk_button_new("btn");
+	GltkWidget* button2 = gltk_button_new("Button");
+	GltkWidget* button3 = gltk_button_new("This is a button");
+
+	gltk_box_append_widget(GLTK_BOX(hbox), button1, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(hbox), button2, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(hbox), button3, TRUE, FALSE);
+
+	gltk_box_append_widget(GLTK_BOX(vbox), hbox, TRUE, FALSE);
+	
 	gltk_window_set_root(win, vbox);
 
 	return win;
