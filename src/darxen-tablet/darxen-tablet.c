@@ -66,10 +66,22 @@ gesture_callback(	GtkWidget* widget,
 	}
 }
 
+static int event_id = 100; //FIXME: hack
+
 static gboolean
 button_press_event(GtkWidget* widget, GdkEventButton* event)
 {
 	g_message("Press event");
+	GltkTouchInputEvent touchEvent;
+	touchEvent.id = event_id;
+	touchEvent.type = TOUCH_BEGIN;
+	touchEvent.fingers = 1;
+	touchEvent.positions = g_new(GltkTouchPosition, 1);
+	touchEvent.positions->x = (int)event->x;
+	touchEvent.positions->y = (int)event->y;
+
+	gltk_touch_free_input_event(touchEvent);
+
 	return TRUE;
 }
 
@@ -77,13 +89,34 @@ static gboolean
 button_release_event(GtkWidget* widget, GdkEventButton* event)
 {
 	g_message("Release event");
+	GltkTouchInputEvent touchEvent;
+	touchEvent.id = event_id++;
+	touchEvent.type = TOUCH_MOVE;
+	touchEvent.fingers = 1;
+	touchEvent.positions = g_new(GltkTouchPosition, 1);
+	touchEvent.positions->x = (int)event->x;
+	touchEvent.positions->y = (int)event->y;
+
+	gltk_touch_free_input_event(touchEvent);
+
 	return TRUE;
 }
 
 static gboolean
 motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 {
-	g_message("motion event");
+	GltkTouchInputEvent touchEvent;
+	touchEvent.id = event_id;
+	touchEvent.type = TOUCH_END;
+	touchEvent.fingers = 1;
+	touchEvent.positions = g_new(GltkTouchPosition, 1);
+	touchEvent.positions->x = (int)event->x;
+	touchEvent.positions->y = (int)event->y;
+
+	gltk_touch_free_input_event(touchEvent);
+
+	g_message("Motion event: %lf, %lf", event->x, event->y);
+
 	return TRUE;
 }
 
