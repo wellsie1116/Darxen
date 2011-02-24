@@ -1,4 +1,4 @@
-/* gltkinput.c
+/* gltkevents.c
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,12 +18,12 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gltkinput.h"
+#include "gltkevents.h"
 
 #include <glib.h>
 
 inline void
-gltk_touch_free_input_event(GltkTouchInputEvent event)
+gltk_touch_free_input_event(GltkEventTouch event)
 {
 	g_free(event.positions);
 }

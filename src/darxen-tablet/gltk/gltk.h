@@ -21,7 +21,8 @@
 #ifndef GLTK_H_C0Y0X5CZ
 #define GLTK_H_C0Y0X5CZ
 
-#include <gltk/gltkinput.h>
+#include <gltk/gltkmarshal.h>
+#include <gltk/gltkevents.h>
 #include <gltk/gltkwindow.h>
 #include <gltk/gltkwidget.h>
 #include <gltk/gltkbox.h>

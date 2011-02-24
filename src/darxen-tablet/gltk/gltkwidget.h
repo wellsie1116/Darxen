@@ -18,10 +18,12 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glib-object.h>
-
 #ifndef GLTKWIDGET_H_K1ZIAA3N
 #define GLTKWIDGET_H_K1ZIAA3N
+
+#include <glib-object.h>
+
+#include "gltkevents.h"
 
 G_BEGIN_DECLS
 
@@ -70,6 +72,13 @@ struct _GltkWidgetClass
 
 	void (*size_allocate)	(	GltkWidget* widget,
 								GltkAllocation* allocation);
+
+	gboolean (*event)		(	GltkWidget* widget,
+								GltkEvent* event);
+
+	gboolean (*touch_event)	(	GltkWidget* widget,
+								GltkEventTouch* event);
+
 	/* virtual funcs */
 	void (*render)			(	GltkWidget* widget);
 };
@@ -88,6 +97,8 @@ void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation)
 GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);
 
 void			gltk_widget_render			(GltkWidget* widget);
+
+gboolean		gltk_widget_send_event		(GltkWidget* widget, GltkEvent* event);
 
 GQuark			gltk_widget_error_quark		();
 

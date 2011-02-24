@@ -121,11 +121,21 @@ gltk_window_render(GltkWindow* window)
 {
 	USING_PRIVATE(window);
 
-	if (!priv->root)
-		return;
+	g_return_if_fail(priv->root);
 	
 	gltk_widget_render(priv->root);
 }
+
+gboolean
+gltk_window_send_event(GltkWindow* window, GltkEvent* event)
+{
+	USING_PRIVATE(window);
+
+	g_return_val_if_fail(priv->root, FALSE);
+
+	return gltk_widget_send_event(priv->root, event);
+}
+
 
 void
 gltk_window_set_root(GltkWindow* window, GltkWidget* widget)

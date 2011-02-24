@@ -1,4 +1,4 @@
-/* gltkinput.h
+/* gltkevents.h
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,12 +18,30 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GLTKINPUT_H_SWZAO5AI
-#define GLTKINPUT_H_SWZAO5AI
+#ifndef GLTKEVENTS_H_SWZAO5AI
+#define GLTKEVENTS_H_SWZAO5AI
 
-typedef enum   _GltkTouchEventType		GltkTouchEventType;
+typedef enum   _GltkEventType			GltkEventType;
+
+typedef struct _GltkEventAny			GltkEventAny;
+
 typedef struct _GltkTouchPosition  		GltkTouchPosition;
-typedef struct _GltkTouchInputEvent		GltkTouchInputEvent;
+typedef enum   _GltkTouchEventType		GltkTouchEventType;
+typedef struct _GltkEventTouch			GltkEventTouch;
+
+typedef union  _GltkEvent				GltkEvent;
+
+enum _GltkEventType
+{
+	GLTK_TOUCH
+};
+
+
+struct _GltkEventAny
+{
+	GltkEventType type;
+};
+
 
 enum _GltkTouchEventType
 {
@@ -38,15 +56,25 @@ struct _GltkTouchPosition
 	int y;
 };
 
-struct _GltkTouchInputEvent
+struct _GltkEventTouch
 {
+	GltkEventType type;
+
 	int id;
-	GltkTouchEventType type;
+	GltkTouchEventType touchType;
 	int fingers;
 	GltkTouchPosition* positions;
 };
 
-void	gltk_touch_free_input_event		(GltkTouchInputEvent event);
+
+union _GltkEvent
+{
+	GltkEventType type;
+	GltkEventAny any;
+	GltkEventTouch touch;
+};
+
+void	gltk_touch_free_input_event		(GltkEventTouch event);
 
 #endif
 
