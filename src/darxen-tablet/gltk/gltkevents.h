@@ -21,6 +21,9 @@
 #ifndef GLTKEVENTS_H_SWZAO5AI
 #define GLTKEVENTS_H_SWZAO5AI
 
+#include <glib.h>
+#include <glib-object.h>
+
 typedef enum   _GltkEventType			GltkEventType;
 
 typedef struct _GltkEventAny			GltkEventAny;
@@ -74,7 +77,12 @@ union _GltkEvent
 	GltkEventTouch touch;
 };
 
-void	gltk_touch_free_input_event		(GltkEventTouch event);
+void		gltk_touch_free_input_event		(	GltkEventTouch event);
+gboolean	gltk_accum_event				(	GSignalInvocationHint* ihint,
+												GValue* return_accu,
+												const GValue* handler_return,
+												gpointer data);
+
 
 #endif
 

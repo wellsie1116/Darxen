@@ -48,6 +48,7 @@ static void gltk_widget_finalize(GObject* gobject);
 
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
+static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
 static gboolean	gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event);
 
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -84,7 +85,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, event),
-						NULL, NULL,
+						gltk_accum_event, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
@@ -104,7 +105,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
-	klass->event = NULL;
+	klass->event = gltk_widget_real_event;
 	klass->touch_event = gltk_widget_real_touch_event;
 
 	klass->render = gltk_widget_render_default;
@@ -189,16 +190,8 @@ gltk_widget_render(GltkWidget* widget)
 gboolean
 gltk_widget_send_event(GltkWidget* widget, GltkEvent* event)
 {
-	gboolean returnValue = FALSE;
-
-	switch (event->type)
-	{
-		case GLTK_TOUCH:
-			g_signal_emit(G_OBJECT(widget), signals[TOUCH_EVENT], 0, event, &returnValue);
-			break;
-		default:
-			g_warning("Unhandled event type: %i", event->type);
-	}
+	gboolean returnValue;
+	g_signal_emit(G_OBJECT(widget), signals[EVENT], 0, &event, &returnValue);
 	return returnValue;
 }
 
@@ -231,21 +224,28 @@ gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 }
 
 static gboolean
+gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
+{
+	gboolean returnValue = FALSE;
+
+	switch (event->type)
+	{
+		case GLTK_TOUCH:
+			g_signal_emit(G_OBJECT(widget), signals[TOUCH_EVENT], 0, event, &returnValue);
+			break;
+		default:
+			g_warning("Unhandled event type: %i", event->type);
+	}
+	return returnValue;
+}
+
+static gboolean
 gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event)
 {
 	USING_PRIVATE(widget);
 
 	g_warning("A widget forgot to override touch_event");
 
-	//int x = event->positions->x;
-	//int y = event->positions->y;
-
-	//if (priv->allocation.x < x && priv->allocation.x + priv->allocation.width > x &&
-	//	priv->allocation.y < y && priv->allocation.y + priv->allocation.height > y)
-	//{
-	//	gltk_widget_
-
-	//}
 	return FALSE;
 }
 

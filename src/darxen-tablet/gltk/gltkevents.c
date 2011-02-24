@@ -20,11 +20,20 @@
 
 #include "gltkevents.h"
 
-#include <glib.h>
-
 inline void
 gltk_touch_free_input_event(GltkEventTouch event)
 {
 	g_free(event.positions);
 }
 
+gboolean
+gltk_accum_event(	GSignalInvocationHint* ihint,
+					GValue* return_accu,
+					const GValue* handler_return,
+					gpointer data)
+{
+	gboolean handlerReturn = g_value_get_boolean(handler_return);
+	g_value_init(return_accu, G_TYPE_BOOLEAN);
+	g_value_set_boolean(return_accu, handlerReturn);
+	return !handlerReturn;
+}
