@@ -77,7 +77,10 @@ union _GltkEvent
 	GltkEventTouch touch;
 };
 
-void		gltk_touch_free_input_event		(	GltkEventTouch event);
+GltkEvent*	gltk_event_new					(	GltkEventType type);
+GltkEvent*	gltk_event_clone				(	GltkEvent* event);
+void		gltk_event_free					(	GltkEvent* event);
+
 gboolean	gltk_accum_event				(	GSignalInvocationHint* ihint,
 												GValue* return_accu,
 												const GValue* handler_return,

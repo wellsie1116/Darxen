@@ -20,10 +20,39 @@
 
 #include "gltkevents.h"
 
-inline void
-gltk_touch_free_input_event(GltkEventTouch event)
+GltkEvent*
+gltk_event_new(GltkEventType type)
 {
-	g_free(event.positions);
+	GltkEvent* event = g_new(GltkEvent, 1);
+	event->type = type;
+	return event;
+}
+
+GltkEvent*
+gltk_event_clone(GltkEvent* event)
+{
+	GltkEvent* newEvent = gltk_event_new(event->type);
+	switch (event->type)
+	{
+		case GLTK_TOUCH:
+			newEvent->touch = event->touch;
+			newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
+			*(newEvent->touch.positions) = *(event->touch.positions);
+			break;
+	}
+	return newEvent;
+}
+
+void
+gltk_event_free(GltkEvent* event)
+{
+	switch (event->type)
+	{
+		case GLTK_TOUCH:
+			g_free(event->touch.positions);
+			break;
+	}
+	g_free(event);
 }
 
 gboolean
@@ -33,7 +62,6 @@ gltk_accum_event(	GSignalInvocationHint* ihint,
 					gpointer data)
 {
 	gboolean handlerReturn = g_value_get_boolean(handler_return);
-	g_value_init(return_accu, G_TYPE_BOOLEAN);
 	g_value_set_boolean(return_accu, handlerReturn);
 	return !handlerReturn;
 }

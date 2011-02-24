@@ -72,18 +72,18 @@ static gboolean
 button_press_event(GtkWidget* widget, GdkEventButton* event)
 {
 	g_message("Press event");
-	GltkEventTouch touchEvent;
-	touchEvent.touchType = GLTK_TOUCH;
-	touchEvent.id = event_id;
-	touchEvent.type = TOUCH_BEGIN;
-	touchEvent.fingers = 1;
-	touchEvent.positions = g_new(GltkTouchPosition, 1);
-	touchEvent.positions->x = (int)event->x;
-	touchEvent.positions->y = (int)event->y;
+	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
-	gltk_window_send_event(glWindow, (GltkEvent*)&touchEvent);
+	e->touch.id = event_id;
+	e->touch.touchType = TOUCH_BEGIN;
+	e->touch.fingers = 1;
+	e->touch.positions = g_new(GltkTouchPosition, 1);
+	e->touch.positions->x = (int)event->x;
+	e->touch.positions->y = (int)event->y;
 
-	gltk_touch_free_input_event(touchEvent);
+	gltk_window_send_event(glWindow, e);
+
+	gltk_event_free(e);
 
 	return TRUE;
 }
@@ -92,18 +92,18 @@ static gboolean
 button_release_event(GtkWidget* widget, GdkEventButton* event)
 {
 	g_message("Release event");
-	GltkEventTouch touchEvent;
-	touchEvent.type = GLTK_TOUCH;
-	touchEvent.id = event_id++;
-	touchEvent.touchType = TOUCH_END;
-	touchEvent.fingers = 1;
-	touchEvent.positions = g_new(GltkTouchPosition, 1);
-	touchEvent.positions->x = (int)event->x;
-	touchEvent.positions->y = (int)event->y;
+	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
-	gltk_window_send_event(glWindow, (GltkEvent*)&touchEvent);
+	e->touch.id = event_id;
+	e->touch.touchType = TOUCH_END;
+	e->touch.fingers = 1;
+	e->touch.positions = g_new(GltkTouchPosition, 1);
+	e->touch.positions->x = (int)event->x;
+	e->touch.positions->y = (int)event->y;
 
-	gltk_touch_free_input_event(touchEvent);
+	gltk_window_send_event(glWindow, e);
+
+	gltk_event_free(e);
 
 	return TRUE;
 }
@@ -111,20 +111,20 @@ button_release_event(GtkWidget* widget, GdkEventButton* event)
 static gboolean
 motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 {
-	GltkEventTouch touchEvent;
-	touchEvent.type = GLTK_TOUCH;
-	touchEvent.id = event_id;
-	touchEvent.touchType = TOUCH_MOVE;
-	touchEvent.fingers = 1;
-	touchEvent.positions = g_new(GltkTouchPosition, 1);
-	touchEvent.positions->x = (int)event->x;
-	touchEvent.positions->y = (int)event->y;
-
-	gltk_window_send_event(glWindow, (GltkEvent*)&touchEvent);
-
-	gltk_touch_free_input_event(touchEvent);
-
 	g_message("Motion event: %lf, %lf", event->x, event->y);
+
+	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
+
+	e->touch.id = event_id;
+	e->touch.touchType = TOUCH_MOVE;
+	e->touch.fingers = 1;
+	e->touch.positions = g_new(GltkTouchPosition, 1);
+	e->touch.positions->x = (int)event->x;
+	e->touch.positions->y = (int)event->y;
+
+	gltk_window_send_event(glWindow, e);
+
+	gltk_event_free(e);
 
 	return TRUE;
 }
@@ -281,14 +281,14 @@ int main(int argc, char *argv[])
 	gtk_container_add(GTK_CONTAINER(window), darea);
 	gtk_widget_add_events(darea, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
 
-	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_PINCH,
-										 2, gesture_callback, NULL, NULL);
-	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_ROTATE,
-										 2, gesture_callback, NULL, NULL);
-	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_DRAG,
-										 2, gesture_callback, NULL, NULL);
-	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_TAP,
-										 2, gesture_callback, NULL, NULL);
+	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_PINCH,
+	//									 2, gesture_callback, NULL, NULL);
+	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_ROTATE,
+	//									 2, gesture_callback, NULL, NULL);
+	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_DRAG,
+	//									 2, gesture_callback, NULL, NULL);
+	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_TAP,
+	//									 2, gesture_callback, NULL, NULL);
 
 	g_signal_connect(darea, "button-press-event", (GCallback)button_press_event, NULL);
 	g_signal_connect(darea, "button-release-event", (GCallback)button_release_event, NULL);

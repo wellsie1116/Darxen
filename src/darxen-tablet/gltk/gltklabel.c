@@ -46,6 +46,8 @@ static void gltk_label_finalize(GObject* gobject);
 static void gltk_label_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_label_render(GltkWidget* label);
 
+static gboolean gltk_label_touch_event(GltkWidget* widget, GltkEventTouch* event);
+
 static void
 gltk_label_class_init(GltkLabelClass* klass)
 {
@@ -59,6 +61,7 @@ gltk_label_class_init(GltkLabelClass* klass)
 
 	gltkwidget_class->size_request = gltk_label_size_request;
 	gltkwidget_class->render = gltk_label_render;
+	gltkwidget_class->touch_event = gltk_label_touch_event;
 }
 
 static void
@@ -157,4 +160,10 @@ gltk_label_render(GltkWidget* label)
 	glEnd();
 }
 
+static gboolean
+gltk_label_touch_event(GltkWidget* widget, GltkEventTouch* event)
+{
+	g_message("We have a touch event!!!!!!!");
+	return TRUE;
+}
 

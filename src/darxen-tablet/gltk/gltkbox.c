@@ -45,7 +45,7 @@ static void gltk_box_dispose(GObject* gobject);
 static void gltk_box_finalize(GObject* gobject);
 
 static void gltk_box_render(GltkWidget* widget);
-static void gltk_box_event(GltkWidget* widget, GltkEvent* event);
+static gboolean gltk_box_event(GltkWidget* widget, GltkEvent* event);
 
 static void
 gltk_box_class_init(GltkBoxClass* klass)
@@ -171,11 +171,13 @@ gltk_box_render(GltkWidget* widget)
 	}
 }
 
-static void
+static gboolean
 gltk_box_event(GltkWidget* widget, GltkEvent* event)
 {
 	GltkBox* box = GLTK_BOX(widget);
 
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+		//g_message("my allocation: (%3d %3d %3d %3d)", allocation.x, allocation.y, allocation.width, allocation.height);
 	gboolean returnValue = FALSE;
 
 	GSList* pChildren = box->children;
@@ -183,21 +185,28 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 
-		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+		GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
+		//g_message("child widget with allocation: (%3d %3d %3d %3d)", childAllocation.x, childAllocation.y, childAllocation.width, childAllocation.height);
 
 		switch (event->type)
 		{
 			case GLTK_TOUCH:
 			{
-				GltkEventTouch eventTouch = event->touch;
+				g_message("Box checking touch event");
+				GltkEvent* childEvent = gltk_event_clone(event);
+				GltkEventTouch eventTouch = childEvent->touch;
+				eventTouch.positions->x -= allocation.x;
+				eventTouch.positions->y -= allocation.y;
 				int x = eventTouch.positions->x;
 				int y = eventTouch.positions->y;
 
-				if (allocation.x < x && allocation.x + allocation.width > x &&
-					allocation.y < y && allocation.y + allocation.height > y)
+				if (childAllocation.x < x && childAllocation.x + childAllocation.width > x &&
+					childAllocation.y < y && childAllocation.y + childAllocation.height > y)
 				{
-					returnValue = gltk_widget_send_event(child->widget, event);
+					g_message("Box sending touch event");
+					returnValue = gltk_widget_send_event(child->widget, childEvent);
 				}
+				gltk_event_free(childEvent);
 			} break;
 			default:
 				g_warning("Unhandled event type: %i", event->type);

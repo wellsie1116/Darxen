@@ -191,7 +191,7 @@ gboolean
 gltk_widget_send_event(GltkWidget* widget, GltkEvent* event)
 {
 	gboolean returnValue;
-	g_signal_emit(G_OBJECT(widget), signals[EVENT], 0, &event, &returnValue);
+	g_signal_emit(G_OBJECT(widget), signals[EVENT], 0, event, &returnValue);
 	return returnValue;
 }
 
