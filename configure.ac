@@ -17,6 +17,7 @@ AC_INIT([darxen],
 AC_PREREQ(2.61)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/darxend/darxend.c)
+AC_CONFIG_MACRO_DIR(m4)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([-Wall dist-bzip2])
 
@@ -43,7 +44,8 @@ AC_AIX
 #AC_MINIX
 AC_ISC_POSIX
 LT_INIT([disable-shared])
-
+# check for gtk-doc
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
 ## Checks for libraries ##
 
@@ -57,7 +59,7 @@ AC_SUBST([libshp_LIBS])
 #OpenGL
 AC_CHECK_HEADERS([GL/gl.h GL/glu.h], [HAVE_GL=yes], [HAVE_GL=no])
 if test x$HAVE_GL = xyes; then
-  GL_LIBS='-lopengl32 -lglu32'
+  GL_LIBS='-lGL -lGLU'
   GL_CFLAGS=
 else
   AC_MSG_ERROR([OpenGL development libraries not found])
@@ -109,6 +111,7 @@ AC_CONFIG_FILES([
    Makefile
    README
    doc/Makefile
+   doc/reference/gltk/Makefile
    m4/Makefile
    src/Makefile
    src/darxend/Makefile

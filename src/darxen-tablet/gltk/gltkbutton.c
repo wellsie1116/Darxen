@@ -189,9 +189,13 @@ gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	{
 		priv->isDown = TRUE;
 	}
-	else
+	else if (touch->touchType == TOUCH_END)
 	{
 		priv->isDown = FALSE;
+	}
+	else
+	{
+		return FALSE;
 	}
 
 	gltk_widget_invalidate(widget);

@@ -17,3 +17,5 @@ stamp-h1
 *.swp
 TAGS
 Session.vim
+m4/*.m4
+gtk-doc.make

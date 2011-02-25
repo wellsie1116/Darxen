@@ -10,6 +10,10 @@
 
 #!/bin/sh
 rm -f config.cache
+echo "- libtoolize."
+libtoolize
+echo "- gtkdocize."
+gtkdocize
 echo "- aclocal."
 aclocal -I m4
 echo "- autoconf."

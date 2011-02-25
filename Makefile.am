@@ -11,6 +11,10 @@
 EXTRA_DIST = reconf configure
 SUBDIRS = m4 src doc
 
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+
+ACLOCAL_AMFLAGS=-I m4
+
 doc-dummy:
 
 doc: doc-dummy
