@@ -32,7 +32,8 @@ enum
 	SIZE_ALLOCATE,
 	EVENT,
 	TOUCH_EVENT,
-	LAST_SIGNAL
+	CLICK_EVENT,
+   	LAST_SIGNAL
 };
 
 typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
@@ -49,7 +50,6 @@ static void gltk_widget_finalize(GObject* gobject);
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
-static gboolean	gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event);
 
 static void	gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window);
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -101,17 +101,27 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[CLICK_EVENT] = 
+		g_signal_new(	"click-event",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, click_event),
+						NULL, NULL,
+						g_cclosure_user_marshal_BOOLEAN__POINTER,
+						G_TYPE_BOOLEAN, 1,
+						G_TYPE_POINTER);
+
 	gobject_class->dispose = gltk_widget_dispose;
 	gobject_class->finalize = gltk_widget_finalize;
 
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
 	klass->event = gltk_widget_real_event;
-	klass->touch_event = gltk_widget_real_touch_event;
+	klass->touch_event = NULL;
+	klass->click_event = NULL;
 
 	klass->set_window = gltk_widget_set_window_default;
 	klass->render = gltk_widget_render_default;
-
 }
 
 static void
@@ -259,23 +269,15 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 		case GLTK_TOUCH:
 			g_signal_emit(G_OBJECT(widget), signals[TOUCH_EVENT], 0, event, &returnValue);
 			break;
+		case GLTK_CLICK:
+			g_signal_emit(G_OBJECT(widget), signals[CLICK_EVENT], 0, event, &returnValue);
+			break;
 		default:
 			g_warning("Unhandled event type: %i", event->type);
 	}
 
 	return returnValue;
 }
-
-static gboolean
-gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event)
-{
-	USING_PRIVATE(widget);
-
-	g_warning("A widget forgot to override touch_event");
-
-	return FALSE;
-}
-
 
 static void
 gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window)

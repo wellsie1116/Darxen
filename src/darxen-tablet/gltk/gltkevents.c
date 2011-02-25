@@ -39,6 +39,9 @@ gltk_event_clone(GltkEvent* event)
 			newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
 			*(newEvent->touch.positions) = *(event->touch.positions);
 			break;
+		case GLTK_CLICK:
+			newEvent->click = event->click;
+			break;
 	}
 	return newEvent;
 }
@@ -50,6 +53,8 @@ gltk_event_free(GltkEvent* event)
 	{
 		case GLTK_TOUCH:
 			g_free(event->touch.positions);
+			break;
+		case GLTK_CLICK:
 			break;
 	}
 	g_free(event);
@@ -65,3 +70,4 @@ gltk_accum_event(	GSignalInvocationHint* ihint,
 	g_value_set_boolean(return_accu, handlerReturn);
 	return !handlerReturn;
 }
+

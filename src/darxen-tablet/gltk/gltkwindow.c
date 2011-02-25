@@ -30,6 +30,8 @@ G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 static void gltk_window_dispose(GObject* gobject);
 static void gltk_window_finalize(GObject* gobject);
 
+static void	gltk_window_press_complete(GltkWindow* window);
+
 typedef struct _GltkWindowPrivate		GltkWindowPrivate;
 struct _GltkWindowPrivate
 {
@@ -37,6 +39,9 @@ struct _GltkWindowPrivate
 	int height;
 
 	GltkWidget* root;
+
+	GltkWidget* pressed;
+	GltkWidget* unpressed;
 
 	GltkWindowCallbacks callbacks;
 };
@@ -141,7 +146,12 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	g_return_val_if_fail(priv->root, FALSE);
 
-	return gltk_widget_send_event(priv->root, event);
+	gboolean returnValue = gltk_widget_send_event(priv->root, event);
+
+	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_END)
+		gltk_window_press_complete(window);
+
+	return returnValue;
 }
 
 
@@ -172,6 +182,33 @@ gltk_window_invalidate(GltkWindow* window)
 		priv->callbacks.request_render();
 }
 
+void
+gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	USING_PRIVATE(window);
+
+	g_assert(!priv->pressed);
+	g_object_ref(G_OBJECT(widget));
+	priv->pressed = widget;
+}
+
+void
+gltk_window_set_widget_unpressed(GltkWindow* window, GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	USING_PRIVATE(window);
+	
+	if (priv->unpressed)
+		return;
+
+	g_object_ref(G_OBJECT(widget));
+	priv->unpressed = widget;
+}
+
+
 
 GQuark
 gltk_window_error_quark()
@@ -182,3 +219,41 @@ gltk_window_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_window_press_complete(GltkWindow* window)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	USING_PRIVATE(window);
+	
+	if (priv->pressed && (priv->pressed == priv->unpressed))
+	{
+		//spawn a clicked event
+		GltkEvent* event = gltk_event_new(GLTK_CLICK);
+		
+		gltk_widget_send_event(priv->pressed, event);
+	}
+	else if (priv->pressed)
+	{
+		//inject the lost TOUCH_END event
+		GltkEvent* event = gltk_event_new(GLTK_TOUCH);
+		event->touch.touchType = TOUCH_END;
+		event->touch.fingers = 1;
+		event->touch.positions = g_new(GltkTouchPosition, 1);
+		event->touch.positions->x = -1;
+		event->touch.positions->y = -1;
+		gltk_widget_send_event(priv->pressed, event);
+	}
+
+	if (priv->pressed)
+	{
+		g_object_unref(G_OBJECT(priv->pressed));
+		priv->pressed = NULL;
+	}
+	if (priv->unpressed)
+	{
+		g_object_unref(G_OBJECT(priv->unpressed));
+		priv->unpressed = NULL;
+	}
+}
+

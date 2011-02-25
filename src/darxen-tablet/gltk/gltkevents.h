@@ -32,11 +32,14 @@ typedef struct _GltkTouchPosition  		GltkTouchPosition;
 typedef enum   _GltkTouchEventType		GltkTouchEventType;
 typedef struct _GltkEventTouch			GltkEventTouch;
 
+typedef struct _GltkEventClick			GltkEventClick;
+
 typedef union  _GltkEvent				GltkEvent;
 
 enum _GltkEventType
 {
-	GLTK_TOUCH
+	GLTK_TOUCH,
+	GLTK_CLICK
 };
 
 
@@ -69,12 +72,20 @@ struct _GltkEventTouch
 	GltkTouchPosition* positions;
 };
 
+struct _GltkEventClick
+{
+	GltkEventType type;
+
+
+};
+
 
 union _GltkEvent
 {
 	GltkEventType type;
 	GltkEventAny any;
 	GltkEventTouch touch;
+	GltkEventClick click;
 };
 
 GltkEvent*	gltk_event_new					(	GltkEventType type);

@@ -67,17 +67,19 @@ typedef enum
 	GLTK_WINDOW_ERROR_FAILED
 } GltkWindowError;
 
-GType			gltk_window_get_type	() G_GNUC_CONST;
-GltkWindow*		gltk_window_new			();
+GType			gltk_window_get_type				() G_GNUC_CONST;
+GltkWindow*		gltk_window_new						();
 
 /* Public functions here */
-void			gltk_window_set_size	(GltkWindow* window, int width, int height);
-void			gltk_window_render		(GltkWindow* window);
-gboolean		gltk_window_send_event	(GltkWindow* window, GltkEvent* event);
+void			gltk_window_set_size				(GltkWindow* window, int width, int height);
+void			gltk_window_render					(GltkWindow* window);
+gboolean		gltk_window_send_event				(GltkWindow* window, GltkEvent* event);
 
-void			gltk_window_set_root	(GltkWindow* window, GltkWidget* widget);
+void			gltk_window_set_root				(GltkWindow* window, GltkWidget* widget);
 
-void			gltk_window_invalidate	(GltkWindow* window);
+void			gltk_window_invalidate				(GltkWindow* window);
+void			gltk_window_set_widget_pressed		(GltkWindow* window, GltkWidget* widget);
+void			gltk_window_set_widget_unpressed	(GltkWindow* window, GltkWidget* widget);
 
 GQuark			gltk_window_error_quark	();
 

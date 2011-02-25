@@ -49,6 +49,7 @@ static void gltk_button_finalize(GObject* gobject);
 
 static void gltk_button_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_button_render(GltkWidget* widget);
+static gboolean gltk_button_click_event(GltkWidget* widget, GltkEventClick* touch);
 static gboolean gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 
 static void gltk_button_clicked(GltkWidget* widget);
@@ -76,6 +77,7 @@ gltk_button_class_init(GltkButtonClass* klass)
 
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
+	gltkwidget_class->click_event = gltk_button_click_event;
 	gltkwidget_class->touch_event = gltk_button_touch_event;
 
 	gltkbutton_class->clicked = gltk_button_clicked;
@@ -181,6 +183,13 @@ gltk_button_render(GltkWidget* widget)
 }
 
 static gboolean
+gltk_button_click_event(GltkWidget* widget, GltkEventClick* touch)
+{
+	g_message("A button has been truly clicked!!!!!");
+	return TRUE;
+}
+
+static gboolean
 gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 {
 	USING_PRIVATE(widget);
@@ -188,10 +197,12 @@ gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	if (touch->touchType == TOUCH_BEGIN)
 	{
 		priv->isDown = TRUE;
+		gltk_window_set_widget_pressed(widget->window, widget);
 	}
 	else if (touch->touchType == TOUCH_END)
 	{
 		priv->isDown = FALSE;
+		gltk_window_set_widget_unpressed(widget->window, widget);
 	}
 	else
 	{

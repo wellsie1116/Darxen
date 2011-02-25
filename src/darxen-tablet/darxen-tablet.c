@@ -66,15 +66,13 @@ gesture_callback(	GtkWidget* widget,
 	}
 }
 
-static int event_id = 100; //FIXME: hack
-
 static gboolean
 button_press_event(GtkWidget* widget, GdkEventButton* event)
 {
 	g_message("Press event");
 	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
-	e->touch.id = event_id;
+	e->touch.id = -1;
 	e->touch.touchType = TOUCH_BEGIN;
 	e->touch.fingers = 1;
 	e->touch.positions = g_new(GltkTouchPosition, 1);
@@ -94,7 +92,7 @@ button_release_event(GtkWidget* widget, GdkEventButton* event)
 	g_message("Release event");
 	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
-	e->touch.id = event_id;
+	e->touch.id = -1;
 	e->touch.touchType = TOUCH_END;
 	e->touch.fingers = 1;
 	e->touch.positions = g_new(GltkTouchPosition, 1);
@@ -115,7 +113,7 @@ motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 
 	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
-	e->touch.id = event_id;
+	e->touch.id = -1;
 	e->touch.touchType = TOUCH_MOVE;
 	e->touch.fingers = 1;
 	e->touch.positions = g_new(GltkTouchPosition, 1);

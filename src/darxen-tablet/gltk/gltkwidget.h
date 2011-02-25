@@ -86,6 +86,9 @@ struct _GltkWidgetClass
 	gboolean (*touch_event)	(	GltkWidget* widget,
 								GltkEventTouch* event);
 
+	gboolean (*click_event)	(	GltkWidget* widget,
+								GltkEventClick* event);
+
 	/* virtual funcs */
 	void (*set_window)		(	GltkWidget* widget,
 								GltkWindow* window);
