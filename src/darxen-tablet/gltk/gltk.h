@@ -23,8 +23,8 @@
 
 #include <gltk/gltkmarshal.h>
 #include <gltk/gltkevents.h>
-#include <gltk/gltkwindow.h>
 #include <gltk/gltkwidget.h>
+#include <gltk/gltkwindow.h>
 #include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>

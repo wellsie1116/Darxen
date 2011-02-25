@@ -51,6 +51,7 @@ static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* a
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
 static gboolean	gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event);
 
+static void	gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window);
 static void gltk_widget_render_default(GltkWidget* widget);
 
 static void
@@ -108,6 +109,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->event = gltk_widget_real_event;
 	klass->touch_event = gltk_widget_real_touch_event;
 
+	klass->set_window = gltk_widget_set_window_default;
 	klass->render = gltk_widget_render_default;
 
 }
@@ -119,6 +121,7 @@ gltk_widget_init(GltkWidget* self)
 
 	static GltkAllocation initialAllocation = {0, 0, -1, -1};
 
+	self->window = NULL;
 	self->parentWidget = NULL;
 
 	priv->allocation = initialAllocation;
@@ -129,6 +132,12 @@ gltk_widget_dispose(GObject* gobject)
 {
 	GltkWidget* self = GLTK_WIDGET(gobject);
 	USING_PRIVATE(self);
+
+	if (self->window)
+	{
+		g_object_unref(G_OBJECT(self->window));
+		self->window = NULL;
+	}
 
 	if (self->parentWidget)
 	{
@@ -160,6 +169,15 @@ gltk_widget_new()
 }
 
 void
+gltk_widget_set_window(GltkWidget* widget, GltkWindow* window)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(!window || GLTK_IS_WINDOW(window));
+
+	GLTK_WIDGET_GET_CLASS(widget)->set_window(widget, window);
+}
+
+void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
@@ -177,6 +195,14 @@ gltk_widget_get_allocation(GltkWidget* widget)
 	USING_PRIVATE(widget);
 
 	return priv->allocation;
+}
+
+void
+gltk_widget_invalidate(GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
+	gltk_window_invalidate(widget->window);
 }
 
 void
@@ -218,7 +244,7 @@ gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	USING_PRIVATE(widget);
 
-	g_message("Widget allocation: %3d %3d %3d %3d", allocation->x, allocation->y, allocation->width, allocation->height);
+	//g_message("Widget allocation: %3d %3d %3d %3d", allocation->x, allocation->y, allocation->width, allocation->height);
 
 	priv->allocation = *allocation;
 }
@@ -236,6 +262,7 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 		default:
 			g_warning("Unhandled event type: %i", event->type);
 	}
+
 	return returnValue;
 }
 
@@ -249,6 +276,17 @@ gltk_widget_real_touch_event(GltkWidget* widget, GltkEventTouch* event)
 	return FALSE;
 }
 
+
+static void
+gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window)
+{
+	if (widget->window)
+		g_object_unref(G_OBJECT(widget->window));
+
+	if (window)
+		g_object_ref(G_OBJECT(window));
+	widget->window = window;
+}
 
 static void
 gltk_widget_render_default(GltkWidget* widget)

@@ -25,6 +25,8 @@
 
 #include "gltkevents.h"
 
+#include "gltkwindow.h"
+
 G_BEGIN_DECLS
 
 typedef struct
@@ -50,12 +52,17 @@ typedef struct
 #define GLTK_IS_WIDGET_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_WIDGET))
 #define GLTK_WIDGET_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_WIDGET, GltkWidgetClass))
 
+#ifndef GLTK_WIDGET_DEF
+#define GLTK_WIDGET_DEF
 typedef struct _GltkWidget			GltkWidget;
+#endif
 typedef struct _GltkWidgetClass		GltkWidgetClass;
 
 struct _GltkWidget
 {
 	GObject parent;
+
+	GltkWindow* window;
 
 	GltkWidget* parentWidget;
 
@@ -80,6 +87,9 @@ struct _GltkWidgetClass
 								GltkEventTouch* event);
 
 	/* virtual funcs */
+	void (*set_window)		(	GltkWidget* widget,
+								GltkWindow* window);
+
 	void (*render)			(	GltkWidget* widget);
 };
 
@@ -91,10 +101,11 @@ typedef enum
 GType			gltk_widget_get_type		() G_GNUC_CONST;
 GltkWidget*		gltk_widget_new				();
 
-/* Public functions here */
+void			gltk_widget_set_window		(GltkWidget* widget, GltkWindow* window);
 void			gltk_widget_size_request	(GltkWidget* widget, GltkSize* size);
 void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation);
 GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);
+void			gltk_widget_invalidate		(GltkWidget* widget);
 
 void			gltk_widget_render			(GltkWidget* widget);
 

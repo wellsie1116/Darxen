@@ -44,6 +44,7 @@ struct _GltkBoxPrivate
 static void gltk_box_dispose(GObject* gobject);
 static void gltk_box_finalize(GObject* gobject);
 
+static void gltk_box_set_window(GltkWidget* widget, GltkWindow* window);
 static void gltk_box_render(GltkWidget* widget);
 static gboolean gltk_box_event(GltkWidget* widget, GltkEvent* event);
 
@@ -58,6 +59,7 @@ gltk_box_class_init(GltkBoxClass* klass)
 	gobject_class->dispose = gltk_box_dispose;
 	gobject_class->finalize = gltk_box_finalize;
 
+	gltkwidget_class->set_window = gltk_box_set_window;
 	gltkwidget_class->render = gltk_box_render;
 	gltkwidget_class->event = gltk_box_event;
 }
@@ -134,6 +136,8 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 	box->childrenCount++;
 
 	box->children = g_slist_append(box->children, child);
+
+	gltk_widget_set_window(widget, GLTK_WIDGET(box)->window);
 }
 
 
@@ -146,6 +150,24 @@ gltk_box_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_box_set_window(GltkWidget* widget, GltkWindow* window)
+{
+	GltkBox* box = GLTK_BOX(widget);
+
+	GSList* pChildren = box->children;
+	while (pChildren)
+	{
+		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+	
+		gltk_widget_set_window(child->widget, window);
+	
+		pChildren = pChildren->next;
+	}
+
+	GLTK_WIDGET_CLASS(gltk_box_parent_class)->set_window(widget, window);
+}
 
 static void
 gltk_box_render(GltkWidget* widget)
@@ -177,43 +199,41 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	GltkBox* box = GLTK_BOX(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
-		//g_message("my allocation: (%3d %3d %3d %3d)", allocation.x, allocation.y, allocation.width, allocation.height);
 	gboolean returnValue = FALSE;
 
-	GSList* pChildren = box->children;
-	while (pChildren && !returnValue)
+	switch (event->type)
 	{
-		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
-
-		GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
-		//g_message("child widget with allocation: (%3d %3d %3d %3d)", childAllocation.x, childAllocation.y, childAllocation.width, childAllocation.height);
-
-		switch (event->type)
+		case GLTK_TOUCH:
 		{
-			case GLTK_TOUCH:
+			GltkEvent* childEvent = gltk_event_clone(event);
+			GltkEventTouch eventTouch = childEvent->touch;
+			eventTouch.positions->x -= allocation.x;
+			eventTouch.positions->y -= allocation.y;
+
+			GSList* pChildren = box->children;
+			while (pChildren && !returnValue)
 			{
-				g_message("Box checking touch event");
-				GltkEvent* childEvent = gltk_event_clone(event);
-				GltkEventTouch eventTouch = childEvent->touch;
-				eventTouch.positions->x -= allocation.x;
-				eventTouch.positions->y -= allocation.y;
+				GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+
+				GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
+
 				int x = eventTouch.positions->x;
 				int y = eventTouch.positions->y;
 
 				if (childAllocation.x < x && childAllocation.x + childAllocation.width > x &&
 					childAllocation.y < y && childAllocation.y + childAllocation.height > y)
 				{
-					g_message("Box sending touch event");
 					returnValue = gltk_widget_send_event(child->widget, childEvent);
 				}
-				gltk_event_free(childEvent);
-			} break;
-			default:
-				g_warning("Unhandled event type: %i", event->type);
-		}
-	
-		pChildren = pChildren->next;
+				pChildren = pChildren->next;
+			}
+
+			gltk_event_free(childEvent);
+		} break;
+		default:
+			g_warning("Unhandled event type: %i", event->type);
 	}
+	
 
 	return returnValue;
 }

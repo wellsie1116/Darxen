@@ -39,6 +39,7 @@ typedef struct _GltkButtonPrivate		GltkButtonPrivate;
 struct _GltkButtonPrivate
 {
 	gchar* text;
+	gboolean isDown;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -48,6 +49,7 @@ static void gltk_button_finalize(GObject* gobject);
 
 static void gltk_button_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_button_render(GltkWidget* widget);
+static gboolean gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 
 static void gltk_button_clicked(GltkWidget* widget);
 
@@ -74,6 +76,7 @@ gltk_button_class_init(GltkButtonClass* klass)
 
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
+	gltkwidget_class->touch_event = gltk_button_touch_event;
 
 	gltkbutton_class->clicked = gltk_button_clicked;
 }
@@ -84,6 +87,7 @@ gltk_button_init(GltkButton* self)
 	USING_PRIVATE(self);
 
 	priv->text = NULL;
+	priv->isDown = FALSE;
 }
 
 static void
@@ -156,17 +160,43 @@ gltk_button_render(GltkWidget* widget)
 	USING_PRIVATE(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(widget));
+	g_message("Rendering");
 
 	glBegin(GL_QUADS);
 	{
-		glColor3f(0.0f, 0.0f, 1.0f);
+		if (!priv->isDown)
+			glColor3f(0.0f, 0.0f, 1.0f);
+		else
+			glColor3f(0.0f, 1.0f, 1.0f);
 		glVertex2i(0, allocation.height);
 		glVertex2i(allocation.width, allocation.height);
-		glColor3f(0.0f, 1.0f, 1.0f);
+		if (priv->isDown)
+			glColor3f(0.0f, 0.0f, 1.0f);
+		else
+			glColor3f(0.0f, 1.0f, 1.0f);
 		glVertex2i(allocation.width, 0);
 		glVertex2i(0, 0);
 	}
 	glEnd();
+}
+
+static gboolean
+gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
+{
+	USING_PRIVATE(widget);
+
+	if (touch->touchType == TOUCH_BEGIN)
+	{
+		priv->isDown = TRUE;
+	}
+	else
+	{
+		priv->isDown = FALSE;
+	}
+
+	gltk_widget_invalidate(widget);
+
+	return TRUE;
 }
 
 static void gltk_button_clicked(GltkWidget* widget)

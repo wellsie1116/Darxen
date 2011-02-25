@@ -20,6 +20,8 @@
 
 #include "gltkwindow.h"
 
+#include "gltkwidget.h"
+
 G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 
 #define USING_PRIVATE(obj) GltkWindowPrivate* priv = GLTK_WINDOW_GET_PRIVATE(obj)
@@ -102,6 +104,8 @@ gltk_window_new(GltkWindowCallbacks callbacks)
 void
 gltk_window_set_size(GltkWindow* window, int width, int height)
 {
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+
 	USING_PRIVATE(window);
 	priv->width = width;
 	priv->height = height;
@@ -119,6 +123,8 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 void
 gltk_window_render(GltkWindow* window)
 {
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+
 	USING_PRIVATE(window);
 
 	g_return_if_fail(priv->root);
@@ -129,6 +135,8 @@ gltk_window_render(GltkWindow* window)
 gboolean
 gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 {
+	g_return_val_if_fail(GLTK_IS_WINDOW(window), FALSE);
+
 	USING_PRIVATE(window);
 
 	g_return_val_if_fail(priv->root, FALSE);
@@ -140,15 +148,30 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 void
 gltk_window_set_root(GltkWindow* window, GltkWidget* widget)
 {
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
 	USING_PRIVATE(window);
 
 	g_object_ref(G_OBJECT(widget));
 
 	priv->root = widget;
+	gltk_widget_set_window(widget, window);
 
 	if (priv->callbacks.request_render)
 		priv->callbacks.request_render();
 }
+
+void
+gltk_window_invalidate(GltkWindow* window)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	USING_PRIVATE(window);
+
+	if (priv->callbacks.request_render)
+		priv->callbacks.request_render();
+}
+
 
 GQuark
 gltk_window_error_quark()

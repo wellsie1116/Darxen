@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 
-#include "gltkwidget.h"
+#include "gltkevents.h"
 
 G_BEGIN_DECLS
 
@@ -42,6 +42,10 @@ typedef struct
 #define GLTK_IS_WINDOW_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_WINDOW))
 #define GLTK_WINDOW_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_WINDOW, GltkWindowClass))
 
+#ifndef GLTK_WIDGET_DEF
+#define GLTK_WIDGET_DEF
+typedef struct _GltkWidget			GltkWidget;
+#endif
 typedef struct _GltkWindow			GltkWindow;
 typedef struct _GltkWindowClass		GltkWindowClass;
 
@@ -72,6 +76,8 @@ void			gltk_window_render		(GltkWindow* window);
 gboolean		gltk_window_send_event	(GltkWindow* window, GltkEvent* event);
 
 void			gltk_window_set_root	(GltkWindow* window, GltkWidget* widget);
+
+void			gltk_window_invalidate	(GltkWindow* window);
 
 GQuark			gltk_window_error_quark	();
 
