@@ -132,10 +132,26 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 	USING_PRIVATE(widget);
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, FALSE);
 
-	float bbox[6];
-	ftglGetFontBBox(font->font, priv->text, -1, bbox);
-	size->height = bbox[4] - bbox[1] + 20;
-	size->width = bbox[3] - bbox[0] + 20;
+	size->height = 20;
+	size->width = 0;
+
+	gchar** lines = g_strsplit(priv->text, "\n", -1);
+	gchar** pLines = lines;
+	while (*pLines)
+	{
+		float bbox[6];
+		ftglGetFontBBox(font->font, *pLines, -1, bbox);
+		float width = bbox[3] - bbox[0];
+		float height = bbox[4] - bbox[1];
+
+		size->height += height + 5;
+		size->width = MAX(size->width, width);
+
+		pLines++;
+	}
+	g_strfreev(lines);
+
+	size->width += 20;
 
 	GLTK_WIDGET_CLASS(gltk_label_parent_class)->size_request(widget, size);
 }
@@ -169,27 +185,15 @@ gltk_label_render(GltkWidget* label)
 		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.0f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
-		gchar** words = g_strsplit(priv->text, " ", -1);
-		gchar** pWords = words;
-		GString* line = g_string_new("");
-		float spaceLen = ftglGetFontAdvance(font->font, " ");
-		while (*pWords)
+		gchar** lines = g_strsplit(priv->text, "\n", -1);
+		gchar** pLines = lines;
+		while (*pLines)
 		{
-			float len = 0.0f;
-			float wordLen;
-			while (*pWords && ((len + (wordLen = ftglGetFontAdvance(font->font, *pWords)) < width) || !line->len))
-			{
-				len += wordLen + spaceLen;
-				g_string_append(line, *pWords);
-				g_string_append_c(line, ' ');
-				pWords++;
-			}
-			g_assert(!*pWords || line->len);
-			ftglRenderFont(font->font, line->str, FTGL_RENDER_ALL);
-			g_string_truncate(line, 0);
+			ftglRenderFont(font->font, *pLines, FTGL_RENDER_ALL);
 			glTranslatef(0.0f, -(font->ascender + font->descender + 5), 0.0f);
+			pLines++;
 		}
-		g_strfreev(words);
+		g_strfreev(lines);
 	}
 	glPopMatrix();
 }
