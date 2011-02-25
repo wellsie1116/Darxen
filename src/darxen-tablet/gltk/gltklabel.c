@@ -20,6 +20,7 @@
 
 #include "gltklabel.h"
 
+#include "gltkfonts.h"
 #include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkLabel, gltk_label, GLTK_TYPE_WIDGET)
@@ -142,12 +143,7 @@ gltk_label_render(GltkWidget* label)
 
 	glBegin(GL_QUADS);
 	{
-		if (!g_strcmp0(priv->text, "red"))
-			glColor3f(1.0f, 0.0f, 0.0f);
-		else if (!g_strcmp0(priv->text, "green"))
-			glColor3f(0.0f, 1.0f, 0.0f);
-		else
-			glColor3f(0.0f, 0.0f, 1.0f);
+		glColor3f(1.0f, 0.0f, 0.0f);
 
 		glVertex2i(0, 0);
 		glVertex2i(0, allocation.height);
@@ -155,5 +151,16 @@ gltk_label_render(GltkWidget* label)
 		glVertex2i(allocation.width, 0);
 	}
 	glEnd();
+
+	glPushMatrix();
+	{
+		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glScalef(1.0f, -1.0f, 1.0f);
+		glTranslatef(0.0f, -font->ascender, 0.0f);
+		//TODO: Word wrap
+		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);
+	}
+	glPopMatrix();
 }
 

@@ -234,28 +234,33 @@ GltkWindow* create_window()
 
 	win = gltk_window_new(callbacks);
 
+	GltkWidget* hbox = gltk_hbox_new();
+
 	GltkWidget* vbox = gltk_vbox_new();
 
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, TRUE);
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* btns = gltk_hbox_new();
 	GltkWidget* button1 = gltk_button_new("btn");
 	GltkWidget* button2 = gltk_button_new("Button");
 	GltkWidget* button3 = gltk_button_new("This is a button");
 
-	gltk_box_append_widget(GLTK_BOX(hbox), button1, TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(hbox), button2, TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(hbox), button3, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(btns), button1, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(btns), button2, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(btns), button3, TRUE, FALSE);
 
-	g_signal_connect(button1, "clicked", (GCallback)button_clicked, NULL);
-	g_signal_connect(button2, "clicked", (GCallback)button_clicked, NULL);
-	g_signal_connect(button3, "clicked", (GCallback)button_clicked, NULL);
+	g_signal_connect(button1, "click_event", (GCallback)button_clicked, NULL);
+	g_signal_connect(button2, "click_event", (GCallback)button_clicked, NULL);
+	g_signal_connect(button3, "click_event", (GCallback)button_clicked, NULL);
 
-	gltk_box_append_widget(GLTK_BOX(vbox), hbox, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
+
+	gltk_box_append_widget(GLTK_BOX(hbox), gltk_button_new("Menu"), TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);
 	
-	gltk_window_set_root(win, vbox);
+	gltk_window_set_root(win, hbox);
 
 	return win;
 }

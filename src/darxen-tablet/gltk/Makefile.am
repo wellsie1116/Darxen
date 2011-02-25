@@ -13,6 +13,7 @@ lib_LTLIBRARIES = libgltk.la
 libgltk_la_SOURCES = gltk.h \
 			 gltkmarshal.c gltkmarshal.h \
 		     gltkwindow.c gltkwindow.h \
+			 gltkfonts.c gltkfonts.h \
 		     gltkwidget.c gltkwidget.h \
 			 gltkbox.c gltkbox.h \
 			 gltkhbox.c gltkhbox.h \
@@ -22,8 +23,8 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkevents.c gltkevents.h
 
 libgltk_la_LDFLAGS = -g -version-info 1:1:0
-libgltk_la_CFLAGS = $(glib_CFLAGS) -Wall
-libgltk_la_LIBADD = $(glib_LIBS)
+libgltk_la_CFLAGS = $(glib_CFLAGS) $(ftgl_CFLAGS) -Wall -O0
+libgltk_la_LIBADD = $(glib_LIBS) $(ftgl_LIBS)
 
 #AM_LDFLAGS = -export-dynamic
 

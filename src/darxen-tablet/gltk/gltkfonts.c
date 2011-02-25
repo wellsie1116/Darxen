@@ -20,48 +20,54 @@
 
 #include "gltkfonts.h"
 
-struct _GltkGLFontCache
-{
-	GHashTable* fonts;
-};
+static GHashTable* fonts = NULL;
 
 void	free_font(GltkGLFont* font);
 
-GltkGLFontCache*
-gltk_fonts_cache_new()
-{
-	GltkGLFontCache* cache = g_new(GltkGLFontCache, 1);
-	cache->fonts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, free_font);
-	return cache;
-}
-
 void
-gltk_fonts_cache_free(GltkGLFontCache* cache)
+gltk_fonts_cache_free()
 {
-	g_hash_table_destroy(cache->fonts);
-	free(cache);
+	g_hash_table_destroy(fonts);
 }
 
 GltkGLFont*
-gltk_fonts_cache_get_font(GltkGLFontCache* cache, const char* path, int size)
+gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 {
 	gchar* desc = g_strdup_printf("%s %i", path, size);
+	if (!fonts)
+		fonts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_font);
 
-	GltkGLFont* font = (GltkGLFont*)g_hash_table_lookup(cache->fonts, desc);
+	GltkGLFont* font = (GltkGLFont*)g_hash_table_lookup(fonts, desc);
+
+	FTGLfont* ftglFont;
+	if (!font || (!font->rendered && renderable))
+	{
+		ftglFont = ftglCreateTextureFont(path);
+		g_assert(ftglFont);
+		ftglSetFontFaceSize(ftglFont, size, size);
+	}
 
 	if (!font)
 	{
 		FTGLfont* ftglFont = ftglCreateTextureFont(path);
-		if (!ftglFont)
-			return NULL;
+		g_assert(ftglFont);
 
 		font = g_new(GltkGLFont, 1);
 
 		font->font = ftglFont;
-		ftglSetFontFaceSize(font, size, size);
-		font->ascender = ftglGetFontAscender(font);
+		font->ascender = ftglGetFontAscender(font->font);
+		font->descender = ftglGetFontDescender(font->font);
+		font->rendered = renderable;
 
-		g_hash_table_insert(cache->fonts, desc, font);
+		g_hash_table_insert(fonts, desc, font);
+	}
+	else if (!font->rendered && renderable)
+	{
+		ftglDestroyFont(font->font);
+		font->font = ftglFont;
+		font->ascender = ftglGetFontAscender(font->font);
+		font->descender = ftglGetFontDescender(font->font);
+		font->rendered = TRUE;
 	}
 
 	return font;

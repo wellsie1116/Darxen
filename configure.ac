@@ -81,6 +81,7 @@ AC_FUNC_MALLOC
 AC_FUNC_STRTOD
 #AC_CHECK_FUNCS([socket])
 
+PKG_CHECK_MODULES(ftgl, ftgl >= 2.1.3)
 PKG_CHECK_MODULES(glib, glib-2.0 >= 2.0.0)
 PKG_CHECK_MODULES(gobject, gobject-2.0 >= 2.0.0)
 PKG_CHECK_MODULES(pango, pango >= 1.0.0)

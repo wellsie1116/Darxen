@@ -27,27 +27,19 @@
 #include <GL/gl.h>
 
 typedef struct _GltkGLFont		GltkGLFont;
-typedef struct _GltkGLFontCache	GltkGLFontCache;
 
 struct _GltkGLFont
 {
 	FTGLfont* font;
+	gboolean rendered;
 	float ascender;
+	float descender;
 };
-
-typedef enum
-{
-	TEXT_ORIGIN_UPPER_LEFT,
-	TEXT_ORIGIN_UPPER_RIGHT,
-	TEXT_ORIGIN_LOWER_LEFT,
-	TEXT_ORIGIN_LOWER_RIGHT
-} GltkGLFontTextOrigin;
 
 #define 			GLTK_FONTS_BASE					"UnBatang.ttf"
 
-GltkGLFontCache*	gltk_fonts_cache_new			();
-void				gltk_fonts_cache_free			(GltkGLFontCache* cache);
-GltkGLFont*			gltk_fonts_cache_get_font		(GltkGLFontCache* cache, const char* path, int size);
+void				gltk_fonts_cache_free			();
+GltkGLFont*			gltk_fonts_cache_get_font		(const char* path, int size, gboolean renderable);
 
 //void				gltk_fonts_test_string			(const char* message);
 #endif

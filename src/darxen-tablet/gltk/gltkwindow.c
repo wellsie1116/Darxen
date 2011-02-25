@@ -189,6 +189,7 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 	USING_PRIVATE(window);
 
+	//FIXME: press events can be stacked, this is odd
 	g_assert(!priv->pressed);
 	g_object_ref(G_OBJECT(widget));
 	priv->pressed = widget;

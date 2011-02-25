@@ -15,7 +15,7 @@ darxen_tablet_SOURCES = darxen-tablet.c \
 	../soap/client/soapClient.c \
 	../libdarxen/libdarxen.la
 
-darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(gsoap_CFLAGS)
+darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(gsoap_CFLAGS) -O0
 darxen_tablet_LDADD = $(gtkglext_LIBS) $(libgrip_LIBS)  $(gsoap_LIBS) ../libdarxen/libdarxen.la gltk/libgltk.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
 darxen_tablet_LDFLAGS = -g
 

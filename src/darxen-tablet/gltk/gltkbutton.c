@@ -20,6 +20,8 @@
 
 #include "gltkbutton.h"
 
+#include "gltkfonts.h"
+
 #include <string.h>
 
 #include <GL/gl.h>
@@ -31,7 +33,6 @@ G_DEFINE_TYPE(GltkButton, gltk_button, GLTK_TYPE_WIDGET)
 
 enum
 {
-	CLICKED,
 	LAST_SIGNAL
 };
 
@@ -40,19 +41,17 @@ struct _GltkButtonPrivate
 {
 	gchar* text;
 	gboolean isDown;
+
 };
 
-static guint signals[LAST_SIGNAL] = {0,};
+//static guint signals[LAST_SIGNAL] = {0,};
 
 static void gltk_button_dispose(GObject* gobject);
 static void gltk_button_finalize(GObject* gobject);
 
 static void gltk_button_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_button_render(GltkWidget* widget);
-static gboolean gltk_button_click_event(GltkWidget* widget, GltkEventClick* touch);
 static gboolean gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch);
-
-static void gltk_button_clicked(GltkWidget* widget);
 
 static void
 gltk_button_class_init(GltkButtonClass* klass)
@@ -63,24 +62,12 @@ gltk_button_class_init(GltkButtonClass* klass)
 
 	g_type_class_add_private(klass, sizeof(GltkButtonPrivate));
 	
-	signals[CLICKED] = 
-		g_signal_new(	"clicked",
-						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_LAST,
-						G_STRUCT_OFFSET(GltkButtonClass, clicked),
-						NULL, NULL,
-						g_cclosure_marshal_VOID__VOID,
-						G_TYPE_NONE, 0);
-	
 	gobject_class->dispose = gltk_button_dispose;
 	gobject_class->finalize = gltk_button_finalize;
 
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
-	gltkwidget_class->click_event = gltk_button_click_event;
 	gltkwidget_class->touch_event = gltk_button_touch_event;
-
-	gltkbutton_class->clicked = gltk_button_clicked;
 }
 
 static void
@@ -149,9 +136,12 @@ static void
 gltk_button_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
+	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, FALSE);
 
-	size->height = 50;
-	size->width = strlen(priv->text) * 20;
+	float bbox[6];
+	ftglGetFontBBox(font->font, priv->text, -1, bbox);
+	size->height = bbox[4] - bbox[1] + 10;
+	size->width = bbox[3] - bbox[0] + 20;
 
 	GLTK_WIDGET_CLASS(gltk_button_parent_class)->size_request(widget, size);
 }
@@ -180,13 +170,23 @@ gltk_button_render(GltkWidget* widget)
 		glVertex2i(0, 0);
 	}
 	glEnd();
-}
 
-static gboolean
-gltk_button_click_event(GltkWidget* widget, GltkEventClick* touch)
-{
-	g_message("A button has been truly clicked!!!!!");
-	return TRUE;
+	glPushMatrix();
+	{
+		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, TRUE);
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glScalef(1.0f, -1.0f, 1.0f);
+
+		float bbox[6];
+		ftglGetFontBBox(font->font, priv->text, -1, bbox);
+		float height = bbox[4] - bbox[1] + 10;
+		float width = bbox[3] - bbox[0] + 20;
+
+		glTranslatef((allocation.width - width) / 2.0, (allocation.height - height) / 2.0 - font->ascender, 0.0f);
+
+		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);
+	}
+	glPopMatrix();
 }
 
 static gboolean
@@ -212,10 +212,5 @@ gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	gltk_widget_invalidate(widget);
 
 	return TRUE;
-}
-
-static void gltk_button_clicked(GltkWidget* widget)
-{
-	g_message("A button was clicked...yay");
 }
 
