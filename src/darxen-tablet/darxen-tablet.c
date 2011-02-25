@@ -214,9 +214,9 @@ GltkWidget* create_hbox()
 {
 	GltkWidget* hbox = gltk_hbox_new();
 
-	GltkWidget* label1 = gltk_label_new("red");
-	GltkWidget* label2 = gltk_label_new("green");
-	GltkWidget* label3 = gltk_label_new("blue");
+	GltkWidget* label1 = gltk_label_new("label");
+	GltkWidget* label2 = gltk_label_new("I am a label that will overflow");
+	GltkWidget* label3 = gltk_label_new("This is a label with a few different sentences worth of text.  I am a second sentence. Here is my third sentence of this paragraph; and I can technically be called the fourth sentence. WOOOOOOOT");
 
 	gltk_box_append_widget(GLTK_BOX(hbox), label1, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), label2, TRUE, FALSE);

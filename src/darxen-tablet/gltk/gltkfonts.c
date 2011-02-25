@@ -50,6 +50,7 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 	if (!font)
 	{
 		FTGLfont* ftglFont = ftglCreateTextureFont(path);
+		ftglFont = ftglCreateTextureFont(path);
 		g_assert(ftglFont);
 
 		font = g_new(GltkGLFont, 1);

@@ -129,8 +129,14 @@ gltk_label_error_quark()
 static void
 gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 {
-	size->width = 100;
-	size->height = 50;
+	USING_PRIVATE(widget);
+	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, FALSE);
+
+	float bbox[6];
+	ftglGetFontBBox(font->font, priv->text, -1, bbox);
+	size->height = bbox[4] - bbox[1] + 20;
+	size->width = bbox[3] - bbox[0] + 20;
+
 	GLTK_WIDGET_CLASS(gltk_label_parent_class)->size_request(widget, size);
 }
 
@@ -141,9 +147,9 @@ gltk_label_render(GltkWidget* label)
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(label));
 
-	glBegin(GL_QUADS);
+	glBegin(GL_LINE_LOOP);
 	{
-		glColor3f(1.0f, 0.0f, 0.0f);
+		glColor3f(1.0f, 1.0f, 1.0f);
 
 		glVertex2i(0, 0);
 		glVertex2i(0, allocation.height);
@@ -152,14 +158,38 @@ gltk_label_render(GltkWidget* label)
 	}
 	glEnd();
 
+	float width = allocation.width - 20;
+	if (width < 5.0f)
+		return;
+
 	glPushMatrix();
 	{
-		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
+		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, TRUE);
 		glColor3f(1.0f, 1.0f, 1.0f);
+		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.0f);
 		glScalef(1.0f, -1.0f, 1.0f);
-		glTranslatef(0.0f, -font->ascender, 0.0f);
-		//TODO: Word wrap
-		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);
+
+		gchar** words = g_strsplit(priv->text, " ", -1);
+		gchar** pWords = words;
+		GString* line = g_string_new("");
+		float spaceLen = ftglGetFontAdvance(font->font, " ");
+		while (*pWords)
+		{
+			float len = 0.0f;
+			float wordLen;
+			while (*pWords && ((len + (wordLen = ftglGetFontAdvance(font->font, *pWords)) < width) || !line->len))
+			{
+				len += wordLen + spaceLen;
+				g_string_append(line, *pWords);
+				g_string_append_c(line, ' ');
+				pWords++;
+			}
+			g_assert(!*pWords || line->len);
+			ftglRenderFont(font->font, line->str, FTGL_RENDER_ALL);
+			g_string_truncate(line, 0);
+			glTranslatef(0.0f, -(font->ascender + font->descender + 5), 0.0f);
+		}
+		g_strfreev(words);
 	}
 	glPopMatrix();
 }

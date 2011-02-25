@@ -140,11 +140,18 @@ gltk_button_size_request(GltkWidget* widget, GltkSize* size)
 
 	float bbox[6];
 	ftglGetFontBBox(font->font, priv->text, -1, bbox);
-	size->height = bbox[4] - bbox[1] + 10;
-	size->width = bbox[3] - bbox[0] + 20;
+	size->height = bbox[4] - bbox[1] + 30;
+	size->width = bbox[3] - bbox[0] + 40;
 
 	GLTK_WIDGET_CLASS(gltk_button_parent_class)->size_request(widget, size);
 }
+
+static float colorBright[] = {0.87f, 0.87f, 0.87f};
+static float colorDark[] = {0.78f, 0.78f, 0.78f};
+
+static float colorHighlightBright[] = {1.0f, 0.6f, 0.03f};
+static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
+
 
 static void
 gltk_button_render(GltkWidget* widget)
@@ -156,33 +163,40 @@ gltk_button_render(GltkWidget* widget)
 
 	glBegin(GL_QUADS);
 	{
-		if (!priv->isDown)
-			glColor3f(0.0f, 0.0f, 1.0f);
-		else
-			glColor3f(0.0f, 1.0f, 1.0f);
-		glVertex2i(0, allocation.height);
-		glVertex2i(allocation.width, allocation.height);
+		float* bright = colorBright;
+		float* dark = colorDark;
+
 		if (priv->isDown)
-			glColor3f(0.0f, 0.0f, 1.0f);
-		else
-			glColor3f(0.0f, 1.0f, 1.0f);
+		{
+			bright = colorHighlightBright;
+			dark = colorHighlightDark;
+		}
+		glColor3fv(bright);
 		glVertex2i(allocation.width, 0);
 		glVertex2i(0, 0);
+		glColor3fv(dark);
+		glVertex2i(0, allocation.height);
+		glVertex2i(allocation.width, allocation.height);
 	}
 	glEnd();
 
 	glPushMatrix();
 	{
-		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, TRUE);
+		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
 		glColor3f(0.0f, 0.0f, 0.0f);
-		glScalef(1.0f, -1.0f, 1.0f);
 
 		float bbox[6];
 		ftglGetFontBBox(font->font, priv->text, -1, bbox);
-		float height = bbox[4] - bbox[1] + 10;
-		float width = bbox[3] - bbox[0] + 20;
+		float height = bbox[4] - bbox[1];
+		float width = bbox[3] - bbox[0];
 
-		glTranslatef((allocation.width - width) / 2.0, (allocation.height - height) / 2.0 - font->ascender, 0.0f);
+		float x;
+	   	float y;
+		x = (allocation.width - width) / 2.0;
+		y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
+
+		glTranslatef(x, y, 0.0f);
+		glScalef(1.0f, -1.0f, 1.0f);
 
 		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);
 	}
