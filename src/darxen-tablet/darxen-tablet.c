@@ -24,6 +24,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "darxensitelist.h"
 #include "../soap/client/DarxenService.nsmap"
 
 #include <gltk/gltk.h>
@@ -204,6 +205,13 @@ button_clicked(GtkWidget* widget, gpointer user_data)
 	printf("Button Clicked: %s\n", text);
 }
 
+static void
+btnQuit_clicked(GtkWidget* widget, gpointer user_data)
+{
+	printf("Goodbye\n");
+	gtk_main_quit();
+}
+
 void
 request_render()
 {
@@ -215,7 +223,7 @@ GltkWidget* create_hbox()
 	GltkWidget* hbox = gltk_hbox_new();
 
 	GltkWidget* label1 = gltk_label_new("label");
-	GltkWidget* label2 = gltk_label_new("I am a label that will overflow");
+	GltkWidget* label2 = gltk_label_new("I am a label");
 	GltkWidget* label3 = gltk_label_new("This is a label with a few different\n"
 		   								"sentences worth of text.  I am a second\n"
 										"sentence. Here is my third sentence of\n"
@@ -250,18 +258,23 @@ GltkWindow* create_window()
 	GltkWidget* button1 = gltk_button_new("btn");
 	GltkWidget* button2 = gltk_button_new("Button");
 	GltkWidget* button3 = gltk_button_new("This is a button");
+	GltkWidget* btnQuit = gltk_button_new("Quit");
 
 	gltk_box_append_widget(GLTK_BOX(btns), button1, TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(btns), button2, TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(btns), button3, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(btns), btnQuit, TRUE, FALSE);
 
 	g_signal_connect(button1, "click_event", (GCallback)button_clicked, NULL);
 	g_signal_connect(button2, "click_event", (GCallback)button_clicked, NULL);
 	g_signal_connect(button3, "click_event", (GCallback)button_clicked, NULL);
+	g_signal_connect(btnQuit, "click_event", (GCallback)btnQuit_clicked, NULL);
 
 	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
 
-	gltk_box_append_widget(GLTK_BOX(hbox), gltk_button_new("Menu"), TRUE, TRUE);
+	GltkWidget* siteList = darxen_site_list_new();
+
+	gltk_box_append_widget(GLTK_BOX(hbox), siteList, TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);
 	
 	gltk_window_set_root(win, hbox);
