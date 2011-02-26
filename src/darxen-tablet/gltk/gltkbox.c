@@ -82,7 +82,7 @@ gltk_box_dispose(GObject* gobject)
 
 	if (self->children)
 	{
-		GSList* pChildren = self->children;
+		GList* pChildren = self->children;
 		while (pChildren)
 		{
 			GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
@@ -92,7 +92,7 @@ gltk_box_dispose(GObject* gobject)
 
 			pChildren = pChildren->next;
 		}
-		g_slist_free(self->children);
+		g_list_free(self->children);
 		self->children = NULL;
 	}
 
@@ -130,14 +130,45 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 	child->widget = widget;
 	child->expand = expand;
 	child->fill = fill;
+	g_object_ref(G_OBJECT(widget));
 
 	if (expand)
 		box->expandCount++;
 	box->childrenCount++;
 
-	box->children = g_slist_append(box->children, child);
+	box->children = g_list_append(box->children, child);
 
+	gltk_widget_set_parent(widget, GLTK_WIDGET(box));
 	gltk_widget_set_window(widget, GLTK_WIDGET(box)->window);
+}
+
+void
+gltk_box_remove_widget(GltkBox* box, GltkWidget* widget)
+{
+	USING_PRIVATE(box);
+
+	GList* pChildren = box->children;
+	while (pChildren)
+	{
+		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+	
+		if (child->widget == widget)
+		{
+			GList* start = g_list_remove_link(pChildren, pChildren);
+			if (pChildren == box->children)
+				box->children = start;
+
+			gltk_widget_unparent(child->widget);
+			g_object_unref(G_OBJECT(child->widget));
+			g_free(child);
+			g_list_free(pChildren);
+			return;
+		}
+	
+		pChildren = pChildren->next;
+	}
+
+	g_return_if_reached();
 }
 
 
@@ -156,7 +187,7 @@ gltk_box_set_window(GltkWidget* widget, GltkWindow* window)
 {
 	GltkBox* box = GLTK_BOX(widget);
 
-	GSList* pChildren = box->children;
+	GList* pChildren = box->children;
 	while (pChildren)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
@@ -174,7 +205,7 @@ gltk_box_render(GltkWidget* widget)
 {
 	GltkBox* box = GLTK_BOX(widget);
 
-	GSList* pChildren = box->children;
+	GList* pChildren = box->children;
 	while (pChildren)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
@@ -210,7 +241,7 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 			eventTouch.positions->x -= allocation.x;
 			eventTouch.positions->y -= allocation.y;
 
-			GSList* pChildren = box->children;
+			GList* pChildren = box->children;
 			while (pChildren && !returnValue)
 			{
 				GltkBoxChild* child = (GltkBoxChild*)pChildren->data;

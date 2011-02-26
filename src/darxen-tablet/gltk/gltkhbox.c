@@ -121,7 +121,7 @@ gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 	size->width = 0;
 	size->height = 0;
 	
-	GSList* pChildren = box->children;
+	GList* pChildren = box->children;
 	while (pChildren)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
@@ -151,7 +151,7 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 	int extraWidth = allocation->width - requisition.width;
 
 	//allocate space for the children, diving the extra space appropriately
-	GSList* pChildren = box->children;
+	GList* pChildren = box->children;
 	while (pChildren)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;

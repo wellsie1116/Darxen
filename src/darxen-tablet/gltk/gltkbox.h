@@ -43,7 +43,7 @@ struct _GltkBox
 {
 	GltkWidget parent;
 	
-	GSList* children; //GltkBoxChild
+	GList* children; //GltkBoxChild
 
 	int expandCount;
 	int childrenCount;
@@ -73,6 +73,7 @@ GType			gltk_box_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_box_new		();
 
 void			gltk_box_append_widget	(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill);
+void			gltk_box_remove_widget	(GltkBox* box, GltkWidget* widget);
 
 GQuark			gltk_box_error_quark	();
 

@@ -146,9 +146,33 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	g_return_val_if_fail(priv->root, FALSE);
 
-	gboolean returnValue = gltk_widget_send_event(priv->root, event);
+	gboolean returnValue;
 
-	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_END)
+	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_MOVE && priv->pressed)
+	{
+		//redirect touch move event to pressed widget
+		GltkEvent* e = gltk_event_clone(event);
+		GltkWidget* parent = priv->pressed;
+		for (parent = priv->pressed; parent; parent = gltk_widget_get_parent(parent))
+		{
+			GltkAllocation allocation = gltk_widget_get_allocation(parent);
+			int i;
+			for (i = 0; i < e->touch.fingers; i++)
+			{
+				e->touch.positions[i].x -= allocation.x;
+				e->touch.positions[i].y -= allocation.y;
+			}
+		}
+		returnValue = gltk_widget_send_event(priv->pressed, e);
+		gltk_event_free(e);
+	}
+	else
+	{
+		returnValue = gltk_widget_send_event(priv->root, event);
+	}
+
+	//check to spawn a click event
+	if (event->touch.touchType == TOUCH_END)
 		gltk_window_press_complete(window);
 
 	return returnValue;
@@ -193,6 +217,8 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 	g_assert(!priv->pressed);
 	g_object_ref(G_OBJECT(widget));
 	priv->pressed = widget;
+
+	//g_object_connect(G_OBJECT(widget), "event", pressed_widget_event
 }
 
 void

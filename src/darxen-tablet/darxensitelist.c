@@ -44,6 +44,8 @@ struct _DarxenSiteListPrivate
 {
 	GList* sites; //gchar*
 	GHashTable* siteMap; //Site
+
+
 };
 
 struct _Site
@@ -89,7 +91,13 @@ static void
 site_free(Site* site)
 {
 	g_free(site->name);
-	//TODO: finish
+	g_object_unref(G_OBJECT(site->viewsBox));
+	g_object_unref(G_OBJECT(site->siteBox));
+	g_hash_table_destroy(site->viewMap);
+	GList* pView;
+	for (pView = site->views; pView; pView = pView->next)
+		g_free(pView->data);
+	g_list_free(site->views);
 	g_free(site);
 }
 
@@ -97,7 +105,7 @@ static void
 view_free(View* view)
 {
 	g_free(view->name);
-	//TODO: finish
+	g_object_unref(G_OBJECT(view->viewButton));
 	g_free(view);
 }
 
@@ -116,7 +124,20 @@ darxen_site_list_dispose(GObject* gobject)
 	DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
 	USING_PRIVATE(self);
 
-	//free and release references
+	if (priv->siteMap)
+	{
+		g_hash_table_destroy(priv->siteMap);
+		priv->siteMap = NULL;
+	}
+
+	if (priv->sites)
+	{
+		GList* pSite;
+		for (pSite = priv->sites; pSite; pSite = pSite->next)
+			g_free(pSite->data);
+		g_list_free(priv->sites);
+		priv->sites = NULL;
+	}
 
 	G_OBJECT_CLASS(darxen_site_list_parent_class)->dispose(gobject);
 }
@@ -162,13 +183,17 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	GltkWidget* siteButton = gltk_button_new(site);
 	g_signal_connect(siteButton, "click_event", (GCallback)site_button_clicked, siteInfo);
 	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), siteButton, FALSE, FALSE);
+	g_object_unref(G_OBJECT(siteButton));
 
 	GltkWidget* viewSpacer = gltk_hbox_new();
 	siteInfo->viewsBox = gltk_vbox_new();
-	gltk_box_append_widget(GLTK_BOX(viewSpacer), gltk_label_new("  "), FALSE, FALSE);
+	GltkWidget* spacer = gltk_label_new("  ");
+	gltk_box_append_widget(GLTK_BOX(viewSpacer), spacer, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(viewSpacer), siteInfo->viewsBox, TRUE, TRUE);
+	g_object_unref(G_OBJECT(spacer));
 
 	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), viewSpacer, FALSE, FALSE);
+	g_object_unref(G_OBJECT(viewSpacer));
 
 	gltk_box_append_widget(GLTK_BOX(list), siteInfo->siteBox, FALSE, FALSE);
 

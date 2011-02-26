@@ -171,12 +171,40 @@ GltkWidget*
 gltk_widget_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_WIDGET, NULL);
-	GltkWidget* self = GLTK_WIDGET(gobject);
-
-	USING_PRIVATE(self);
 
 	return (GltkWidget*)gobject;
 }
+
+GltkWidget*
+gltk_widget_get_parent(GltkWidget* widget)
+{
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
+
+	return widget->parentWidget;
+}
+
+void
+gltk_widget_set_parent(GltkWidget* widget, GltkWidget* parent)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(GLTK_IS_WIDGET(parent));
+	g_return_if_fail(widget != parent);
+	g_return_if_fail(!widget->parentWidget);
+
+	g_object_ref(parent);
+	widget->parentWidget = parent;
+}
+
+void
+gltk_widget_unparent(GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(GLTK_IS_WIDGET(widget->parentWidget));
+
+	g_object_unref(G_OBJECT(widget->parentWidget));
+	widget->parentWidget = NULL;
+}
+
 
 void
 gltk_widget_set_window(GltkWidget* widget, GltkWindow* window)

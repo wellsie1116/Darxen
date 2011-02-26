@@ -47,7 +47,6 @@ struct _GltkButtonClass
 	GltkWidgetClass parent_class;
 	
 	/* signals */
-	void (*clicked)		(	GltkWidget* widget);
 
 	/* virtual funcs */
 };
