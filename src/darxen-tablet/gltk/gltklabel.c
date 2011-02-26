@@ -182,7 +182,7 @@ gltk_label_render(GltkWidget* label)
 	{
 		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, TRUE);
 		glColor3f(1.0f, 1.0f, 1.0f);
-		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.0f);
+		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
 		gchar** lines = g_strsplit(priv->text, "\n", -1);

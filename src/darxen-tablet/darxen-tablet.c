@@ -140,7 +140,7 @@ expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 		g_error("Failed to draw to GLDrawable");
 	}
 
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
 	// glBegin(GL_TRIANGLES);
@@ -184,6 +184,8 @@ configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 	gluOrtho2D(0.0, event->width, event->height, 0.0);
 	
 	glMatrixMode(GL_MODELVIEW);
+
+	glEnable(GL_DEPTH_TEST);
 
 	gltk_window_set_size(glWindow, event->width, event->height);
 

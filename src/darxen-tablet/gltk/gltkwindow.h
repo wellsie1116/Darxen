@@ -72,6 +72,7 @@ GltkWindow*		gltk_window_new						();
 
 /* Public functions here */
 void			gltk_window_set_size				(GltkWindow* window, int width, int height);
+void			gltk_window_layout					(GltkWindow* window);
 void			gltk_window_render					(GltkWindow* window);
 gboolean		gltk_window_send_event				(GltkWindow* window, GltkEvent* event);
 

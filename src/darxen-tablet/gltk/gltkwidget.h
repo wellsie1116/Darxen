@@ -74,26 +74,32 @@ struct _GltkWidgetClass
 	GObjectClass parent_class;
 	
 	/* signals */
-	void (*size_request)	(	GltkWidget* widget,
-								GltkSize* size);
+	void (*size_request)			(	GltkWidget* widget,
+										GltkSize* size);
 
-	void (*size_allocate)	(	GltkWidget* widget,
-								GltkAllocation* allocation);
+	void (*size_allocate)			(	GltkWidget* widget,
+										GltkAllocation* allocation);
 
-	gboolean (*event)		(	GltkWidget* widget,
-								GltkEvent* event);
+	gboolean (*event)				(	GltkWidget* widget,
+										GltkEvent* event);
 
-	gboolean (*touch_event)	(	GltkWidget* widget,
-								GltkEventTouch* event);
+	gboolean (*long_touch_event)	(	GltkWidget* widget,
+										GltkEventClick* event);
 
-	gboolean (*click_event)	(	GltkWidget* widget,
-								GltkEventClick* event);
+	gboolean (*touch_event)			(	GltkWidget* widget,
+										GltkEventTouch* event);
+
+	gboolean (*drag_event)			(	GltkWidget* widget,
+										GltkEventDrag* event);
+
+	gboolean (*click_event)			(	GltkWidget* widget,
+										GltkEventClick* event);
 
 	/* virtual funcs */
-	void (*set_window)		(	GltkWidget* widget,
-								GltkWindow* window);
+	void (*set_window)				(	GltkWidget* widget,
+										GltkWindow* window);
 
-	void (*render)			(	GltkWidget* widget);
+	void (*render)					(	GltkWidget* widget);
 };
 
 typedef enum
@@ -112,12 +118,15 @@ void			gltk_widget_size_request	(GltkWidget* widget, GltkSize* size);
 void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation);
 GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);
 void			gltk_widget_invalidate		(GltkWidget* widget);
+void			gltk_widget_layout			(GltkWidget* widget);
 
 void			gltk_widget_render			(GltkWidget* widget);
 
 gboolean		gltk_widget_send_event		(GltkWidget* widget, GltkEvent* event);
 
 GQuark			gltk_widget_error_quark		();
+
+GltkAllocation	gltk_allocation_translate_to_global	(GltkWidget* widget);
 
 G_END_DECLS
 

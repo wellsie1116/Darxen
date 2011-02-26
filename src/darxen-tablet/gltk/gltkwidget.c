@@ -31,7 +31,9 @@ enum
 	SIZE_REQUEST,
 	SIZE_ALLOCATE,
 	EVENT,
+	LONG_TOUCH_EVENT,
 	TOUCH_EVENT,
+	DRAG_EVENT,
 	CLICK_EVENT,
    	LAST_SIGNAL
 };
@@ -91,11 +93,31 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[LONG_TOUCH_EVENT] = 
+		g_signal_new(	"long-touch-event",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, long_touch_event),
+						NULL, NULL,
+						g_cclosure_user_marshal_BOOLEAN__POINTER,
+						G_TYPE_BOOLEAN, 1,
+						G_TYPE_POINTER);
+
 	signals[TOUCH_EVENT] = 
 		g_signal_new(	"touch-event",
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, touch_event),
+						NULL, NULL,
+						g_cclosure_user_marshal_BOOLEAN__POINTER,
+						G_TYPE_BOOLEAN, 1,
+						G_TYPE_POINTER);
+
+	signals[DRAG_EVENT] = 
+		g_signal_new(	"drag-event",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, drag_event),
 						NULL, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
@@ -117,7 +139,9 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
 	klass->event = gltk_widget_real_event;
+	klass->long_touch_event = NULL;
 	klass->touch_event = NULL;
+	klass->drag_event = NULL;
 	klass->click_event = NULL;
 
 	klass->set_window = gltk_widget_set_window_default;
@@ -244,6 +268,14 @@ gltk_widget_invalidate(GltkWidget* widget)
 }
 
 void
+gltk_widget_layout(GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
+	gltk_window_invalidate(widget->window);
+}
+
+void
 gltk_widget_render(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
@@ -254,6 +286,7 @@ gltk_widget_render(GltkWidget* widget)
 gboolean
 gltk_widget_send_event(GltkWidget* widget, GltkEvent* event)
 {
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), FALSE);
 	gboolean returnValue;
 	g_signal_emit(G_OBJECT(widget), signals[EVENT], 0, event, &returnValue);
 	return returnValue;
@@ -263,6 +296,23 @@ GQuark
 gltk_widget_error_quark()
 {
 	return g_quark_from_static_string("gltk-widget-error-quark");
+}
+
+GltkAllocation
+gltk_allocation_translate_to_global(GltkWidget* widget)
+{
+	GltkAllocation res = {0,};
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), res);
+
+	res = gltk_widget_get_allocation(widget);
+
+	while ((widget = gltk_widget_get_parent(widget)))
+	{
+		GltkAllocation parentAllocation = gltk_widget_get_allocation(widget);
+		res.x += parentAllocation.x;
+		res.y += parentAllocation.y;
+	}
+	return res;
 }
 
 /*********************
@@ -294,8 +344,14 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 
 	switch (event->type)
 	{
+		case GLTK_LONG_TOUCH:
+			g_signal_emit(G_OBJECT(widget), signals[LONG_TOUCH_EVENT], 0, event, &returnValue);
+			break;
 		case GLTK_TOUCH:
 			g_signal_emit(G_OBJECT(widget), signals[TOUCH_EVENT], 0, event, &returnValue);
+			break;
+		case GLTK_DRAG:
+			g_signal_emit(G_OBJECT(widget), signals[DRAG_EVENT], 0, event, &returnValue);
 			break;
 		case GLTK_CLICK:
 			g_signal_emit(G_OBJECT(widget), signals[CLICK_EVENT], 0, event, &returnValue);

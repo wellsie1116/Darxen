@@ -22,6 +22,8 @@
 
 #include "gltkwidget.h"
 
+#include <math.h>
+
 G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 
 #define USING_PRIVATE(obj) GltkWindowPrivate* priv = GLTK_WINDOW_GET_PRIVATE(obj)
@@ -40,6 +42,8 @@ struct _GltkWindowPrivate
 
 	GltkWidget* root;
 
+	GltkTouchPosition pressedPosition;
+	guint longPressed;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
 
@@ -68,6 +72,9 @@ gltk_window_init(GltkWindow* self)
 	priv->height = -1;
 	priv->root = NULL;
 	priv->callbacks = emptyCallbacks;
+	priv->longPressed = 0;
+	priv->pressed = NULL;
+	priv->unpressed = NULL;
 }
 
 static void
@@ -115,14 +122,23 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 	priv->width = width;
 	priv->height = height;
 	
-	if (priv->root)
-	{
-		GltkAllocation allocation = {0, 0, width, height};
-		gltk_widget_size_allocate(priv->root, allocation);
-	}
+	gltk_window_layout(window);
 
 	if (priv->callbacks.request_render)
 		priv->callbacks.request_render();
+}
+void
+gltk_window_layout(GltkWindow* window)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+
+	USING_PRIVATE(window);
+
+	if (priv->root)
+	{
+		GltkAllocation allocation = {0, 0, priv->width, priv->height};
+		gltk_widget_size_allocate(priv->root, allocation);
+	}
 }
 
 void
@@ -146,25 +162,59 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	g_return_val_if_fail(priv->root, FALSE);
 
-	gboolean returnValue;
+	gboolean returnValue = FALSE;
+
+	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_BEGIN)
+		priv->pressedPosition = *event->touch.positions;
 
 	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_MOVE && priv->pressed)
 	{
-		//redirect touch move event to pressed widget
-		GltkEvent* e = gltk_event_clone(event);
-		GltkWidget* parent = priv->pressed;
-		for (parent = priv->pressed; parent; parent = gltk_widget_get_parent(parent))
+		int dx = event->touch.positions->x - priv->pressedPosition.x;
+		int dy = event->touch.positions->y - priv->pressedPosition.y;
+
+		//store current translation
+		if (priv->longPressed)
 		{
-			GltkAllocation allocation = gltk_widget_get_allocation(parent);
-			int i;
-			for (i = 0; i < e->touch.fingers; i++)
+			float dist = sqrt(dx*dx+dy*dy);
+			if (dist > 10.0f)
 			{
-				e->touch.positions[i].x -= allocation.x;
-				e->touch.positions[i].y -= allocation.y;
+				g_source_remove(priv->longPressed);
+				priv->longPressed = 0;
+			}
+			
+			//TODO: also, send a touch move event?
+		}
+
+		if (!priv->longPressed)
+		{
+			//send a drag event to the pressed widget
+			GltkEvent* e = gltk_event_new(GLTK_DRAG);
+			e->drag.dx = dx;
+			e->drag.dy = dy;
+			priv->pressedPosition = *(event->touch.positions);
+
+			returnValue = gltk_widget_send_event(priv->pressed, e);
+			gltk_event_free(e);
+
+			if (!returnValue)
+			{
+				//instead, redirect touch move event to pressed widget
+				e = gltk_event_clone(event);
+				GltkWidget* parent = priv->pressed;
+				for (parent = priv->pressed; parent; parent = gltk_widget_get_parent(parent))
+				{
+					GltkAllocation allocation = gltk_widget_get_allocation(parent);
+					int i;
+					for (i = 0; i < e->touch.fingers; i++)
+					{
+						e->touch.positions[i].x -= allocation.x;
+						e->touch.positions[i].y -= allocation.y;
+					}
+				}
+				returnValue = gltk_widget_send_event(priv->pressed, e);
+				gltk_event_free(e);
 			}
 		}
-		returnValue = gltk_widget_send_event(priv->pressed, e);
-		gltk_event_free(e);
 	}
 	else
 	{
@@ -206,6 +256,21 @@ gltk_window_invalidate(GltkWindow* window)
 		priv->callbacks.request_render();
 }
 
+static gboolean
+check_long_press(GltkWindow* window)
+{
+	USING_PRIVATE(window);
+
+	priv->longPressed = 0;
+
+	//spawn long press event
+	GltkEvent* event = gltk_event_new(GLTK_LONG_TOUCH);
+	gltk_widget_send_event(priv->pressed, event);
+	gltk_event_free(event);
+
+	return FALSE;
+}
+
 void
 gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 {
@@ -218,7 +283,9 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 	g_object_ref(G_OBJECT(widget));
 	priv->pressed = widget;
 
-	//g_object_connect(G_OBJECT(widget), "event", pressed_widget_event
+	if (priv->longPressed)
+		g_source_remove(priv->longPressed);
+	priv->longPressed = g_timeout_add(1000, (GSourceFunc)check_long_press, window);
 }
 
 void
@@ -252,6 +319,12 @@ gltk_window_press_complete(GltkWindow* window)
 {
 	g_return_if_fail(GLTK_IS_WINDOW(window));
 	USING_PRIVATE(window);
+	
+	if (priv->longPressed)
+	{
+		g_source_remove(priv->longPressed);
+		priv->longPressed = 0;
+	}
 	
 	if (priv->pressed && (priv->pressed == priv->unpressed))
 	{

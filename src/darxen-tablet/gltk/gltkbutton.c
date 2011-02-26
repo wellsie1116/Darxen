@@ -195,7 +195,7 @@ gltk_button_render(GltkWidget* widget)
 		x = (allocation.width - width) / 2.0;
 		y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
 
-		glTranslatef(x, y, 0.0f);
+		glTranslatef(x, y, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
 		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);

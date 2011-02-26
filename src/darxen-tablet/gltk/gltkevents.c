@@ -39,6 +39,12 @@ gltk_event_clone(GltkEvent* event)
 			newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
 			*(newEvent->touch.positions) = *(event->touch.positions);
 			break;
+		case GLTK_LONG_TOUCH:
+			newEvent->longTouch = event->longTouch;
+			break;
+		case GLTK_DRAG:
+			newEvent->drag = event->drag;
+			break;
 		case GLTK_CLICK:
 			newEvent->click = event->click;
 			break;
@@ -53,6 +59,10 @@ gltk_event_free(GltkEvent* event)
 	{
 		case GLTK_TOUCH:
 			g_free(event->touch.positions);
+			break;
+		case GLTK_LONG_TOUCH:
+			break;
+		case GLTK_DRAG:
 			break;
 		case GLTK_CLICK:
 			break;

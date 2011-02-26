@@ -37,6 +37,7 @@ enum
 };
 
 typedef struct _DarxenSiteListPrivate		DarxenSiteListPrivate;
+typedef struct _SiteViewInfo				SiteViewInfo;
 typedef struct _Site						Site;
 typedef struct _View						View;
 
@@ -45,7 +46,16 @@ struct _DarxenSiteListPrivate
 	GList* sites; //gchar*
 	GHashTable* siteMap; //Site
 
+	GltkWidget* dragButton;
+	GltkAllocation dragButtonParentAllocation;
 
+};
+
+struct _SiteViewInfo
+{
+	DarxenSiteList* list;
+	gchar* site;
+	gchar* view;
 };
 
 struct _Site
@@ -60,6 +70,7 @@ struct _Site
 struct _View
 {
 	gchar* name;
+	SiteViewInfo info;
 	GltkWidget* viewButton;
 };
 
@@ -68,9 +79,11 @@ struct _View
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
 
-static void	site_button_clicked(GltkButton* button, Site* siteInfo);
+static gboolean	site_button_clicked(GltkButton* button, GltkEventClick* event, Site* siteInfo);
+static gboolean view_button_long_touch(GltkButton* button, GltkEventClick* event, SiteViewInfo* info);
+static gboolean view_button_drag(GltkButton* button, GltkEventDrag* event, SiteViewInfo* info);
 // static void darxen_site_list_size_request(GltkWidget* widget, GltkSize* size);
-// static void darxen_site_list_render(GltkWidget* widget);
+static void darxen_site_list_render(GltkWidget* widget);
 
 static void
 darxen_site_list_class_init(DarxenSiteListClass* klass)
@@ -84,7 +97,7 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 	gobject_class->finalize = darxen_site_list_finalize;
 
 	// gltkwidget_class->size_request = darxen_site_list_size_request;
-	// gltkwidget_class->render = darxen_site_list_render;
+	gltkwidget_class->render = darxen_site_list_render;
 }
 
 static void
@@ -116,6 +129,7 @@ darxen_site_list_init(DarxenSiteList* self)
 
 	priv->sites = NULL;
 	priv->siteMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)site_free);
+	priv->dragButton = NULL;
 }
 
 static void
@@ -216,7 +230,12 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 
 	View* viewInfo = g_new(View, 1);
 	viewInfo->name = g_strdup(view);
+	viewInfo->info.list = list;
+	viewInfo->info.site = siteInfo->name;
+	viewInfo->info.view = viewInfo->name;
 	viewInfo->viewButton = gltk_button_new(view);
+	g_signal_connect(viewInfo->viewButton, "long_touch_event", (GCallback)view_button_long_touch, &viewInfo->info);
+	g_signal_connect(viewInfo->viewButton, "drag_event", (GCallback)view_button_drag, &viewInfo->info);
 
 	gltk_box_append_widget(GLTK_BOX(siteInfo->viewsBox), viewInfo->viewButton, FALSE, FALSE);
 
@@ -234,12 +253,57 @@ darxen_site_list_error_quark()
 /*********************
  * Private Functions *
  *********************/
-static void
-site_button_clicked(GltkButton* button, Site* siteInfo)
+static gboolean
+site_button_clicked(GltkButton* button, GltkEventClick* event, Site* siteInfo)
 {
 	g_message("Button clicked");
+
+	return TRUE;
 }
 
+static gboolean
+view_button_long_touch(GltkButton* button, GltkEventClick* event, SiteViewInfo* info)
+{
+	g_message("View long touched");
+
+	USING_PRIVATE(info->list);
+
+	Site* siteInfo = g_hash_table_lookup(priv->siteMap, info->site);
+	g_assert(siteInfo);
+
+	View* viewInfo = g_hash_table_lookup(siteInfo->viewMap, info->view);
+	g_assert(viewInfo);
+	g_assert(viewInfo->viewButton == GLTK_WIDGET(button));
+
+	priv->dragButton = viewInfo->viewButton;
+	priv->dragButtonParentAllocation = gltk_allocation_translate_to_global(gltk_widget_get_parent(priv->dragButton));
+	gltk_box_remove_widget(GLTK_BOX(siteInfo->viewsBox), viewInfo->viewButton);
+	gltk_widget_set_parent(priv->dragButton, GLTK_WIDGET(info->list));
+
+	gltk_widget_invalidate(GLTK_WIDGET(info->list));
+	gltk_widget_layout(GLTK_WIDGET(info->list));
+
+	return TRUE;
+}
+
+static gboolean
+view_button_drag(GltkButton* button, GltkEventDrag* event, SiteViewInfo* info)
+{
+	g_message("Button Drag");
+
+	USING_PRIVATE(info->list);
+
+	if (!priv->dragButton)
+		return FALSE;
+
+	GltkAllocation allocation = gltk_widget_get_allocation(priv->dragButton);
+	allocation.x += event->dx;
+	allocation.y += event->dy;
+	gltk_widget_size_allocate(priv->dragButton, allocation);
+	gltk_widget_invalidate(priv->dragButton);
+
+	return TRUE;
+}
 
 // static void
 // darxen_site_list_size_request(GltkWidget* widget, GltkSize* size)
@@ -250,17 +314,23 @@ site_button_clicked(GltkButton* button, Site* siteInfo)
 // 	GLTK_WIDGET_CLASS(darxen_site_list_parent_class)->size_request(widget, size);
 // }
 // 
-// static void
-// darxen_site_list_render(GltkWidget* widget)
-// {
-// 	glColor3f(0.0, 1.0, 1.0);
-// 	glBegin(GL_QUADS);
-// 	{
-// 		glVertex2i(0, 0);
-// 		glVertex2i(0, 100);
-// 		glVertex2i(100, 100);
-// 		glVertex2i(100, 0);
-// 	}
-// 	glEnd();
-// }
+static void
+darxen_site_list_render(GltkWidget* widget)
+{
+	DarxenSiteList* list = DARXEN_SITE_LIST(widget);
+	USING_PRIVATE(list);
+
+	if (priv->dragButton)
+	{
+		glPushMatrix();
+		{
+			GltkAllocation allocation = gltk_widget_get_allocation(priv->dragButton);
+			glTranslatef(priv->dragButtonParentAllocation.x + allocation.x, priv->dragButtonParentAllocation.y + allocation.y, 0.5f);
+			gltk_widget_render(priv->dragButton);
+		}
+		glPopMatrix();
+	}
+
+	GLTK_WIDGET_CLASS(darxen_site_list_parent_class)->render(widget);
+}
 
