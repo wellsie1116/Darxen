@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 #define DARXEN_SITE_LIST_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), DARXEN_TYPE_SITE_LIST, DarxenSiteListClass))
 #define DARXEN_IS_SITE_LIST(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), DARXEN_TYPE_SITE_LIST))
 #define DARXEN_IS_SITE_LIST_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), DARXEN_TYPE_SITE_LIST))
-#define DARXEN_SITE_LIST_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), DARXEN_TYPE_SITE_LIST, DarxenSiteListClass))
+#define DARXEN_SITE_LIST_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), DARXEN_TYPE_SITE_LIST, DarxenSiteListClass))
 
 typedef struct _DarxenSiteList			DarxenSiteList;
 typedef struct _DarxenSiteListClass		DarxenSiteListClass;
@@ -60,7 +60,8 @@ typedef enum
 GType			darxen_site_list_get_type	() G_GNUC_CONST;
 GltkWidget*		darxen_site_list_new		();
 
-/* Public functions here */
+void			darxen_site_list_add_site	(DarxenSiteList* list, const gchar* site);
+void			darxen_site_list_add_view	(DarxenSiteList* list, const gchar* site, const gchar* view);
 
 GQuark			darxen_site_list_error_quark	();
 

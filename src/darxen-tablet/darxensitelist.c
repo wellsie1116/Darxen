@@ -20,6 +20,8 @@
 
 #include "darxensitelist.h"
 
+#include <glib.h>
+
 G_DEFINE_TYPE(DarxenSiteList, darxen_site_list, GLTK_TYPE_VBOX)
 
 #define USING_PRIVATE(obj) DarxenSiteListPrivate* priv = DARXEN_SITE_LIST_GET_PRIVATE(obj)
@@ -35,10 +37,28 @@ enum
 };
 
 typedef struct _DarxenSiteListPrivate		DarxenSiteListPrivate;
+typedef struct _Site						Site;
+typedef struct _View						View;
+
 struct _DarxenSiteListPrivate
 {
-	int dummy;
+	GList* sites; //gchar*
+	GHashTable* siteMap; //Site
+};
 
+struct _Site
+{
+	gchar* name;
+	GltkWidget* siteBox;
+	GltkWidget* viewsBox;
+	GList* views; //gchar*
+	GHashTable* viewMap; //View
+};
+
+struct _View
+{
+	gchar* name;
+	GltkWidget* viewButton;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -46,6 +66,7 @@ struct _DarxenSiteListPrivate
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
 
+static void	site_button_clicked(GltkButton* button, Site* siteInfo);
 // static void darxen_site_list_size_request(GltkWidget* widget, GltkSize* size);
 // static void darxen_site_list_render(GltkWidget* widget);
 
@@ -65,17 +86,28 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 }
 
 static void
+site_free(Site* site)
+{
+	g_free(site->name);
+	//TODO: finish
+	g_free(site);
+}
+
+static void
+view_free(View* view)
+{
+	g_free(view->name);
+	//TODO: finish
+	g_free(view);
+}
+
+static void
 darxen_site_list_init(DarxenSiteList* self)
 {
 	USING_PRIVATE(self);
 
-	GltkWidget* btn1 = gltk_button_new("Button 1");
-	GltkWidget* btn2 = gltk_button_new("Button 2");
-	GltkWidget* btn3 = gltk_button_new("Button 3");
-
-	gltk_box_append_widget(GLTK_BOX(self), btn1, TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(self), btn2, TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(self), btn3, TRUE, FALSE);
+	priv->sites = NULL;
+	priv->siteMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)site_free);
 }
 
 static void
@@ -111,6 +143,62 @@ darxen_site_list_new()
 	return (GltkWidget*)gobject;
 }
 
+void
+darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
+{
+	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
+	USING_PRIVATE(list);
+
+	GList* siteNode;
+	siteNode = g_list_find_custom(priv->sites, site, (GCompareFunc)g_strcmp0);
+	g_return_if_fail(!siteNode);
+
+	Site* siteInfo = g_new(Site, 1);
+	siteInfo->name = g_strdup(site);
+	siteInfo->siteBox = gltk_vbox_new();
+	siteInfo->views = NULL;
+	siteInfo->viewMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)view_free);
+
+	GltkWidget* siteButton = gltk_button_new(site);
+	g_signal_connect(siteButton, "click_event", (GCallback)site_button_clicked, siteInfo);
+	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), siteButton, FALSE, FALSE);
+
+	GltkWidget* viewSpacer = gltk_hbox_new();
+	siteInfo->viewsBox = gltk_vbox_new();
+	gltk_box_append_widget(GLTK_BOX(viewSpacer), gltk_label_new("  "), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(viewSpacer), siteInfo->viewsBox, TRUE, TRUE);
+
+	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), viewSpacer, FALSE, FALSE);
+
+	gltk_box_append_widget(GLTK_BOX(list), siteInfo->siteBox, FALSE, FALSE);
+
+	priv->sites = g_list_append(priv->sites, g_strdup(site));
+	g_hash_table_insert(priv->siteMap, g_strdup(site), siteInfo);
+}
+
+void
+darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
+	USING_PRIVATE(list);
+
+	Site* siteInfo = g_hash_table_lookup(priv->siteMap, site);
+	g_return_if_fail(siteInfo);
+
+	GList* viewNode;
+	viewNode = g_list_find_custom(siteInfo->views, view, (GCompareFunc)g_strcmp0);
+	g_return_if_fail(!viewNode);
+
+	View* viewInfo = g_new(View, 1);
+	viewInfo->name = g_strdup(view);
+	viewInfo->viewButton = gltk_button_new(view);
+
+	gltk_box_append_widget(GLTK_BOX(siteInfo->viewsBox), viewInfo->viewButton, FALSE, FALSE);
+
+	siteInfo->views = g_list_append(siteInfo->views, g_strdup(view));
+	g_hash_table_insert(siteInfo->viewMap, g_strdup(view), viewInfo);
+}
+
 
 GQuark
 darxen_site_list_error_quark()
@@ -121,6 +209,12 @@ darxen_site_list_error_quark()
 /*********************
  * Private Functions *
  *********************/
+static void
+site_button_clicked(GltkButton* button, Site* siteInfo)
+{
+	g_message("Button clicked");
+}
+
 
 // static void
 // darxen_site_list_size_request(GltkWidget* widget, GltkSize* size)

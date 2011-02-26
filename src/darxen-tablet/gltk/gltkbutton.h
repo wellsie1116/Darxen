@@ -58,7 +58,7 @@ typedef enum
 } GltkButtonError;
 
 GType			gltk_button_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_button_new			(gchar* text);
+GltkWidget*		gltk_button_new			(const gchar* text);
 
 const gchar*	gltk_button_get_text	(GltkButton* button);
 

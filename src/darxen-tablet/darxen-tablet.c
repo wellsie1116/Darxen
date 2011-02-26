@@ -273,6 +273,15 @@ GltkWindow* create_window()
 	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
 
 	GltkWidget* siteList = darxen_site_list_new();
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
+
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
+
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
 
 	gltk_box_append_widget(GLTK_BOX(hbox), siteList, TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);
