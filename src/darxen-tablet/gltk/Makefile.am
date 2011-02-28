@@ -15,9 +15,12 @@ libgltk_la_SOURCES = gltk.h \
 		     gltkwindow.c gltkwindow.h \
 			 gltkfonts.c gltkfonts.h \
 		     gltkwidget.c gltkwidget.h \
+			 gltkscrollable.c gltkscrollable.h \
 			 gltkbox.c gltkbox.h \
 			 gltkhbox.c gltkhbox.h \
 			 gltkvbox.c gltkvbox.h \
+			 gltkbin.c gltkbin.h \
+			 gltklist.c gltklist.h \
 			 gltklabel.c gltklabel.h \
 			 gltkbutton.c gltkbutton.h \
 			 gltkevents.c gltkevents.h

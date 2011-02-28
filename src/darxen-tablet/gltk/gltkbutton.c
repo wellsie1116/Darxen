@@ -159,7 +159,6 @@ gltk_button_render(GltkWidget* widget)
 	USING_PRIVATE(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(widget));
-	g_message("Rendering");
 
 	glBegin(GL_QUADS);
 	{

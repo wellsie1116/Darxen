@@ -130,7 +130,7 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 	child->widget = widget;
 	child->expand = expand;
 	child->fill = fill;
-	g_object_ref(G_OBJECT(widget));
+	g_object_ref_sink(G_OBJECT(widget));
 
 	if (expand)
 		box->expandCount++;

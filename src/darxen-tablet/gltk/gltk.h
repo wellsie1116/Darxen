@@ -25,10 +25,13 @@
 #include <gltk/gltkevents.h>
 #include <gltk/gltkfonts.h>
 #include <gltk/gltkwidget.h>
+#include <gltk/gltkscrollable.h>
 #include <gltk/gltkwindow.h>
 #include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>
+#include <gltk/gltkbin.h>
+#include <gltk/gltklist.h>
 #include <gltk/gltklabel.h>
 #include <gltk/gltkbutton.h>
 

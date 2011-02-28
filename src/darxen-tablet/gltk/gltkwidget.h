@@ -60,7 +60,7 @@ typedef struct _GltkWidgetClass		GltkWidgetClass;
 
 struct _GltkWidget
 {
-	GObject parent;
+	GInitiallyUnowned parent;
 
 	GltkWindow* window;
 
@@ -71,7 +71,7 @@ struct _GltkWidget
 
 struct _GltkWidgetClass
 {
-	GObjectClass parent_class;
+	GInitiallyUnownedClass parent_class;
 	
 	/* signals */
 	void (*size_request)			(	GltkWidget* widget,

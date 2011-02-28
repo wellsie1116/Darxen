@@ -21,7 +21,7 @@
 #include "gltkwidget.h"
 #include "gltkmarshal.h"
 
-G_DEFINE_TYPE(GltkWidget, gltk_widget, G_TYPE_OBJECT)
+G_DEFINE_TYPE(GltkWidget, gltk_widget, G_TYPE_INITIALLY_UNOWNED)
 
 #define USING_PRIVATE(obj) GltkWidgetPrivate* priv = GLTK_WIDGET_GET_PRIVATE(obj)
 #define GLTK_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_WIDGET, GltkWidgetPrivate))
@@ -52,6 +52,7 @@ static void gltk_widget_finalize(GObject* gobject);
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
+static gboolean gltk_widget_chain_event(GltkWidget* widget, gpointer event);
 
 static void	gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window);
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -98,7 +99,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, long_touch_event),
-						NULL, NULL,
+						gltk_accum_event, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
@@ -108,7 +109,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, touch_event),
-						NULL, NULL,
+						gltk_accum_event, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
@@ -118,7 +119,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, drag_event),
-						NULL, NULL,
+						gltk_accum_event, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
@@ -128,7 +129,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWidgetClass, click_event),
-						NULL, NULL,
+						gltk_accum_event, NULL,
 						g_cclosure_user_marshal_BOOLEAN__POINTER,
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
@@ -139,14 +140,15 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
 	klass->event = gltk_widget_real_event;
-	klass->long_touch_event = NULL;
+	klass->long_touch_event = (void*)gltk_widget_chain_event;
 	klass->touch_event = NULL;
-	klass->drag_event = NULL;
-	klass->click_event = NULL;
+	klass->drag_event = (void*)gltk_widget_chain_event;
+	klass->click_event = (void*)gltk_widget_chain_event;
 
 	klass->set_window = gltk_widget_set_window_default;
 	klass->render = gltk_widget_render_default;
 }
+
 
 static void
 gltk_widget_init(GltkWidget* self)
@@ -264,7 +266,8 @@ gltk_widget_invalidate(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	gltk_window_invalidate(widget->window);
+	if (widget->window)
+		gltk_window_invalidate(widget->window);
 }
 
 void
@@ -272,7 +275,8 @@ gltk_widget_layout(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	gltk_window_invalidate(widget->window);
+	if (widget->window)
+		gltk_window_invalidate(widget->window);
 }
 
 void
@@ -361,6 +365,16 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 	}
 
 	return returnValue;
+}
+
+static gboolean
+gltk_widget_chain_event(GltkWidget* widget, gpointer event)
+{
+	if (!widget->parentWidget)
+		return FALSE;
+
+	//chain up to parent
+	return gltk_widget_real_event(widget->parentWidget, (GltkEvent*)event);
 }
 
 static void

@@ -239,6 +239,37 @@ GltkWidget* create_hbox()
 	return hbox;
 }
 
+static gboolean
+long_touch(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
+{
+	if (!g_strcmp0(user_data, "kind"))
+	{
+		g_message("Long touch intercepted");
+		return TRUE;
+	}
+	else
+	{
+		g_message("Long touch ignored");
+		return FALSE;
+	}
+}
+
+GltkWidget* create_list_item(const gchar* msg)
+{
+	GltkWidget* vbox = gltk_vbox_new();
+	g_object_force_floating(G_OBJECT(vbox));
+
+	GltkWidget* button = gltk_button_new(msg);
+
+	gltk_box_append_widget(GLTK_BOX(vbox), button, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), gltk_label_new(	"This label is\n"
+															"not clickable"), FALSE, FALSE);
+
+	g_signal_connect(button, "long-touch-event", (GCallback)long_touch, msg);
+
+	return vbox;
+}
+
 GltkWindow* create_window()
 {
 	GltkWindowCallbacks callbacks;
@@ -274,16 +305,22 @@ GltkWindow* create_window()
 
 	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
 
-	GltkWidget* siteList = darxen_site_list_new();
-	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
-	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
-	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
+	//GltkWidget* siteList = darxen_site_list_new();
+	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
+	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
+	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
 
-	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
-	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
-	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
+	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
+	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
+	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
 
-	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
+	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
+	
+	GltkWidget* siteList = gltk_list_new();
+
+	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("klot"), NULL);
+	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kind"), NULL);
+	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kilx"), NULL);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), siteList, TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);
