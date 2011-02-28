@@ -22,6 +22,9 @@
 
 #include "gltkvbox.h"
 #include "gltkbin.h"
+#include "gltklabel.h"
+
+#include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_SCROLLABLE)
 
@@ -51,8 +54,7 @@ static void gltk_list_finalize(GObject* gobject);
 
 static gboolean gltk_list_event(GltkWidget* widget, GltkEvent* event);
 static void gltk_list_set_window(GltkWidget* widget, GltkWindow* window);
-static gboolean gltk_list_touch_event(GltkWidget* widget, GltkEventTouch* touch);
-static gboolean gltk_list_long_touch_event(GltkWidget* widget, GltkEventClick* event);
+static void gltk_list_render(GltkWidget* widget);
 
 static gboolean gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item);
 static gboolean gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item);
@@ -71,8 +73,7 @@ gltk_list_class_init(GltkListClass* klass)
 
 	gltkwidget_class->event = gltk_list_event;
 	gltkwidget_class->set_window = gltk_list_set_window;
-	//gltkwidget_class->touch_event = gltk_list_touch_event;
-	//gltkwidget_class->long_touch_event = gltk_list_long_touch_event;
+	gltkwidget_class->render = gltk_list_render;
 }
 
 static void
@@ -210,28 +211,34 @@ gltk_list_set_window(GltkWidget* widget, GltkWindow* window)
 	GLTK_WIDGET_CLASS(gltk_list_parent_class)->set_window(widget, window);
 }
 
-static gboolean
-gltk_list_touch_event(GltkWidget* widget, GltkEventTouch* touch)
+static void
+gltk_list_render(GltkWidget* widget)
 {
-	switch (touch->touchType)
-	{
-		case TOUCH_BEGIN:
-			gltk_window_set_widget_pressed(widget->window, widget);
-			break;
-		case TOUCH_END:
-			gltk_window_set_widget_unpressed(widget->window, widget);
-			break;
-		default:
-			return FALSE;
-	}
-	return TRUE;
-}
+	USING_PRIVATE(widget);
 
-static gboolean
-gltk_list_long_touch_event(GltkWidget* widget, GltkEventClick* event)
-{
-	g_message("List received long touch, worthless now.....");
-	return TRUE;
+	GLTK_WIDGET_CLASS(gltk_list_parent_class)->render(widget);
+
+	if (priv->drag)
+	{
+		GList* pChildren = GLTK_BOX(priv->vbox)->children;
+		GList* pItems = priv->items;
+		GltkBoxChild* child = NULL;
+		while (pChildren && pItems)
+		{
+			child = (GltkBoxChild*)pChildren->data;
+			if (priv->drag == (GltkListItem*)pItems->data)
+				break;
+			pChildren = pChildren->next;
+			pItems = pItems->next;
+		}
+		g_assert(child);
+
+		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+		GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
+		glTranslatef(allocation.x+childAllocation.x, allocation.y+childAllocation.y, 0.5f);
+		gltk_widget_render(priv->drag->widget);
+		glTranslatef(-allocation.x-childAllocation.x, -allocation.y-childAllocation.y, -0.5f);
+	}
 }
 
 static gboolean
@@ -247,7 +254,28 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 			break;
 		case TOUCH_END:
 			gltk_window_set_widget_unpressed(widget->window, widget);
-			priv->drag = NULL;
+			if (priv->drag)
+			{
+				GList* pChildren = GLTK_BOX(priv->vbox)->children;
+				GList* pItems = priv->items;
+				while (pChildren && pItems)
+				{
+					GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+					if (item == (GltkListItem*)pItems->data)
+					{
+						GltkBin* bin = GLTK_BIN(child->widget);
+						gltk_bin_set_widget(bin, item->widget);
+						break;
+					}
+
+					pChildren = pChildren->next;
+					pItems = pItems->next;
+				}
+
+				priv->drag = NULL;
+				gltk_window_layout(widget->window);
+				gltk_window_invalidate(widget->window);
+			}
 			break;
 		default:
 			g_message("bin touch event - ignored");
@@ -264,8 +292,19 @@ gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkLi
 	USING_PRIVATE(list);
 	priv->drag = item;
 
-	g_message("A bin in a list was long touched, nomming event");
+	GltkWidget* bin = item->widget->parentWidget;
+	
+	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
+	allocation.x = 0;
+	allocation.y = 0;
+	gltk_widget_size_allocate(priv->drag->widget, allocation);
 
+	gltk_bin_set_widget(GLTK_BIN(bin), gltk_label_new("placeholder"));
+
+	gltk_window_layout(widget->window);
+	gltk_window_invalidate(widget->window);
+
+	g_message("A bin in a list was long touched, nomming event");
 
 	return TRUE;
 }

@@ -32,7 +32,7 @@ G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 static void gltk_window_dispose(GObject* gobject);
 static void gltk_window_finalize(GObject* gobject);
 
-static void	gltk_window_press_complete(GltkWindow* window);
+static gboolean	gltk_window_press_complete(GltkWindow* window);
 
 typedef struct _GltkWindowPrivate		GltkWindowPrivate;
 struct _GltkWindowPrivate
@@ -216,6 +216,10 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			}
 		}
 	}
+	else if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_END && priv->pressed)
+	{
+		//do not send the event, they aren't expecting it
+	}
 	else
 	{
 		returnValue = gltk_widget_send_event(priv->root, event);
@@ -223,7 +227,7 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	//check to spawn a click event
 	if (event->touch.touchType == TOUCH_END)
-		gltk_window_press_complete(window);
+		returnValue = gltk_window_press_complete(window) || returnValue;
 
 	return returnValue;
 }
@@ -314,11 +318,13 @@ gltk_window_error_quark()
  * Private Functions *
  *********************/
 
-static void
+static gboolean
 gltk_window_press_complete(GltkWindow* window)
 {
-	g_return_if_fail(GLTK_IS_WINDOW(window));
+	g_return_val_if_fail(GLTK_IS_WINDOW(window), FALSE);
 	USING_PRIVATE(window);
+
+	gboolean returnValue = FALSE;
 	
 	if (priv->longPressed)
 	{
@@ -342,7 +348,7 @@ gltk_window_press_complete(GltkWindow* window)
 		event->touch.positions = g_new(GltkTouchPosition, 1);
 		event->touch.positions->x = -1;
 		event->touch.positions->y = -1;
-		gltk_widget_send_event(priv->pressed, event);
+		returnValue = gltk_widget_send_event(priv->pressed, event);
 	}
 
 	if (priv->pressed)
@@ -355,5 +361,7 @@ gltk_window_press_complete(GltkWindow* window)
 		g_object_unref(G_OBJECT(priv->unpressed));
 		priv->unpressed = NULL;
 	}
+
+	return returnValue;
 }
 
