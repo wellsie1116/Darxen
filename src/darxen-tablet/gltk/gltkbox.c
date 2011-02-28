@@ -258,13 +258,15 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 				}
 				pChildren = pChildren->next;
 			}
-
 			gltk_event_free(childEvent);
+
+			if (!returnValue)
+				returnValue = GLTK_WIDGET_CLASS(gltk_box_parent_class)->event(widget, event);
 		} break;
 		default:
-			g_warning("Unhandled event type: %i", event->type);
+			//g_warning("Unhandled event type: %i", event->type);
+			returnValue = GLTK_WIDGET_CLASS(gltk_box_parent_class)->event(widget, event);
 	}
-	
 
 	return returnValue;
 }

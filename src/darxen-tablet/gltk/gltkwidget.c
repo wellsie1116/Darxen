@@ -141,7 +141,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->size_allocate = gltk_widget_real_size_allocate;
 	klass->event = gltk_widget_real_event;
 	klass->long_touch_event = (void*)gltk_widget_chain_event;
-	klass->touch_event = NULL;
+	klass->touch_event = (void*)gltk_widget_chain_event;
 	klass->drag_event = (void*)gltk_widget_chain_event;
 	klass->click_event = (void*)gltk_widget_chain_event;
 

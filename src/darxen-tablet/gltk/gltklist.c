@@ -39,6 +39,8 @@ struct _GltkListPrivate
 {
 	GList* items; //GltkListItem
 
+	GltkListItem* drag;
+
 	GltkWidget* vbox;
 };
 
@@ -52,8 +54,9 @@ static void gltk_list_set_window(GltkWidget* widget, GltkWindow* window);
 static gboolean gltk_list_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 static gboolean gltk_list_long_touch_event(GltkWidget* widget, GltkEventClick* event);
 
-static gboolean gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event);
-static gboolean gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event);
+static gboolean gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item);
+static gboolean gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item);
+static gboolean gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem* item);
 
 static void
 gltk_list_class_init(GltkListClass* klass)
@@ -68,8 +71,8 @@ gltk_list_class_init(GltkListClass* klass)
 
 	gltkwidget_class->event = gltk_list_event;
 	gltkwidget_class->set_window = gltk_list_set_window;
-	gltkwidget_class->touch_event = gltk_list_touch_event;
-	gltkwidget_class->long_touch_event = gltk_list_long_touch_event;
+	//gltkwidget_class->touch_event = gltk_list_touch_event;
+	//gltkwidget_class->long_touch_event = gltk_list_long_touch_event;
 }
 
 static void
@@ -81,6 +84,7 @@ gltk_list_init(GltkList* self)
 	gltk_scrollable_set_widget(GLTK_SCROLLABLE(self), priv->vbox);
 
 	priv->items = NULL;
+	priv->drag = NULL;
 }
 
 static void
@@ -125,6 +129,7 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 
 	priv->items = g_list_append(priv->items, item);
 	
+	g_signal_connect(bin, "touch-event", (GCallback)gltk_list_bin_touch_event, item);
 	g_signal_connect(bin, "long-touch-event", (GCallback)gltk_list_bin_long_touch_event, item);
 	g_signal_connect(bin, "drag-event", (GCallback)gltk_list_bin_drag_event, item);
 
@@ -163,7 +168,6 @@ gltk_list_event(GltkWidget* widget, GltkEvent* event)
 	GltkList* list = GLTK_LIST(widget);
 	USING_PRIVATE(list);
 
-	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	gboolean returnValue = FALSE;
 
 	switch (event->type)
@@ -171,29 +175,7 @@ gltk_list_event(GltkWidget* widget, GltkEvent* event)
 		case GLTK_TOUCH:
 		{
 			//first, try to pass the event to an item
-			GltkEvent* childEvent = gltk_event_clone(event);
-			GltkEventTouch eventTouch = childEvent->touch;
-			eventTouch.positions->x -= allocation.x;
-			eventTouch.positions->y -= allocation.y;
-
-			GList* pItems = priv->items;
-			while (pItems && !returnValue)
-			{
-				GltkListItem* item = (GltkListItem*)pItems->data;
-
-				GltkAllocation childAllocation = gltk_widget_get_allocation(item->widget);
-
-				int x = eventTouch.positions->x;
-				int y = eventTouch.positions->y;
-
-				if (childAllocation.x < x && childAllocation.x + childAllocation.width > x &&
-					childAllocation.y < y && childAllocation.y + childAllocation.height > y)
-				{
-					returnValue = gltk_widget_send_event(item->widget, childEvent);
-				}
-				pItems = pItems->next;
-			}
-			gltk_event_free(childEvent);
+			returnValue = gltk_widget_send_event(priv->vbox, event);
 
 			if (!returnValue)
 			{
@@ -248,22 +230,64 @@ gltk_list_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 static gboolean
 gltk_list_long_touch_event(GltkWidget* widget, GltkEventClick* event)
 {
-	g_message("List received long touch");
+	g_message("List received long touch, worthless now.....");
 	return TRUE;
 }
 
+static gboolean
+gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item)
+{
+	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	USING_PRIVATE(list);
+
+	switch (event->touchType)
+	{
+		case TOUCH_BEGIN:
+			gltk_window_set_widget_pressed(widget->window, widget);
+			break;
+		case TOUCH_END:
+			gltk_window_set_widget_unpressed(widget->window, widget);
+			priv->drag = NULL;
+			break;
+		default:
+			g_message("bin touch event - ignored");
+			return FALSE;
+	}
+	g_message("bin touch event - handled");
+	return TRUE;
+}
 
 static gboolean
-gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event)
+gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item)
 {
+	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	USING_PRIVATE(list);
+	priv->drag = item;
+
 	g_message("A bin in a list was long touched, nomming event");
 
+
 	return TRUE;
 }
 
 static gboolean
-gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event)
+gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem* item)
 {
+	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	USING_PRIVATE(list);
+
+	if (!priv->drag)
+		return FALSE;
+	
+	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
+
+	//allocation.x += event->dx;
+	allocation.y += event->dy;
+
+	gltk_widget_size_allocate(priv->drag->widget, allocation);
+
+	gltk_widget_invalidate(GLTK_WIDGET(list));
+
 	g_message("A bin in a list was dragged, nomming event");
 	return TRUE;
 }
