@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 #define GLTK_LIST_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_LIST, GltkListClass))
 
 typedef struct _GltkListItem		GltkListItem;
+typedef struct _GltkListItemPrivate	GltkListItemPrivate;
 typedef struct _GltkList			GltkList;
 typedef struct _GltkListClass		GltkListClass;
 
@@ -42,6 +43,7 @@ struct _GltkListItem
 {
 	GltkWidget* widget;
 	gpointer data;
+	GltkListItemPrivate* priv;
 };
 
 struct _GltkList

@@ -185,7 +185,9 @@ configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 	
 	glMatrixMode(GL_MODELVIEW);
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	gltk_window_set_size(glWindow, event->width, event->height);
 
@@ -362,7 +364,7 @@ int main(int argc, char *argv[])
 	g_signal_connect(darea, "button-release-event", (GCallback)button_release_event, NULL);
 	g_signal_connect(darea, "motion-notify-event", (GCallback)motion_notify_event, NULL);
 
-	glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE);
+	glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGBA | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE);
 	g_assert(glconfig);
 
 	if (!gtk_widget_set_gl_capability(darea, glconfig, NULL, TRUE, GDK_GL_RGBA_TYPE))

@@ -47,6 +47,15 @@ struct _GltkListPrivate
 	GltkWidget* vbox;
 };
 
+struct _GltkListItemPrivate
+{
+	struct {
+		int x;
+		int y;
+	} offset;
+	gboolean removed;
+};
+
 //static guint signals[LAST_SIGNAL] = {0,};
 
 static void gltk_list_dispose(GObject* gobject);
@@ -127,6 +136,7 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	GltkListItem* item = g_new(GltkListItem, 1);
 	item->widget = widget;
 	item->data = data;
+	item->priv = g_new(GltkListItemPrivate, 1);
 
 	priv->items = g_list_append(priv->items, item);
 	
@@ -149,6 +159,7 @@ gltk_list_remove_item(GltkList* list, GltkListItem* item)
 
 	g_object_unref(G_OBJECT(item->widget));
 
+	g_free(item->priv);
 	g_free(item);
 }
 
@@ -233,11 +244,34 @@ gltk_list_render(GltkWidget* widget)
 		}
 		g_assert(child);
 
+		static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f, 0.5f};
+		glTranslatef(0.0f, 0.0f, 0.2f);
+
+		//overlay a rectangle on top of the widget in the list
 		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+		glColor4fv(colorHighlightDark);
+		glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
+
+		//draw a line between stuff
+		glColor3fv(colorHighlightDark);
+		glBegin(GL_LINES);
+		{
+			int x = allocation.x + allocation.width / 2;
+			int y = allocation.y + allocation.height / 2;
+			glVertex2f(x, y);
+			glVertex2f(x + priv->drag->priv->offset.x, y + priv->drag->priv->offset.y);
+		}
+		glEnd();
+
+		//draw a rectangle behind our floating widget
+		glColor4fv(colorHighlightDark);
 		GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
-		glTranslatef(allocation.x+childAllocation.x, allocation.y+childAllocation.y, 0.5f);
+		glTranslatef(allocation.x+priv->drag->priv->offset.x, allocation.y+priv->drag->priv->offset.y, 0.0f);
+		glRectf(0, 0, allocation.width, allocation.height);
 		gltk_widget_render(priv->drag->widget);
-		glTranslatef(-allocation.x-childAllocation.x, -allocation.y-childAllocation.y, -0.5f);
+
+		//undo our translations
+		glTranslatef(-allocation.x-priv->drag->priv->offset.x, -allocation.y-priv->drag->priv->offset.y, -0.2f);
 	}
 }
 
@@ -254,26 +288,26 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 			break;
 		case TOUCH_END:
 			gltk_window_set_widget_unpressed(widget->window, widget);
-			if (priv->drag)
+			if (priv->drag && priv->drag == item)
 			{
-				GList* pChildren = GLTK_BOX(priv->vbox)->children;
-				GList* pItems = priv->items;
-				while (pChildren && pItems)
-				{
-					GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
-					if (item == (GltkListItem*)pItems->data)
-					{
-						GltkBin* bin = GLTK_BIN(child->widget);
-						gltk_bin_set_widget(bin, item->widget);
-						break;
-					}
+				//GList* pChildren = GLTK_BOX(priv->vbox)->children;
+				//GList* pItems = priv->items;
+				//while (pChildren && pItems)
+				//{
+				//	GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+				//	if (item == (GltkListItem*)pItems->data)
+				//	{
+				//		GltkBin* bin = GLTK_BIN(child->widget);
+				//		gltk_bin_set_widget(bin, item->widget);
+				//		break;
+				//	}
 
-					pChildren = pChildren->next;
-					pItems = pItems->next;
-				}
+				//	pChildren = pChildren->next;
+				//	pItems = pItems->next;
+				//}
 
 				priv->drag = NULL;
-				gltk_window_layout(widget->window);
+				//gltk_window_layout(widget->window);
 				gltk_window_invalidate(widget->window);
 			}
 			break;
@@ -293,20 +327,60 @@ gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkLi
 	priv->drag = item;
 
 	GltkWidget* bin = item->widget->parentWidget;
-	
-	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
-	allocation.x = 0;
-	allocation.y = 0;
-	gltk_widget_size_allocate(priv->drag->widget, allocation);
 
-	gltk_bin_set_widget(GLTK_BIN(bin), gltk_label_new("placeholder"));
+	item->priv->offset.x = 0;
+	item->priv->offset.y = 0;
 
-	gltk_window_layout(widget->window);
+	//GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
+	//allocation.x = 0;
+	//allocation.y = 0;
+	//gltk_widget_size_allocate(priv->drag->widget, allocation);
+
+	//gltk_bin_set_widget(GLTK_BIN(bin), gltk_label_new("placeholder"));
+
+	//gltk_window_layout(widget->window);
 	gltk_window_invalidate(widget->window);
 
 	g_message("A bin in a list was long touched, nomming event");
 
 	return TRUE;
+}
+
+static GList*
+move_node_forward(GList* list, GList* node)
+{
+	//last element
+	if (!node->next)
+		return list;
+
+	//first element
+	if (list == node)
+		list = node->next;
+
+	GList* next = node->next;
+
+	if (node->prev)
+		node->prev->next = next;
+	next->prev = node->prev;
+
+	node->next = next->next;
+	if (node->next)
+		next->next->prev = node;
+
+	node->prev = next;
+	next->next = node;
+
+	return list;
+}
+
+static GList*
+move_node_back(GList* list, GList* node)
+{
+	//last element
+	if (!node->prev)
+		return list;
+
+	return move_node_forward(list, node->prev);
 }
 
 static gboolean
@@ -318,12 +392,49 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	if (!priv->drag)
 		return FALSE;
 	
+	item->priv->offset.x += event->dx;
+	item->priv->offset.y += event->dy;
+	
+	//find our child and item in our lists
+	GList* pChildren = GLTK_BOX(priv->vbox)->children;
+	GList* pItems = priv->items;
+	while (pChildren && pItems)
+	{
+		if (item == (GltkListItem*)pItems->data)
+			break;
+		pChildren = pChildren->next;
+		pItems = pItems->next;
+	}
+	g_assert(pChildren && pItems);
+
 	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
 
-	//allocation.x += event->dx;
-	allocation.y += event->dy;
+	if (item->priv->offset.y > allocation.height)
+	{
+		//move item further down in out items list
+		//ditto for our vbox's widgets
+		if (pItems->next)
+		{
+			item->priv->offset.y -= allocation.height;
 
-	gltk_widget_size_allocate(priv->drag->widget, allocation);
+			GLTK_BOX(priv->vbox)->children = move_node_forward(GLTK_BOX(priv->vbox)->children, pChildren);
+			priv->items = move_node_forward(priv->items, pItems);
+
+			gltk_window_layout(widget->window);
+		}
+	}
+	else if (item->priv->offset.y < -allocation.height)
+	{
+		if (pItems->prev)
+		{
+			item->priv->offset.y += allocation.height;
+
+			GLTK_BOX(priv->vbox)->children = move_node_back(GLTK_BOX(priv->vbox)->children, pChildren);
+			priv->items = move_node_back(priv->items, pItems);
+
+			gltk_window_layout(widget->window);
+		}
+	}
 
 	gltk_widget_invalidate(GLTK_WIDGET(list));
 

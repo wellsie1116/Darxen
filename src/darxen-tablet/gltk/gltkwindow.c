@@ -216,10 +216,10 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			}
 		}
 	}
-	else if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_END && priv->pressed)
-	{
-		//do not send the event, they aren't expecting it
-	}
+	//else if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_END && priv->pressed)
+	//{
+	//	//do not send the event, they aren't expecting it
+	//}
 	else
 	{
 		returnValue = gltk_widget_send_event(priv->root, event);
