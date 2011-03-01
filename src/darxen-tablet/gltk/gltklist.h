@@ -21,7 +21,7 @@
 #ifndef GLTKLIST_H_BXBTDL1W
 #define GLTKLIST_H_BXBTDL1W
 
-#include "gltkscrollable.h"
+#include "gltkvbox.h"
 
 G_BEGIN_DECLS
 
@@ -48,12 +48,12 @@ struct _GltkListItem
 
 struct _GltkList
 {
-	GltkScrollable parent;
+	GltkVBox parent;
 };
 
 struct _GltkListClass
 {
-	GltkScrollableClass parent_class;
+	GltkVBoxClass parent_class;
 	
 	/* signals */
 	/* virtual funcs */

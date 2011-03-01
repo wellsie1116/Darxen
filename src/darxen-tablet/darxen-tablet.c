@@ -260,10 +260,12 @@ GltkWidget* create_sublist()
 {
 	GltkWidget* widget = gltk_list_new();
 
-	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 1"), NULL);
+	GltkWidget* btn1;
+	gltk_list_add_item(GLTK_LIST(widget), btn1=gltk_button_new("View Item 1"), NULL);
 	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 2"), NULL);
 	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 3"), NULL);
 
+	g_signal_connect(btn1, "click-event", button_clicked, NULL);
 	return widget;
 }
 
@@ -337,8 +339,12 @@ GltkWindow* create_window()
 	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("klot"), NULL);
 	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kind"), NULL);
 	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kilx"), NULL);
+	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("site"), NULL);
+	
+	GltkScrollable* scrollable = gltk_scrollable_new();
+	gltk_scrollable_set_widget(scrollable, siteList);
 
-	gltk_box_append_widget(GLTK_BOX(hbox), siteList, TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(hbox), scrollable, TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);
 	
 	gltk_window_set_root(win, hbox);

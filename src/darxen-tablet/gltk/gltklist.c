@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <GL/gl.h>
 
-G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_SCROLLABLE)
+G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_VBOX)
 
 #define USING_PRIVATE(obj) GltkListPrivate* priv = GLTK_LIST_GET_PRIVATE(obj)
 #define GLTK_LIST_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_LIST, GltkListPrivate))
@@ -44,8 +44,6 @@ struct _GltkListPrivate
 	GList* items; //GltkListItem
 
 	GltkListItem* drag;
-
-	GltkWidget* vbox;
 };
 
 struct _GltkListItemPrivate
@@ -62,7 +60,6 @@ struct _GltkListItemPrivate
 static void gltk_list_dispose(GObject* gobject);
 static void gltk_list_finalize(GObject* gobject);
 
-static gboolean gltk_list_event(GltkWidget* widget, GltkEvent* event);
 static void gltk_list_set_window(GltkWidget* widget, GltkWindow* window);
 static void gltk_list_render(GltkWidget* widget);
 
@@ -81,7 +78,6 @@ gltk_list_class_init(GltkListClass* klass)
 	gobject_class->dispose = gltk_list_dispose;
 	gobject_class->finalize = gltk_list_finalize;
 
-	gltkwidget_class->event = gltk_list_event;
 	gltkwidget_class->set_window = gltk_list_set_window;
 	gltkwidget_class->render = gltk_list_render;
 }
@@ -90,9 +86,6 @@ static void
 gltk_list_init(GltkList* self)
 {
 	USING_PRIVATE(self);
-
-	priv->vbox = gltk_vbox_new();
-	gltk_scrollable_set_widget(GLTK_SCROLLABLE(self), priv->vbox);
 
 	priv->items = NULL;
 	priv->drag = NULL;
@@ -132,7 +125,7 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 
 	g_object_ref_sink(G_OBJECT(widget));
 	GltkWidget* bin = gltk_bin_new(widget);
-	gltk_box_append_widget(GLTK_BOX(priv->vbox), bin, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(list), bin, FALSE, FALSE);
 
 	GltkListItem* item = g_new(GltkListItem, 1);
 	item->widget = widget;
@@ -174,37 +167,6 @@ gltk_list_error_quark()
  * Private Functions *
  *********************/
 
-
-static gboolean
-gltk_list_event(GltkWidget* widget, GltkEvent* event)
-{
-	GltkList* list = GLTK_LIST(widget);
-	USING_PRIVATE(list);
-
-	gboolean returnValue = FALSE;
-
-	switch (event->type)
-	{
-		case GLTK_TOUCH:
-		{
-			//first, try to pass the event to an item
-			returnValue = gltk_widget_send_event(priv->vbox, event);
-
-			if (!returnValue)
-			{
-				//The event is ours to process, defer to our parent class to emit out specific event types
-				returnValue = GLTK_WIDGET_CLASS(gltk_list_parent_class)->event(widget, event);
-			}
-		} break;
-
-		default:
-			//let other events pass through
-			returnValue = GLTK_WIDGET_CLASS(gltk_list_parent_class)->event(widget, event);
-	}
-
-	return returnValue;
-}
-
 static void
 gltk_list_set_window(GltkWidget* widget, GltkWindow* window)
 {
@@ -232,7 +194,7 @@ gltk_list_render(GltkWidget* widget)
 
 	if (priv->drag)
 	{
-		GList* pChildren = GLTK_BOX(priv->vbox)->children;
+		GList* pChildren = GLTK_BOX(widget)->children;
 		GList* pItems = priv->items;
 		GltkBoxChild* child = NULL;
 		while (pChildren && pItems)
@@ -246,44 +208,48 @@ gltk_list_render(GltkWidget* widget)
 		g_assert(child);
 
 		static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f, 0.5f};
-		glTranslatef(0.0f, 0.0f, 0.2f);
 		int offsetX = priv->drag->priv->offset.x;
 		int offsetY = priv->drag->priv->offset.y;
 		if (abs(offsetX) < 10)
 			offsetX = 0;
 
-		//overlay a rectangle on top of the widget in the list
-		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
-		glColor4fv(colorHighlightDark);
-		glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
-
-		//draw a line between stuff
-		glColor3fv(colorHighlightDark);
-		glBegin(GL_LINES);
+		glPushMatrix();
 		{
-			int x = allocation.x + allocation.width / 2;
-			int y = allocation.y + allocation.height / 2;
-			glVertex2f(x, y);
-			glVertex2f(x + offsetX, y + offsetY);
+			GltkAllocation myAllocation = gltk_widget_get_allocation(widget);
+			g_message("Allocation: %i %i", myAllocation.x, myAllocation.y);
+			glTranslatef(myAllocation.x, myAllocation.y, 0.0f);
+
+			//overlay a rectangle on top of the widget in the list
+			GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+			glColor4fv(colorHighlightDark);
+			glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
+
+			//draw a line between stuff
+			glColor3fv(colorHighlightDark);
+			glBegin(GL_LINES);
+			{
+				int x = allocation.x + allocation.width / 2;
+				int y = allocation.y + allocation.height / 2;
+				glVertex2f(x, y);
+				glVertex2f(x + offsetX, y + offsetY);
+			}
+			glEnd();
+
+			//draw a rectangle behind our floating widget
+			glColor4fv(colorHighlightDark);
+			GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
+			glTranslatef(allocation.x+offsetX, allocation.y+offsetY, 0.0f);
+			glRectf(0, 0, allocation.width, allocation.height);
+			gltk_widget_render(priv->drag->widget);
 		}
-		glEnd();
-
-		//draw a rectangle behind our floating widget
-		glColor4fv(colorHighlightDark);
-		GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
-		glTranslatef(allocation.x+offsetX, allocation.y+offsetY, 0.0f);
-		glRectf(0, 0, allocation.width, allocation.height);
-		gltk_widget_render(priv->drag->widget);
-
-		//undo our translations
-		glTranslatef(-allocation.x-offsetX, -allocation.y-offsetY, -0.2f);
+		glPopMatrix();
 	}
 }
 
 static gboolean
 gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
 	USING_PRIVATE(list);
 
 	switch (event->touchType)
@@ -327,7 +293,7 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 static gboolean
 gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
 	USING_PRIVATE(list);
 
 	priv->drag = item;
@@ -392,7 +358,7 @@ move_node_back(GList* list, GList* node)
 static gboolean
 gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
+	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
 	USING_PRIVATE(list);
 
 	if (!priv->drag)
@@ -402,7 +368,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	item->priv->offset.y += event->dy;
 	
 	//find our child and item in our lists
-	GList* pChildren = GLTK_BOX(priv->vbox)->children;
+	GList* pChildren = GLTK_BOX(list)->children;
 	GList* pItems = priv->items;
 	while (pChildren && pItems)
 	{
@@ -410,6 +376,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			break;
 		pChildren = pChildren->next;
 		pItems = pItems->next;
+		g_message("Next child");
 	}
 	g_assert(pChildren && pItems);
 
@@ -423,7 +390,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		{
 			item->priv->offset.y -= allocation.height;
 
-			GLTK_BOX(priv->vbox)->children = move_node_forward(GLTK_BOX(priv->vbox)->children, pChildren);
+			GLTK_BOX(list)->children = move_node_forward(GLTK_BOX(list)->children, pChildren);
 			priv->items = move_node_forward(priv->items, pItems);
 
 			gltk_window_layout(widget->window);
@@ -435,7 +402,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		{
 			item->priv->offset.y += allocation.height;
 
-			GLTK_BOX(priv->vbox)->children = move_node_back(GLTK_BOX(priv->vbox)->children, pChildren);
+			GLTK_BOX(list)->children = move_node_back(GLTK_BOX(list)->children, pChildren);
 			priv->items = move_node_back(priv->items, pItems);
 
 			gltk_window_layout(widget->window);

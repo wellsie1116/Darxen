@@ -55,12 +55,13 @@ typedef enum
 	GLTK_SCROLLABLE_ERROR_FAILED
 } GltkScrollableError;
 
-GType			gltk_scrollable_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_scrollable_new			();
+GType			gltk_scrollable_get_type		() G_GNUC_CONST;
+GltkWidget*		gltk_scrollable_new				();
 
-void			gltk_scrollable_set_widget	(GltkScrollable* scrollable, GltkWidget* widget);
+void			gltk_scrollable_set_widget		(GltkScrollable* scrollable, GltkWidget* widget);
+void			gltk_scrollable_transform_event	(GltkScrollable* scrollable, GltkEvent* event);
 
-GQuark			gltk_scrollable_error_quark	();
+GQuark			gltk_scrollable_error_quark		();
 
 G_END_DECLS
 

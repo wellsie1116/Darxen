@@ -21,6 +21,7 @@
 #include "gltkscrollable.h"
 
 #include <glib.h>
+#include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkScrollable, gltk_scrollable, GLTK_TYPE_WIDGET)
 
@@ -36,6 +37,10 @@ typedef struct _GltkScrollablePrivate		GltkScrollablePrivate;
 struct _GltkScrollablePrivate
 {
 	GltkWidget* widget;
+	struct {
+		int x;
+		int y;
+	} offset;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -45,6 +50,7 @@ static void gltk_scrollable_finalize(GObject* gobject);
 
 static void gltk_scrollable_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
+static gboolean gltk_scrollable_event(GltkWidget* widget, GltkEvent* event);
 static void gltk_scrollable_render(GltkWidget* widget);
 static void gltk_scrollable_set_window(GltkWidget* widget, GltkWindow* window);
 static gboolean gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event);
@@ -62,6 +68,7 @@ gltk_scrollable_class_init(GltkScrollableClass* klass)
 
 	gltkwidget_class->size_request = gltk_scrollable_size_request;
 	gltkwidget_class->size_allocate = gltk_scrollable_size_allocate;
+	gltkwidget_class->event = gltk_scrollable_event;
 	gltkwidget_class->render = gltk_scrollable_render;
 	gltkwidget_class->set_window = gltk_scrollable_set_window;
 	gltkwidget_class->drag_event = gltk_scrollable_drag_event;
@@ -73,6 +80,8 @@ gltk_scrollable_init(GltkScrollable* self)
 	USING_PRIVATE(self);
 
 	priv->widget = NULL;
+	priv->offset.x = 0;
+	priv->offset.y = 0;
 }
 
 static void
@@ -119,8 +128,32 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 
 	g_object_ref_sink(G_OBJECT(widget));
 	priv->widget = widget;
+	priv->offset.x = 0;
+	priv->offset.y = 0;
 	gltk_widget_set_parent(widget, GLTK_WIDGET(scrollable));
 	gltk_widget_set_window(widget, GLTK_WIDGET(scrollable)->window);
+}
+
+void
+gltk_scrollable_transform_event(GltkScrollable* scrollable, GltkEvent* event)
+{
+	USING_PRIVATE(scrollable);
+
+	switch (event->type)
+	{
+		case GLTK_TOUCH:
+		{
+			int i;
+			for (i = 0; i < event->touch.fingers; i++)
+			{
+				event->touch.positions[i].x -= priv->offset.x;
+				event->touch.positions[i].y -= priv->offset.y;
+			}
+		}
+			break;
+		default:
+			break;
+	}
 }
 
 
@@ -149,6 +182,24 @@ gltk_scrollable_size_request(GltkWidget* widget, GltkSize* size)
 	gltk_widget_size_request(priv->widget, size);
 }
 
+static gboolean
+gltk_scrollable_event(GltkWidget* widget, GltkEvent* event)
+{
+	USING_PRIVATE(widget);
+
+	gboolean returnValue = FALSE;
+
+	if (priv->widget)
+	{
+		GltkEvent* transformed = gltk_event_clone(event);
+		//gltk_scrollable_transform_event(GLTK_SCROLLABLE(widget), transformed);
+		returnValue = gltk_widget_send_event(priv->widget, transformed);
+		gltk_event_free(transformed);
+	}
+
+	return returnValue;
+}
+
 static void
 gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
@@ -156,7 +207,10 @@ gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 
 	if (priv->widget)
 	{
-		gltk_widget_size_allocate(priv->widget, *allocation);
+		GltkSize size;
+		gltk_widget_size_request(priv->widget, &size);
+		GltkAllocation childAllocation = {priv->offset.x, priv->offset.y, MAX(allocation->width, size.width), MAX(allocation->height, size.height)};
+		gltk_widget_size_allocate(priv->widget, childAllocation);
 	}
 
 	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->size_allocate(widget, allocation);
@@ -167,8 +221,12 @@ gltk_scrollable_render(GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
 
-	if (priv->widget)
-		gltk_widget_render(priv->widget);
+	if (!priv->widget)
+		return;
+
+	glTranslatef(priv->offset.x, priv->offset.y, 0.0f);
+	gltk_widget_render(priv->widget);
+	glTranslatef(-priv->offset.x, -priv->offset.y, 0.0f);
 }
 
 static void
@@ -179,7 +237,6 @@ gltk_scrollable_set_window(GltkWidget* widget, GltkWindow* window)
 	gltk_widget_set_window(priv->widget, window);
 
 	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->set_window(widget, window);
-
 }
 
 static gboolean
@@ -188,7 +245,20 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 	if (event->longTouched)
 		return FALSE;
 
-	g_message("scrollable should pan now");
+	USING_PRIVATE(widget);
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	GltkAllocation childAllocation = gltk_widget_get_allocation(priv->widget);
+
+	priv->offset.x = CLAMP(priv->offset.x + event->dx, -(childAllocation.width - allocation.width), 0);
+	priv->offset.y = CLAMP(priv->offset.y + event->dy, -(childAllocation.height - allocation.height), 0);
+
+	childAllocation.x = priv->offset.x;
+	childAllocation.y = priv->offset.y;
+
+	gltk_widget_size_allocate(priv->widget, childAllocation);
+
+	gltk_window_invalidate(widget->window);
+
 	return TRUE; //or FALSE if we cannot scroll at all?
 }
 
