@@ -24,6 +24,7 @@
 #include "gltkbin.h"
 #include "gltklabel.h"
 
+#include <math.h>
 #include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_SCROLLABLE)
@@ -246,6 +247,10 @@ gltk_list_render(GltkWidget* widget)
 
 		static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f, 0.5f};
 		glTranslatef(0.0f, 0.0f, 0.2f);
+		int offsetX = priv->drag->priv->offset.x;
+		int offsetY = priv->drag->priv->offset.y;
+		if (abs(offsetX) < 10)
+			offsetX = 0;
 
 		//overlay a rectangle on top of the widget in the list
 		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
@@ -259,19 +264,19 @@ gltk_list_render(GltkWidget* widget)
 			int x = allocation.x + allocation.width / 2;
 			int y = allocation.y + allocation.height / 2;
 			glVertex2f(x, y);
-			glVertex2f(x + priv->drag->priv->offset.x, y + priv->drag->priv->offset.y);
+			glVertex2f(x + offsetX, y + offsetY);
 		}
 		glEnd();
 
 		//draw a rectangle behind our floating widget
 		glColor4fv(colorHighlightDark);
 		GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
-		glTranslatef(allocation.x+priv->drag->priv->offset.x, allocation.y+priv->drag->priv->offset.y, 0.0f);
+		glTranslatef(allocation.x+offsetX, allocation.y+offsetY, 0.0f);
 		glRectf(0, 0, allocation.width, allocation.height);
 		gltk_widget_render(priv->drag->widget);
 
 		//undo our translations
-		glTranslatef(-allocation.x-priv->drag->priv->offset.x, -allocation.y-priv->drag->priv->offset.y, -0.2f);
+		glTranslatef(-allocation.x-offsetX, -allocation.y-offsetY, -0.2f);
 	}
 }
 

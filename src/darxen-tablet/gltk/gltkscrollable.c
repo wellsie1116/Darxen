@@ -185,6 +185,9 @@ gltk_scrollable_set_window(GltkWidget* widget, GltkWindow* window)
 static gboolean
 gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 {
+	if (event->longTouched)
+		return FALSE;
+
 	g_message("scrollable should pan now");
 	return TRUE; //or FALSE if we cannot scroll at all?
 }

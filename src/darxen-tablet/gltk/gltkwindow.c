@@ -43,7 +43,8 @@ struct _GltkWindowPrivate
 	GltkWidget* root;
 
 	GltkTouchPosition pressedPosition;
-	guint longPressed;
+	guint longPressPending;
+	gboolean longPressed;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
 
@@ -72,7 +73,7 @@ gltk_window_init(GltkWindow* self)
 	priv->height = -1;
 	priv->root = NULL;
 	priv->callbacks = emptyCallbacks;
-	priv->longPressed = 0;
+	priv->longPressPending = 0;
 	priv->pressed = NULL;
 	priv->unpressed = NULL;
 }
@@ -173,24 +174,25 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 		int dy = event->touch.positions->y - priv->pressedPosition.y;
 
 		//store current translation
-		if (priv->longPressed)
+		if (priv->longPressPending)
 		{
 			float dist = sqrt(dx*dx+dy*dy);
 			if (dist > 10.0f)
 			{
-				g_source_remove(priv->longPressed);
-				priv->longPressed = 0;
+				g_source_remove(priv->longPressPending);
+				priv->longPressPending = 0;
 			}
 			
 			//TODO: also, send a touch move event?
 		}
 
-		if (!priv->longPressed)
+		if (!priv->longPressPending)
 		{
 			//send a drag event to the pressed widget
 			GltkEvent* e = gltk_event_new(GLTK_DRAG);
 			e->drag.dx = dx;
 			e->drag.dy = dy;
+			e->drag.longTouched = priv->longPressed;
 			priv->pressedPosition = *(event->touch.positions);
 
 			returnValue = gltk_widget_send_event(priv->pressed, e);
@@ -265,7 +267,8 @@ check_long_press(GltkWindow* window)
 {
 	USING_PRIVATE(window);
 
-	priv->longPressed = 0;
+	priv->longPressPending = 0;
+	priv->longPressed = TRUE;
 
 	//spawn long press event
 	GltkEvent* event = gltk_event_new(GLTK_LONG_TOUCH);
@@ -282,14 +285,15 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 	USING_PRIVATE(window);
 
-	//FIXME: press events can be stacked, this is odd
-	g_assert(!priv->pressed);
+	if (priv->pressed)
+		return;
 	g_object_ref(G_OBJECT(widget));
 	priv->pressed = widget;
+	priv->longPressed = FALSE;
 
-	if (priv->longPressed)
-		g_source_remove(priv->longPressed);
-	priv->longPressed = g_timeout_add(1000, (GSourceFunc)check_long_press, window);
+	if (priv->longPressPending)
+		g_source_remove(priv->longPressPending);
+	priv->longPressPending = g_timeout_add(1000, (GSourceFunc)check_long_press, window);
 }
 
 void
@@ -326,10 +330,10 @@ gltk_window_press_complete(GltkWindow* window)
 
 	gboolean returnValue = FALSE;
 	
-	if (priv->longPressed)
+	if (priv->longPressPending)
 	{
-		g_source_remove(priv->longPressed);
-		priv->longPressed = 0;
+		g_source_remove(priv->longPressPending);
+		priv->longPressPending = 0;
 	}
 	
 	if (priv->pressed && (priv->pressed == priv->unpressed))

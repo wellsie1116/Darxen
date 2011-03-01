@@ -52,7 +52,6 @@ static void gltk_widget_finalize(GObject* gobject);
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
-static gboolean gltk_widget_chain_event(GltkWidget* widget, gpointer event);
 
 static void	gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window);
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -140,10 +139,10 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
 	klass->event = gltk_widget_real_event;
-	klass->long_touch_event = (void*)gltk_widget_chain_event;
-	klass->touch_event = (void*)gltk_widget_chain_event;
-	klass->drag_event = (void*)gltk_widget_chain_event;
-	klass->click_event = (void*)gltk_widget_chain_event;
+	klass->long_touch_event = NULL;
+	klass->touch_event = NULL;
+	klass->drag_event = NULL;
+	klass->click_event = NULL;
 
 	klass->set_window = gltk_widget_set_window_default;
 	klass->render = gltk_widget_render_default;
@@ -346,35 +345,32 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 {
 	gboolean returnValue = FALSE;
 
-	switch (event->type)
+	GltkWidget* pWidget = widget;
+	for (pWidget = widget; pWidget; pWidget = pWidget->parentWidget)
 	{
-		case GLTK_LONG_TOUCH:
-			g_signal_emit(G_OBJECT(widget), signals[LONG_TOUCH_EVENT], 0, event, &returnValue);
-			break;
-		case GLTK_TOUCH:
-			g_signal_emit(G_OBJECT(widget), signals[TOUCH_EVENT], 0, event, &returnValue);
-			break;
-		case GLTK_DRAG:
-			g_signal_emit(G_OBJECT(widget), signals[DRAG_EVENT], 0, event, &returnValue);
-			break;
-		case GLTK_CLICK:
-			g_signal_emit(G_OBJECT(widget), signals[CLICK_EVENT], 0, event, &returnValue);
-			break;
-		default:
-			g_warning("Unhandled event type: %i", event->type);
+		gboolean eventReturnValue = FALSE;
+		switch (event->type)
+		{
+			case GLTK_LONG_TOUCH:
+				g_signal_emit(G_OBJECT(pWidget), signals[LONG_TOUCH_EVENT], 0, event, &eventReturnValue);
+				break;
+			case GLTK_TOUCH:
+				g_signal_emit(G_OBJECT(pWidget), signals[TOUCH_EVENT], 0, event, &eventReturnValue);
+				break;
+			case GLTK_DRAG:
+				g_signal_emit(G_OBJECT(pWidget), signals[DRAG_EVENT], 0, event, &eventReturnValue);
+				break;
+			case GLTK_CLICK:
+				g_signal_emit(G_OBJECT(pWidget), signals[CLICK_EVENT], 0, event, &eventReturnValue);
+				break;
+			default:
+				g_warning("Unhandled event type: %i", event->type);
+		}
+		if (!returnValue)
+			returnValue = eventReturnValue;
 	}
 
 	return returnValue;
-}
-
-static gboolean
-gltk_widget_chain_event(GltkWidget* widget, gpointer event)
-{
-	if (!widget->parentWidget)
-		return FALSE;
-
-	//chain up to parent
-	return gltk_widget_real_event(widget->parentWidget, (GltkEvent*)event);
 }
 
 static void

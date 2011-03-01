@@ -80,6 +80,8 @@ struct _GltkEventDrag
 {
 	GltkEventType type;
 
+	gboolean longTouched;
+
 	int dx;
 	int dy;
 };
