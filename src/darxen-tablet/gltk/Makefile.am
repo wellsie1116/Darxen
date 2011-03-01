@@ -29,6 +29,12 @@ libgltk_la_LDFLAGS = -g -version-info 1:1:0
 libgltk_la_CFLAGS = $(glib_CFLAGS) $(ftgl_CFLAGS) -Wall -O0
 libgltk_la_LIBADD = $(glib_LIBS) $(ftgl_LIBS)
 
+marshal:
+	glib-genmarshal --header gltkmarshal.list >gltkmarshal.h
+	glib-genmarshal --body gltkmarshal.list >gltkmarshal.c
+
+.PHONY: marshal
+
 #AM_LDFLAGS = -export-dynamic
 
 EXTRA_DIST = 

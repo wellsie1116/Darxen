@@ -67,8 +67,6 @@ gltk_box_class_init(GltkBoxClass* klass)
 static void
 gltk_box_init(GltkBox* self)
 {
-	USING_PRIVATE(self);
-
 	self->children = NULL;
 	self->expandCount = 0;
 	self->childrenCount = 0;
@@ -78,7 +76,6 @@ static void
 gltk_box_dispose(GObject* gobject)
 {
 	GltkBox* self = GLTK_BOX(gobject);
-	USING_PRIVATE(self);
 
 	if (self->children)
 	{
@@ -102,11 +99,6 @@ gltk_box_dispose(GObject* gobject)
 static void
 gltk_box_finalize(GObject* gobject)
 {
-	GltkBox* self = GLTK_BOX(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(gltk_box_parent_class)->finalize(gobject);
 }
 
@@ -114,9 +106,6 @@ GltkWidget*
 gltk_box_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_BOX, NULL);
-	GltkBox* self = GLTK_BOX(gobject);
-
-	USING_PRIVATE(self);
 
 	return (GltkWidget*)gobject;
 }
@@ -124,8 +113,6 @@ gltk_box_new()
 void
 gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill)
 {
-	USING_PRIVATE(box);
-
 	GltkBoxChild* child = g_new(GltkBoxChild, 1);
 	child->widget = widget;
 	child->expand = expand;
@@ -145,8 +132,6 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 void
 gltk_box_remove_widget(GltkBox* box, GltkWidget* widget)
 {
-	USING_PRIVATE(box);
-
 	GList* pChildren = box->children;
 	while (pChildren)
 	{

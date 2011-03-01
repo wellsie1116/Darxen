@@ -97,7 +97,22 @@ gltk_list_dispose(GObject* gobject)
 	GltkList* self = GLTK_LIST(gobject);
 	USING_PRIVATE(self);
 
-	//TODO: free and release references
+	if (priv->items)
+	{
+		GList* pItems = priv->items;
+		while (pItems)
+		{
+			GltkListItem* item = (GltkListItem*)pItems->data;
+		
+			g_object_unref(G_OBJECT(item->widget));
+			g_free(item->priv);
+			g_free(item);
+		
+			pItems = pItems->next;
+		}
+		g_list_free(priv->items);
+		priv->items = NULL;
+	}
 
 	G_OBJECT_CLASS(gltk_list_parent_class)->dispose(gobject);
 }
@@ -148,6 +163,7 @@ gltk_list_remove_item(GltkList* list, GltkListItem* item)
 {
 	g_return_if_fail(GLTK_IS_LIST(list));
 	g_return_if_fail(item);
+	g_return_if_fail(item->list == list);
 	USING_PRIVATE(list);
 
 	priv->items = g_list_remove(priv->items, item);
@@ -238,7 +254,7 @@ gltk_list_render(GltkWidget* widget)
 
 			//draw a rectangle behind our floating widget
 			glColor4fv(colorHighlightDark);
-			GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
+			//GltkAllocation childAllocation = gltk_widget_get_allocation(priv->drag->widget);
 			glTranslatef(allocation.x+offsetX, allocation.y+offsetY, 0.0f);
 			glRectf(0, 0, allocation.width, allocation.height);
 			gltk_widget_render(priv->drag->widget);
@@ -261,32 +277,13 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 			gltk_window_set_widget_unpressed(widget->window, widget);
 			if (priv->drag && priv->drag == item)
 			{
-				//GList* pChildren = GLTK_BOX(priv->vbox)->children;
-				//GList* pItems = priv->items;
-				//while (pChildren && pItems)
-				//{
-				//	GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
-				//	if (item == (GltkListItem*)pItems->data)
-				//	{
-				//		GltkBin* bin = GLTK_BIN(child->widget);
-				//		gltk_bin_set_widget(bin, item->widget);
-				//		break;
-				//	}
-
-				//	pChildren = pChildren->next;
-				//	pItems = pItems->next;
-				//}
-
 				priv->drag = NULL;
-				//gltk_window_layout(widget->window);
 				gltk_window_invalidate(widget->window);
 			}
 			break;
 		default:
-			g_message("bin touch event - ignored");
 			return FALSE;
 	}
-	g_message("bin touch event - handled");
 	return TRUE;
 }
 
@@ -297,22 +294,10 @@ gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkLi
 
 	priv->drag = item;
 
-	GltkWidget* bin = item->widget->parentWidget;
-
 	item->priv->offset.x = 0;
 	item->priv->offset.y = 0;
 
-	//GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
-	//allocation.x = 0;
-	//allocation.y = 0;
-	//gltk_widget_size_allocate(priv->drag->widget, allocation);
-
-	//gltk_bin_set_widget(GLTK_BIN(bin), gltk_label_new("placeholder"));
-
-	//gltk_window_layout(widget->window);
 	gltk_window_invalidate(widget->window);
-
-	g_message("A bin in a list was long touched, nomming event");
 
 	return TRUE;
 }

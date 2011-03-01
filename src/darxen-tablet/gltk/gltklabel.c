@@ -73,11 +73,6 @@ gltk_label_init(GltkLabel* self)
 static void
 gltk_label_dispose(GObject* gobject)
 {
-	GltkLabel* self = GLTK_LABEL(gobject);
-	USING_PRIVATE(self);
-
-	//free and release references
-
 	G_OBJECT_CLASS(gltk_label_parent_class)->dispose(gobject);
 }
 

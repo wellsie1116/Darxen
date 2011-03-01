@@ -62,30 +62,17 @@ gltk_hbox_class_init(GltkHBoxClass* klass)
 static void
 gltk_hbox_init(GltkHBox* self)
 {
-	USING_PRIVATE(self);
-
-	/* initialize fields generically here */
 }
 
 static void
 gltk_hbox_dispose(GObject* gobject)
 {
-	GltkHBox* self = GLTK_HBOX(gobject);
-	USING_PRIVATE(self);
-
-	//free and release references
-
 	G_OBJECT_CLASS(gltk_hbox_parent_class)->dispose(gobject);
 }
 
 static void
 gltk_hbox_finalize(GObject* gobject)
 {
-	GltkHBox* self = GLTK_HBOX(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(gltk_hbox_parent_class)->finalize(gobject);
 }
 
@@ -93,9 +80,6 @@ GltkWidget*
 gltk_hbox_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_HBOX, NULL);
-	GltkHBox* self = GLTK_HBOX(gobject);
-
-	USING_PRIVATE(self);
 
 	return (GltkWidget*)gobject;
 }
@@ -114,8 +98,6 @@ gltk_hbox_error_quark()
 static void
 gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 {
-	USING_PRIVATE(widget);
-
 	GltkBox* box = GLTK_BOX(widget);
 
 	size->width = 0;
@@ -139,8 +121,6 @@ gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 static void
 gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
-	USING_PRIVATE(widget);
-
 	GltkBox* box = GLTK_BOX(widget);
 
 	int x = 0;

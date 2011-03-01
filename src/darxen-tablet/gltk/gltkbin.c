@@ -96,7 +96,6 @@ gltk_bin_new(GltkWidget* widget)
 	GObject *gobject = g_object_new(GLTK_TYPE_BIN, NULL);
 	GltkBin* self = GLTK_BIN(gobject);
 
-	USING_PRIVATE(self);
 	gltk_bin_set_widget(self, widget);
 
 	return (GltkWidget*)gobject;

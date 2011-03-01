@@ -58,7 +58,6 @@ gltk_button_class_init(GltkButtonClass* klass)
 {
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
 	GltkWidgetClass* gltkwidget_class = GLTK_WIDGET_CLASS(klass);
-	GltkButtonClass* gltkbutton_class = GLTK_BUTTON_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(GltkButtonPrivate));
 	
@@ -82,11 +81,6 @@ gltk_button_init(GltkButton* self)
 static void
 gltk_button_dispose(GObject* gobject)
 {
-	GltkButton* self = GLTK_BUTTON(gobject);
-	USING_PRIVATE(self);
-
-	//free and release references
-
 	G_OBJECT_CLASS(gltk_button_parent_class)->dispose(gobject);
 }
 

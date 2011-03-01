@@ -29,10 +29,10 @@ G_DEFINE_TYPE(DarxenSiteList, darxen_site_list, GLTK_TYPE_LIST)
 
 enum
 {
-	//new view selected
 	//sites reordered
 	//views reordered
 	//view deleted
+	VIEW_SELECTED,
 	LAST_SIGNAL
 };
 
@@ -47,6 +47,7 @@ struct _DarxenSiteListPrivate
 
 struct _Site
 {
+	DarxenSiteList* list;
 	gchar* name;
 	GltkWidget* siteBox;
 	GltkWidget* views;
@@ -59,7 +60,7 @@ struct _View
 	GltkWidget* button;
 };
 
-//static guint signals[LAST_SIGNAL] = {0,};
+static guint signals[LAST_SIGNAL] = {0,};
 
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
@@ -68,9 +69,18 @@ static void
 darxen_site_list_class_init(DarxenSiteListClass* klass)
 {
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
-	GltkWidgetClass* gltkwidget_class = GLTK_WIDGET_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(DarxenSiteListPrivate));
+
+	signals[VIEW_SELECTED] = 
+		g_signal_new(	"view-selected",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(DarxenSiteListClass, view_selected),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_POINTER);
 	
 	gobject_class->dispose = darxen_site_list_dispose;
 	gobject_class->finalize = darxen_site_list_finalize;
@@ -135,6 +145,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	USING_PRIVATE(list);
 	
 	Site* siteInfo = g_new(Site, 1);
+	siteInfo->list = list;
 	siteInfo->name = g_strdup(site);
 	siteInfo->siteBox = gltk_vbox_new();
 	siteInfo->views = gltk_list_new();
@@ -157,6 +168,13 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	g_hash_table_insert(priv->sites, g_strdup(site), listItem);
 }
 
+static gboolean
+view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
+{
+	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
+	return TRUE;
+}
+
 void
 darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* view)
 {
@@ -173,7 +191,7 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	viewInfo->name = g_strdup(view);
 	viewInfo->button = gltk_button_new(view);
 	g_object_ref(G_OBJECT(viewInfo->button));
-	//g_signal_connect(viewInfo->button, "click-event", view_clicked, viewInfo);
+	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
 	
 	gltk_list_add_item(GLTK_LIST(siteInfo->views), viewInfo->button, viewInfo);
 }
@@ -188,11 +206,4 @@ darxen_site_list_error_quark()
 /*********************
  * Private Functions *
  *********************/
-static gboolean
-site_button_clicked(GltkButton* button, GltkEventClick* event, Site* siteInfo)
-{
-	g_message("Button clicked");
-
-	return TRUE;
-}
 

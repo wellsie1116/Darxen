@@ -166,7 +166,6 @@ static void
 gltk_widget_dispose(GObject* gobject)
 {
 	GltkWidget* self = GLTK_WIDGET(gobject);
-	USING_PRIVATE(self);
 
 	if (self->window)
 	{
@@ -186,9 +185,6 @@ gltk_widget_dispose(GObject* gobject)
 static void
 gltk_widget_finalize(GObject* gobject)
 {
-	GltkWidget* self = GLTK_WIDGET(gobject);
-	USING_PRIVATE(self);
-
 	G_OBJECT_CLASS(gltk_widget_parent_class)->finalize(gobject);
 }
 

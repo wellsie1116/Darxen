@@ -49,6 +49,9 @@ struct _DarxenSiteListClass
 	GltkListClass parent_class;
 	
 	/* signals */
+
+	void (*view_selected)	(	gchar* site,
+								gchar* view);
 	/* virtual funcs */
 };
 

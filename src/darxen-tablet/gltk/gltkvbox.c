@@ -62,30 +62,17 @@ gltk_vbox_class_init(GltkVBoxClass* klass)
 static void
 gltk_vbox_init(GltkVBox* self)
 {
-	USING_PRIVATE(self);
-
-	/* initialize fields generically here */
 }
 
 static void
 gltk_vbox_dispose(GObject* gobject)
 {
-	GltkVBox* self = GLTK_VBOX(gobject);
-	USING_PRIVATE(self);
-
-	//free and release references
-
 	G_OBJECT_CLASS(gltk_vbox_parent_class)->dispose(gobject);
 }
 
 static void
 gltk_vbox_finalize(GObject* gobject)
 {
-	GltkVBox* self = GLTK_VBOX(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(gltk_vbox_parent_class)->finalize(gobject);
 }
 
@@ -93,9 +80,6 @@ GltkWidget*
 gltk_vbox_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_VBOX, NULL);
-	GltkVBox* self = GLTK_VBOX(gobject);
-
-	USING_PRIVATE(self);
 
 	return (GltkWidget*)gobject;
 }
@@ -114,8 +98,6 @@ gltk_vbox_error_quark()
 static void
 gltk_vbox_size_request(GltkWidget* widget, GltkSize* size)
 {
-	USING_PRIVATE(widget);
-
 	GltkBox* box = GLTK_BOX(widget);
 
 	size->width = 0;
@@ -139,8 +121,6 @@ gltk_vbox_size_request(GltkWidget* widget, GltkSize* size)
 static void
 gltk_vbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
-	USING_PRIVATE(widget);
-
 	GltkBox* box = GLTK_BOX(widget);
 
 	int y = 0;

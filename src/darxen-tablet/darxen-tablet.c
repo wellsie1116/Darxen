@@ -217,7 +217,7 @@ btnQuit_clicked(GtkWidget* widget, gpointer user_data)
 }
 
 void
-request_render()
+request_render(GltkWindow* window, gpointer user_data)
 {
 	gtk_widget_queue_draw(darea);
 }
@@ -241,61 +241,18 @@ GltkWidget* create_hbox()
 	return hbox;
 }
 
-static gboolean
-long_touch(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
+static void
+view_selected(DarxenSiteList* siteList, gchar* site, gchar* view, gpointer user_data)
 {
-	if (!g_strcmp0(user_data, "kind"))
-	{
-		g_message("Long touch intercepted");
-		return TRUE;
-	}
-	else
-	{
-		g_message("Long touch ignored");
-		return FALSE;
-	}
-}
-
-GltkWidget* create_sublist()
-{
-	GltkWidget* widget = gltk_list_new();
-
-	GltkWidget* btn1;
-	gltk_list_add_item(GLTK_LIST(widget), btn1=gltk_button_new("View Item 1"), NULL);
-	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 2"), NULL);
-	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 3"), NULL);
-
-	g_signal_connect(btn1, "click-event", button_clicked, NULL);
-	return widget;
-}
-
-GltkWidget* create_list_item(const gchar* msg)
-{
-	GltkWidget* vbox = gltk_vbox_new();
-	g_object_force_floating(G_OBJECT(vbox));
-
-	GltkWidget* button = gltk_button_new(msg);
-	GltkWidget* hbox = gltk_hbox_new();
-
-	gltk_box_append_widget(GLTK_BOX(hbox), gltk_label_new("  "), FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(hbox), create_sublist(), TRUE, TRUE);
-
-	gltk_box_append_widget(GLTK_BOX(vbox), button, FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(vbox), hbox, FALSE, FALSE);
-
-	g_signal_connect(button, "long-touch-event", (GCallback)long_touch, (gpointer)msg);
-
-	return vbox;
+	g_message("%s/%s selected", site, view);
 }
 
 GltkWindow* create_window()
 {
-	GltkWindowCallbacks callbacks;
 	GltkWindow* win;
 
-	callbacks.request_render = request_render;
-
-	win = gltk_window_new(callbacks);
+	win = gltk_window_new();
+	g_signal_connect(G_OBJECT(win), "request-render", (GCallback)request_render, NULL);
 
 	GltkWidget* hbox = gltk_hbox_new();
 
@@ -324,29 +281,18 @@ GltkWindow* create_window()
 	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
 
 	GltkWidget* siteList;
+	siteList = darxen_site_list_new();
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
 
-	if (1)
-	{
-		siteList = darxen_site_list_new();
-		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
-		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
-		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
+	darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
 
-		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
-		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
-		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
+	darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
 
-		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
-	}
-	else
-	{
-		siteList = gltk_list_new();
-
-		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("klot"), NULL);
-		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kind"), NULL);
-		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kilx"), NULL);
-		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("site"), NULL);
-	}
+	g_signal_connect(G_OBJECT(siteList), "view-selected", G_CALLBACK(view_selected), NULL);
 	
 	GltkWidget* scrollable = gltk_scrollable_new();
 	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), siteList);

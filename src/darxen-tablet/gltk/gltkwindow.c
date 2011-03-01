@@ -28,6 +28,11 @@ G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 
 #define USING_PRIVATE(obj) GltkWindowPrivate* priv = GLTK_WINDOW_GET_PRIVATE(obj)
 #define GLTK_WINDOW_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_WINDOW, GltkWindowPrivate))
+enum
+{
+	REQUEST_RENDER,
+   	LAST_SIGNAL
+};
 
 static void gltk_window_dispose(GObject* gobject);
 static void gltk_window_finalize(GObject* gobject);
@@ -47,9 +52,9 @@ struct _GltkWindowPrivate
 	gboolean longPressed;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
-
-	GltkWindowCallbacks callbacks;
 };
+
+static guint signals[LAST_SIGNAL] = {0,};
 
 static void
 gltk_window_class_init(GltkWindowClass* klass)
@@ -57,6 +62,15 @@ gltk_window_class_init(GltkWindowClass* klass)
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(GltkWindowPrivate));
+	
+	signals[REQUEST_RENDER] = 
+		g_signal_new(	"request-render",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(GltkWindowClass, request_render),
+						NULL, NULL,
+						g_cclosure_marshal_VOID__VOID,
+						G_TYPE_NONE, 0);
 	
 	gobject_class->dispose = gltk_window_dispose;
 	gobject_class->finalize = gltk_window_finalize;
@@ -67,12 +81,9 @@ gltk_window_init(GltkWindow* self)
 {
 	USING_PRIVATE(self);
 
-	static GltkWindowCallbacks emptyCallbacks = {0,};
-
 	priv->width = -1;
 	priv->height = -1;
 	priv->root = NULL;
-	priv->callbacks = emptyCallbacks;
 	priv->longPressPending = 0;
 	priv->pressed = NULL;
 	priv->unpressed = NULL;
@@ -96,20 +107,13 @@ gltk_window_dispose(GObject* gobject)
 static void
 gltk_window_finalize(GObject* gobject)
 {
-	GltkWindow* self = GLTK_WINDOW(gobject);
-	USING_PRIVATE(self);
-
 	G_OBJECT_CLASS(gltk_window_parent_class)->finalize(gobject);
 }
 
 GltkWindow*
-gltk_window_new(GltkWindowCallbacks callbacks)
+gltk_window_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_WINDOW, NULL);
-	GltkWindow* self = GLTK_WINDOW(gobject);
-
-	USING_PRIVATE(self);
-	priv->callbacks = callbacks;
 
 	return (GltkWindow*)gobject;
 }
@@ -125,8 +129,7 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 	
 	gltk_window_layout(window);
 
-	if (priv->callbacks.request_render)
-		priv->callbacks.request_render();
+	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }
 void
 gltk_window_layout(GltkWindow* window)
@@ -248,18 +251,15 @@ gltk_window_set_root(GltkWindow* window, GltkWidget* widget)
 	priv->root = widget;
 	gltk_widget_set_window(widget, window);
 
-	if (priv->callbacks.request_render)
-		priv->callbacks.request_render();
+	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }
 
 void
 gltk_window_invalidate(GltkWindow* window)
 {
 	g_return_if_fail(GLTK_IS_WINDOW(window));
-	USING_PRIVATE(window);
 
-	if (priv->callbacks.request_render)
-		priv->callbacks.request_render();
+	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }
 
 static gboolean
