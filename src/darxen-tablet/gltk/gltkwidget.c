@@ -368,6 +368,10 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 		}
 		if (!returnValue)
 			returnValue = eventReturnValue;
+
+		//only send long touches to 1 widget
+		if (returnValue && event->type == GLTK_LONG_TOUCH)
+			break;
 	}
 
 	return returnValue;

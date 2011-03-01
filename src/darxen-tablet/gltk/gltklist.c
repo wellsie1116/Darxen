@@ -24,7 +24,7 @@
 #include "gltkbin.h"
 #include "gltklabel.h"
 
-#include <math.h>
+#include <stdlib.h>
 #include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_SCROLLABLE)
@@ -329,6 +329,7 @@ gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkLi
 {
 	GltkList* list = GLTK_LIST(widget->parentWidget->parentWidget); //ugly
 	USING_PRIVATE(list);
+
 	priv->drag = item;
 
 	GltkWidget* bin = item->widget->parentWidget;

@@ -278,15 +278,15 @@ check_long_press(GltkWindow* window)
 	return FALSE;
 }
 
-void
+gboolean
 gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 {
-	g_return_if_fail(GLTK_IS_WINDOW(window));
-	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_val_if_fail(GLTK_IS_WINDOW(window), FALSE);
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), FALSE);
 	USING_PRIVATE(window);
 
 	if (priv->pressed)
-		return;
+		return FALSE;
 	g_object_ref(G_OBJECT(widget));
 	priv->pressed = widget;
 	priv->longPressed = FALSE;
@@ -294,6 +294,7 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 	if (priv->longPressPending)
 		g_source_remove(priv->longPressPending);
 	priv->longPressPending = g_timeout_add(1000, (GSourceFunc)check_long_press, window);
+	return TRUE;
 }
 
 void

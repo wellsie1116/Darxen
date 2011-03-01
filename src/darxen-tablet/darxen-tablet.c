@@ -256,18 +256,32 @@ long_touch(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 	}
 }
 
+GltkWidget* create_sublist()
+{
+	GltkWidget* widget = gltk_list_new();
+
+	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 1"), NULL);
+	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 2"), NULL);
+	gltk_list_add_item(GLTK_LIST(widget), gltk_button_new("View Item 3"), NULL);
+
+	return widget;
+}
+
 GltkWidget* create_list_item(const gchar* msg)
 {
 	GltkWidget* vbox = gltk_vbox_new();
 	g_object_force_floating(G_OBJECT(vbox));
 
 	GltkWidget* button = gltk_button_new(msg);
+	GltkWidget* hbox = gltk_hbox_new();
+
+	gltk_box_append_widget(GLTK_BOX(hbox), gltk_label_new("  "), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(hbox), create_sublist(), TRUE, TRUE);
 
 	gltk_box_append_widget(GLTK_BOX(vbox), button, FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(vbox), gltk_label_new(	"This label is\n"
-															"not clickable"), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), hbox, FALSE, FALSE);
 
-	g_signal_connect(button, "long-touch-event", (GCallback)long_touch, msg);
+	g_signal_connect(button, "long-touch-event", (GCallback)long_touch, (gpointer)msg);
 
 	return vbox;
 }
