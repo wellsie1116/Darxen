@@ -41,12 +41,12 @@ typedef struct _DarxenSiteListClass		DarxenSiteListClass;
 
 struct _DarxenSiteList
 {
-	GltkVBox parent;
+	GltkList parent;
 };
 
 struct _DarxenSiteListClass
 {
-	GltkVBoxClass parent_class;
+	GltkListClass parent_class;
 	
 	/* signals */
 	/* virtual funcs */

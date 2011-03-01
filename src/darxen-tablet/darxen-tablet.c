@@ -323,26 +323,33 @@ GltkWindow* create_window()
 
 	gltk_box_append_widget(GLTK_BOX(vbox), btns, TRUE, FALSE);
 
-	//GltkWidget* siteList = darxen_site_list_new();
-	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
-	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
-	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
+	GltkWidget* siteList;
 
-	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
-	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
-	//darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
+	if (1)
+	{
+		siteList = darxen_site_list_new();
+		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "klot");
+		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Base Reflectivity");
+		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "klot", "Radial Velocity");
 
-	//darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
+		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kind");
+		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cached Reflectivity");
+		darxen_site_list_add_view(DARXEN_SITE_LIST(siteList), "kind", "Cool Storm Yesterday");
+
+		darxen_site_list_add_site(DARXEN_SITE_LIST(siteList), "kilx");
+	}
+	else
+	{
+		siteList = gltk_list_new();
+
+		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("klot"), NULL);
+		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kind"), NULL);
+		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kilx"), NULL);
+		gltk_list_add_item(GLTK_LIST(siteList), create_list_item("site"), NULL);
+	}
 	
-	GltkWidget* siteList = gltk_list_new();
-
-	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("klot"), NULL);
-	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kind"), NULL);
-	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("kilx"), NULL);
-	gltk_list_add_item(GLTK_LIST(siteList), create_list_item("site"), NULL);
-	
-	GltkScrollable* scrollable = gltk_scrollable_new();
-	gltk_scrollable_set_widget(scrollable, siteList);
+	GltkWidget* scrollable = gltk_scrollable_new();
+	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), siteList);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), scrollable, TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), vbox, TRUE, TRUE);

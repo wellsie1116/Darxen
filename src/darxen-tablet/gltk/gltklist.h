@@ -41,6 +41,7 @@ typedef struct _GltkListClass		GltkListClass;
 
 struct _GltkListItem
 {
+	GltkList* list;
 	GltkWidget* widget;
 	gpointer data;
 	GltkListItemPrivate* priv;

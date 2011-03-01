@@ -255,6 +255,8 @@ gltk_widget_size_allocate(GltkWidget* widget, GltkAllocation allocation)
 GltkAllocation
 gltk_widget_get_allocation(GltkWidget* widget)
 {
+	static GltkAllocation empty = {-1, -1, -1, -1};
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), empty);
 	USING_PRIVATE(widget);
 
 	return priv->allocation;

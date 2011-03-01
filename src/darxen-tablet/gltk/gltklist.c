@@ -128,6 +128,7 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	gltk_box_append_widget(GLTK_BOX(list), bin, FALSE, FALSE);
 
 	GltkListItem* item = g_new(GltkListItem, 1);
+	item->list = list;
 	item->widget = widget;
 	item->data = data;
 	item->priv = g_new(GltkListItemPrivate, 1);
@@ -249,8 +250,7 @@ gltk_list_render(GltkWidget* widget)
 static gboolean
 gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
-	USING_PRIVATE(list);
+	USING_PRIVATE(item->list);
 
 	switch (event->touchType)
 	{
@@ -293,8 +293,7 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 static gboolean
 gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
-	USING_PRIVATE(list);
+	USING_PRIVATE(item->list);
 
 	priv->drag = item;
 
@@ -358,8 +357,7 @@ move_node_back(GList* list, GList* node)
 static gboolean
 gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem* item)
 {
-	GltkList* list = GLTK_LIST(widget->parentWidget); //ugly
-	USING_PRIVATE(list);
+	USING_PRIVATE(item->list);
 
 	if (!priv->drag)
 		return FALSE;
@@ -368,7 +366,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	item->priv->offset.y += event->dy;
 	
 	//find our child and item in our lists
-	GList* pChildren = GLTK_BOX(list)->children;
+	GList* pChildren = GLTK_BOX(item->list)->children;
 	GList* pItems = priv->items;
 	while (pChildren && pItems)
 	{
@@ -388,9 +386,9 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		//ditto for our vbox's widgets
 		if (pItems->next)
 		{
-			item->priv->offset.y -= allocation.height;
+			item->priv->offset.y -= gltk_widget_get_allocation(((GltkListItem*)pItems->next->data)->widget).height;
 
-			GLTK_BOX(list)->children = move_node_forward(GLTK_BOX(list)->children, pChildren);
+			GLTK_BOX(item->list)->children = move_node_forward(GLTK_BOX(item->list)->children, pChildren);
 			priv->items = move_node_forward(priv->items, pItems);
 
 			gltk_window_layout(widget->window);
@@ -400,16 +398,16 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	{
 		if (pItems->prev)
 		{
-			item->priv->offset.y += allocation.height;
+			item->priv->offset.y += gltk_widget_get_allocation(((GltkListItem*)pItems->prev->data)->widget).height;
 
-			GLTK_BOX(list)->children = move_node_back(GLTK_BOX(list)->children, pChildren);
+			GLTK_BOX(item->list)->children = move_node_back(GLTK_BOX(item->list)->children, pChildren);
 			priv->items = move_node_back(priv->items, pItems);
 
 			gltk_window_layout(widget->window);
 		}
 	}
 
-	gltk_widget_invalidate(GLTK_WIDGET(list));
+	gltk_widget_invalidate(GLTK_WIDGET(item->list));
 
 	g_message("A bin in a list was dragged, nomming event");
 	return TRUE;
