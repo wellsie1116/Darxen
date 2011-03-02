@@ -15,8 +15,8 @@ libdarxen_la_SOURCES = libdarxen.h \
 	DarxenDataStructs.c DarxenDataStructs.h \
 	DarxenParser.c DarxenParser.h \
 	DarxenParserLevel3.c DarxenParserLevel3.h \
+	libdarxenPoller.c \
 	libdarxenRestfulClient.c libdarxenRestfulClient.h \
-	libdarxenClient.c libdarxenClient.h \
 	libdarxenFileSupport.c libdarxenFileSupport.h \
 	libdarxeninit.c libdarxeninit.h \
 	libdarxenRenderingCommon.c libdarxenRenderingCommon.h \

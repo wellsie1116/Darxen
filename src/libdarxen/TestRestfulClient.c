@@ -22,18 +22,27 @@
 
 #include "libdarxenRestfulClient.h"
 
+#include <stdlib.h>
+
 typedef struct {
+	GPid darxend;
 	DarxenRestfulClient* client;
 } RestfulClientFixture;
 
 static void test_construct_setup(RestfulClientFixture* fix, gconstpointer testdata)
 {
 	fix->client = darxen_restful_client_new();
+
+	//gchar* args[] = {"darxend", NULL};
+	//g_assert(g_spawn_async("../darxend", args, NULL, 0, NULL, NULL, &fix->darxend, NULL));
+	//sleep(1);
 }
 
 static void test_construct_teardown(RestfulClientFixture* fix, gconstpointer testdata)
 {
 	g_object_unref(G_OBJECT(fix->client));
+
+	//g_spawn_close_pid(fix->darxend);
 }
 
 static void test_setup(RestfulClientFixture* fix, gconstpointer testdata)
@@ -79,6 +88,7 @@ static void test_connection(RestfulClientFixture* fix, gconstpointer testdata)
 static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
 {
 	int res;
+	DarxenPoller* poller;
 	GError* error = NULL;
 	
 	RadarPoller* pollers;
@@ -91,9 +101,9 @@ static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
 	g_assert(!pollers[0].site && !pollers[0].product);
 	free(pollers);
 
-	res = darxen_restful_client_add_poller(fix->client, "klot", "N0R", &error);
+	poller = darxen_restful_client_add_poller(fix->client, "klot", "N0R", &error);
 	g_assert_no_error(error);
-	g_assert_cmpint(res, ==, 0);
+	g_assert(DARXEN_IS_POLLER(poller));
 	
 	pollers = darxen_restful_client_list_pollers(fix->client, &pollerCount, &error);
 	g_assert_no_error(error);
@@ -103,13 +113,13 @@ static void test_pollers(RestfulClientFixture* fix, gconstpointer testdata)
 	g_assert_cmpstr(pollers[0].product, ==, "N0R");
 	free(pollers);
 
-	res = darxen_restful_client_add_poller(fix->client, "klot", "N1R", &error);
+	poller = darxen_restful_client_add_poller(fix->client, "klot", "N1R", &error);
 	g_assert_no_error(error);
-	g_assert_cmpint(res, ==, 0);
+	g_assert(DARXEN_IS_POLLER(poller));
 	
-	res = darxen_restful_client_add_poller(fix->client, "kilx", "N0R", &error);
+	poller = darxen_restful_client_add_poller(fix->client, "kilx", "N0R", &error);
 	g_assert_no_error(error);
-	g_assert_cmpint(res, ==, 0);
+	g_assert(DARXEN_IS_POLLER(poller));
 
 	res = darxen_restful_client_remove_poller(fix->client, "klot", "N0R", &error);
 	g_assert_no_error(error);

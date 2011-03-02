@@ -23,6 +23,10 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 int
 main (int argc, char* argv[]) {
 	g_type_init();
@@ -30,5 +34,21 @@ main (int argc, char* argv[]) {
 
 	libdarxen_init();
 	testing_common_init();
-	return g_test_run();
+
+	//spawn our darxend daemon
+	pid_t pid = vfork();
+	if (!pid)
+	{
+		execl("../darxend/darxend", "darxend", NULL);
+		execl("./darxend", "darxend", NULL);
+		_exit(1);
+	}
+	else
+	{
+		sleep(1);
+	}
+
+	int res = g_test_run();
+	kill(pid, 15);
+	return res;
 }

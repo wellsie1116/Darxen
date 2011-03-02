@@ -28,7 +28,6 @@
 #include <curl/curl.h>
 
 #include "restapi.h"
-#include "../soap/server/soapH.h"
 #include "Settings.h"
 #include "ClientManager.h"
 #include "RadarDataManager.h"

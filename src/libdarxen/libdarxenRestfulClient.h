@@ -31,8 +31,20 @@ G_BEGIN_DECLS
 #define DARXEN_IS_RESTFUL_CLIENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), DARXEN_TYPE_RESTFUL_CLIENT))
 #define DARXEN_RESTFUL_CLIENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), DARXEN_TYPE_RESTFUL_CLIENT, DarxenRestfulClientClass))
 
+#define DARXEN_POLLER_ERROR darxen_poller_error_quark()
+
+#define DARXEN_TYPE_POLLER				(darxen_poller_get_type())
+#define DARXEN_POLLER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), DARXEN_TYPE_POLLER, DarxenPoller))
+#define DARXEN_POLLER_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), DARXEN_TYPE_POLLER, DarxenPollerClass))
+#define DARXEN_IS_POLLER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), DARXEN_TYPE_POLLER))
+#define DARXEN_IS_POLLER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), DARXEN_TYPE_POLLER))
+#define DARXEN_POLLER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), DARXEN_TYPE_POLLER, DarxenPollerClass))
+
 typedef struct _DarxenRestfulClient			DarxenRestfulClient;
 typedef struct _DarxenRestfulClientClass		DarxenRestfulClientClass;
+
+typedef struct _DarxenPoller			DarxenPoller;
+typedef struct _DarxenPollerClass		DarxenPollerClass;
 
 struct _DarxenRestfulClient
 {
@@ -56,6 +68,13 @@ typedef struct {
 	gchar* product;
 } RadarPoller;
 
+typedef struct {
+	gchar* site;
+	gchar* product;
+	gchar* ID;
+	gchar* data;
+} RadarData;
+
 GType					darxen_restful_client_get_type	() G_GNUC_CONST;
 DarxenRestfulClient*	darxen_restful_client_new		();
 
@@ -63,12 +82,42 @@ DarxenRestfulClient*	darxen_restful_client_new		();
 int						darxen_restful_client_connect		(DarxenRestfulClient* self, GError** error);
 int						darxen_restful_client_disconnect	(DarxenRestfulClient* self, GError** error);
 
-int						darxen_restful_client_add_poller	(DarxenRestfulClient* self, char* site, char* product, GError** error);
-int						darxen_restful_client_remove_poller	(DarxenRestfulClient* self, char* site, char* product, GError** error);
+DarxenPoller*			darxen_restful_client_add_poller	(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error);
+int						darxen_restful_client_remove_poller	(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error);
 RadarPoller*			darxen_restful_client_list_pollers	(DarxenRestfulClient* self, int* size, GError** error);
 
 
+//RadarDataInfo*			darxen_restful_client_get_data		(DarxenRestfulClient* self, int len);
+
+
 GQuark			darxen_restful_client_error_quark	();
+
+struct _DarxenPoller
+{
+	GObject parent;
+};
+
+struct _DarxenPollerClass
+{
+	GObjectClass parent_class;
+	
+	/* signals */
+	void (*data_received) (DarxenPoller* poller, gpointer data);//FIXME: correct data type
+
+	/* virtual funcs */
+};
+
+typedef enum
+{
+	DARXEN_POLLER_ERROR_FAILED
+} DarxenPollerError;
+
+GType			darxen_poller_get_type	() G_GNUC_CONST;
+DarxenPoller*	darxen_poller_new		(DarxenRestfulClient* client, const gchar* site, const gchar* product);
+
+/* Public functions here */
+
+GQuark			darxen_poller_error_quark	();
 
 G_END_DECLS
 

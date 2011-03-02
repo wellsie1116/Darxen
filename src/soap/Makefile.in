@@ -1,4 +1,0 @@
-
-soap:
-	soapcpp2 -S -L -c -dserver stubs.h
-	soapcpp2 -C -L -c -dclient stubs.h
