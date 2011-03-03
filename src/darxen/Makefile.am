@@ -20,8 +20,6 @@ darxen_SOURCES = DarxenCommon.c DarxenCommon.h \
 	ntbkProducts.c ntbkProducts.h \
 	RadarViewer.c RadarViewer.h \
 	darxen.c \
-	../soap/client/soapC.c \
-	../soap/client/soapClient.c \
 	../libdarxen/libdarxen.la
 
 darxen_CFLAGS = -Wall -I../libdarxen $(gtkglext_CFLAGS) $(libglade_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS)

@@ -86,8 +86,6 @@ PKG_CHECK_MODULES(gtk, gtk+-2.0 >= 2.16.0)
 PKG_CHECK_MODULES(libglade, libglade-2.0 >= 2.0.0)
 PKG_CHECK_MODULES(gtkglext, gtkglext-1.0 >= 1.0.5)
 PKG_CHECK_MODULES(libxml, libxml-2.0 >= 2.6.27)
-PKG_CHECK_MODULES(gsoappp, gsoap++ >= 2.7)
-PKG_CHECK_MODULES(gsoap, gsoap >= 2.7)
 
 PKG_CHECK_MODULES(curl, libcurl >= 7.18)
 PKG_CHECK_MODULES(libmicrohttpd, libmicrohttpd >= 0.4.4)
@@ -117,7 +115,6 @@ AC_CONFIG_FILES([
    src/darxen-cli/Makefile
    src/darxen-cgi/Makefile
    src/darxen/Makefile
-   src/soap/Makefile
 ])
 
 AC_OUTPUT

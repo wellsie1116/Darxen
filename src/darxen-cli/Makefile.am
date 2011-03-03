@@ -10,8 +10,6 @@
 
 bin_PROGRAMS=darxencli
 darxencli_SOURCES= darxencli.c \
-	../soap/client/soapC.c \
-	../soap/client/soapClient.c \
 	../libdarxen/libdarxen.la
 darxencli_CFLAGS = -Wall -I../libdarxen $(gobject_CFLAGS) $(glib_CFLAGS) $(gsoap_CFLAGS)
 darxencli_LDADD = $(gobject_LIBS) $(glib_LIBS) $(gsoap_LIBS) ../libdarxen/libdarxen.la -lpthread # -lwsock32 
