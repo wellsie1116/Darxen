@@ -42,6 +42,8 @@ typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
 struct _GltkWidgetPrivate
 {
 	GltkAllocation allocation;
+
+	gboolean isVisible;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -160,6 +162,7 @@ gltk_widget_init(GltkWidget* self)
 	self->parentWidget = NULL;
 
 	priv->allocation = initialAllocation;
+	priv->isVisible = TRUE;
 }
 
 static void
@@ -237,6 +240,26 @@ gltk_widget_set_window(GltkWidget* widget, GltkWindow* window)
 }
 
 void
+gltk_widget_set_visible(GltkWidget* widget, gboolean visible)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	USING_PRIVATE(widget);
+
+	if (priv->isVisible != (priv->isVisible = visible))
+		gltk_widget_layout(widget);
+}
+
+gboolean
+gltk_widget_get_visible(GltkWidget* widget)
+{
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), FALSE);
+	USING_PRIVATE(widget);
+
+	return priv->isVisible;
+}
+
+
+void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
@@ -273,7 +296,7 @@ gltk_widget_layout(GltkWidget* widget)
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
 	if (widget->window)
-		gltk_window_invalidate(widget->window);
+		gltk_window_layout(widget->window);
 }
 
 void

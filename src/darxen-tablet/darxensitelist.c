@@ -102,7 +102,7 @@ darxen_site_list_init(DarxenSiteList* self)
 {
 	USING_PRIVATE(self);
 
-	priv->sites = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_site_list_item);
+	priv->sites = NULL;
 }
 
 static void
@@ -131,11 +131,21 @@ GltkWidget*
 darxen_site_list_new()
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_SITE_LIST, NULL);
-	//DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
+	DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
 
-	//USING_PRIVATE(self);
+	USING_PRIVATE(self);
+
+	priv->sites = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_site_list_item);
 
 	return (GltkWidget*)gobject;
+}
+
+static gboolean
+site_clicked(GltkButton* button, GltkEventClick* event, Site* siteInfo)
+{
+	gltk_widget_set_visible(siteInfo->views, !gltk_widget_get_visible(siteInfo->views));
+
+	return TRUE;
 }
 
 void
@@ -153,7 +163,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	g_object_ref(G_OBJECT(siteInfo->views));
 
 	GltkWidget* siteButton = gltk_button_new(site);
-	//g_signal_connect(siteButton, "click-event", site_clicked, list);
+	g_signal_connect(siteButton, "click-event", (GCallback)site_clicked, siteInfo);
 
 	GltkWidget* hbox = gltk_hbox_new();
 

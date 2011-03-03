@@ -1,4 +1,4 @@
-/* darxen-tablet.c
+/* darxenmainview.c
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,17 +18,21 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "darxen-tablet.h"
+#include "darxenmainview.h"
 
-#include "../soap/client/DarxenService.nsmap"
+static GltkWidget* root = NULL;
 
-int main(int argc, char *argv[])
+GltkWidget*
+darxen_main_view_get_root()
 {
-	int res;
-	res = initialize_gui(&argc, &argv);
+	if (!root)
+	{
+		root = gltk_vbox_new();
+		g_object_ref(G_OBJECT(root));
 
-	run_gui();
+		gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), TRUE, TRUE);
+	}
 
-	return 0;
+	return root;
 }
 

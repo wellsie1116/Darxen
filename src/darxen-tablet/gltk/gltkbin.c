@@ -121,6 +121,8 @@ gltk_bin_set_widget(GltkBin* bin, GltkWidget* widget)
 		priv->widget = widget;
 		gltk_box_append_widget(GLTK_BOX(bin), widget, TRUE, TRUE);
 	}
+
+	gltk_widget_layout(GLTK_WIDGET(bin));
 }
 
 GQuark
@@ -137,8 +139,15 @@ static void
 gltk_bin_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
-	
-	gltk_widget_size_request(priv->widget, size);
+	if (priv->widget)
+	{
+		gltk_widget_size_request(priv->widget, size);
+	}
+	else
+	{
+		size->width = 0;
+		size->height = 0;
+	}
 }
 
 static void

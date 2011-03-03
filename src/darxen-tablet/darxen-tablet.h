@@ -1,4 +1,4 @@
-/* darxen-tablet.c
+/* darxen-tablet.h
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,17 +18,12 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "darxen-tablet.h"
+#include <glib.h>
 
-#include "../soap/client/DarxenService.nsmap"
+int initialize_gui(int* argc, char** argv[]);
+void run_gui();
 
-int main(int argc, char *argv[])
-{
-	int res;
-	res = initialize_gui(&argc, &argv);
-
-	run_gui();
-
-	return 0;
-}
+void show_main();
+void show_site_config(const gchar* site);
+void show_view(const gchar* site, const gchar* product);
 

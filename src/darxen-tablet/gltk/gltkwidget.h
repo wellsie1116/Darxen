@@ -113,7 +113,11 @@ GltkWidget*		gltk_widget_new				();
 GltkWidget*		gltk_widget_get_parent		(GltkWidget* widget);
 void			gltk_widget_set_parent		(GltkWidget* widget, GltkWidget* parent);
 void			gltk_widget_unparent		(GltkWidget* widget);
+
 void			gltk_widget_set_window		(GltkWidget* widget, GltkWindow* window);
+
+void			gltk_widget_set_visible		(GltkWidget* widget, gboolean visible);
+gboolean		gltk_widget_get_visible		(GltkWidget* widget);
 void			gltk_widget_size_request	(GltkWidget* widget, GltkSize* size);
 void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation);
 GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);

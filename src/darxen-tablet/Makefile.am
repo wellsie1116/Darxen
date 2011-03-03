@@ -10,7 +10,12 @@
 
 
 bin_PROGRAMS=darxen-tablet
-darxen_tablet_SOURCES = darxen-tablet.c \
+darxen_tablet_SOURCES = darxen-tablet.c darxen-tablet.h \
+						darxengui.c \
+						darxenconfig.c darxenconfig.h \
+						darxenmainview.c darxenmainview.h \
+						darxenview.c darxenview.h \
+						darxenpanelmanager.c darxenpanelmanager.h \
 						darxensitelist.c darxensitelist.h \
 						../soap/client/soapC.c \
 						../soap/client/soapClient.c \
