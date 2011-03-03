@@ -20,8 +20,6 @@
 
 #include "darxen-tablet.h"
 
-#include "../soap/client/DarxenService.nsmap"
-
 int main(int argc, char *argv[])
 {
 	int res;

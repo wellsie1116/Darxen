@@ -93,6 +93,7 @@ PKG_CHECK_MODULES(libxml, libxml-2.0 >= 2.6.27)
 PKG_CHECK_MODULES(curl, libcurl >= 7.18)
 PKG_CHECK_MODULES(libmicrohttpd, libmicrohttpd >= 0.4.4)
 PKG_CHECK_MODULES(json, json-glib-1.0 >= 0.7.6)
+PKG_CHECK_MODULES(libgrip, libgrip-0.1 >= 0.1.2)
 
 #net_LIBS='-lwsock32'
 net_LIBS=
