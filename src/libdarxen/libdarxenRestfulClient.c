@@ -295,6 +295,146 @@ darxen_restful_client_list_pollers(DarxenRestfulClient* self, int* size, GError*
 	return pollers;
 }
 
+static size_t
+headers_search_data(char* ptr, size_t size, size_t nmemb, int* nums)
+{
+	gchar* header = g_strndup(ptr, nmemb);
+	gchar* value = g_strstr_len(header, nmemb, ": ") + 2;
+
+	if (!strncmp(header, "SearchID", strlen("SearchID")))
+	{
+		nums[0] = atoi(value);
+	}
+	else if (!strncmp(header, "SearchSize", strlen("SearchSize")))
+	{
+		nums[1] = atoi(value);
+	}
+	g_free(header);
+	return nmemb * size;
+}
+
+gboolean
+darxen_restful_client_search_data(	DarxenRestfulClient* self, 
+									const gchar* site, 
+									const gchar* product, 
+									const gchar* startId, 
+									const gchar* endId, 
+									int* searchId, 
+									int* count,
+									GError** error)
+{
+	//TODO: test
+	USING_PRIVATE(self);
+
+	int dummy;
+	if (!searchId) searchId = &dummy;
+	if (!count) count = &dummy;
+	
+	gchar* url = g_strdup_printf("/search/%s/%s/%s/%s", site, product, startId, endId);
+	CURL* curl = create_curl_client("PUT", url, priv->auth_token, NULL);
+	g_free(url);
+	g_assert(curl);
+
+	int nums[2] = {0, 0};
+
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headers_search_data);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA, nums);
+
+	if (go_curl(curl, error))
+		return FALSE;
+
+	*searchId = nums[0];
+	*count = nums[1];
+
+	return TRUE;
+}
+
+gchar**
+darxen_restful_client_read_search(	DarxenRestfulClient* self,
+									int searchId, 
+									int start, 
+									int count, 
+									GError** error)
+{
+	//TODO: test
+	USING_PRIVATE(self);
+	ResponseBody body = {0,};
+
+	gchar* url = g_strdup_printf("/search/%d/%d/%d", searchId, start, count);
+	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return NULL;
+
+	//parse json
+	JsonParser* parser = json_parser_new();
+	if (!json_parser_load_from_data(parser, body.data, body.len, error))
+	{
+		free(body.data);
+		g_object_unref(G_OBJECT(parser));
+		return NULL;
+	}
+
+	JsonNode* root = json_parser_get_root(parser);
+	JsonArray* array = json_node_get_array(root);
+	int len = json_array_get_length(array);
+	g_assert(len == count);
+
+	gchar** res = g_new(gchar*, count+1);
+	int i;
+	for (i = 0; i < len; i++)
+		res[i] = g_strdup(json_array_get_string_element(array, i));
+	res[i] = NULL;
+
+	free(body.data);
+	g_object_unref(G_OBJECT(parser));
+	return res;
+}
+
+gboolean
+darxen_restful_client_free_search(	DarxenRestfulClient* self, 
+									int searchId, 
+									GError** error)
+{
+	//TODO: test
+	USING_PRIVATE(self);
+
+	gchar* url = g_strdup_printf("/search/%d", searchId);
+	CURL* curl = create_curl_client("DELETE", url, priv->auth_token, NULL);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+char*
+darxen_restful_client_read_data(	DarxenRestfulClient* self,
+									const gchar* site,
+									const gchar* product,
+									const gchar* id,
+									GError** error)
+{
+	//TODO: test
+	USING_PRIVATE(self);
+	ResponseBody body = {0,};
+
+	gchar* url = g_strdup_printf("/data/%s/%s/%s", site, product, id);
+	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return NULL;
+
+	return body.data;
+}
+
+
 GQuark
 darxen_restful_client_error_quark()
 {

@@ -82,9 +82,47 @@ DarxenRestfulClient*	darxen_restful_client_new		();
 int						darxen_restful_client_connect		(DarxenRestfulClient* self, GError** error);
 int						darxen_restful_client_disconnect	(DarxenRestfulClient* self, GError** error);
 
-DarxenPoller*			darxen_restful_client_add_poller	(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error);
-int						darxen_restful_client_remove_poller	(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error);
-RadarPoller*			darxen_restful_client_list_pollers	(DarxenRestfulClient* self, int* size, GError** error);
+
+DarxenPoller*			darxen_restful_client_add_poller	(	DarxenRestfulClient* self, 
+																gchar* site, 
+																gchar* product, 
+																GError** error);
+
+int						darxen_restful_client_remove_poller	(	DarxenRestfulClient* self, 
+																gchar* site, 
+																gchar* product, 
+																GError** error);
+
+RadarPoller*			darxen_restful_client_list_pollers	(	DarxenRestfulClient* self, 
+																int* size, 
+																GError** error);
+
+
+gboolean				darxen_restful_client_search_data	(	DarxenRestfulClient* self, 
+																const gchar* site, 
+																const gchar* product, 
+																const gchar* startId, 
+																const gchar* endId, 
+																int* searchId, 
+																int* count,
+																GError** error);
+
+gchar**					darxen_restful_client_read_search	(	DarxenRestfulClient* self,
+																int searchId, 
+																int start, 
+																int count, 
+																GError** error);
+
+gboolean				darxen_restful_client_free_search	(	DarxenRestfulClient* self, 
+																int searchId, 
+																GError** error);
+
+char*					darxen_restful_client_read_data		(	DarxenRestfulClient* self,
+																const gchar* site,
+																const gchar* product,
+																const gchar* id,
+																GError** error);
+
 
 
 //RadarDataInfo*			darxen_restful_client_get_data		(DarxenRestfulClient* self, int len);
@@ -102,7 +140,7 @@ struct _DarxenPollerClass
 	GObjectClass parent_class;
 	
 	/* signals */
-	void (*data_received) (DarxenPoller* poller, gpointer data);//FIXME: correct data type
+	void (*data_received) (DarxenPoller* poller, RadarData* data);
 
 	/* virtual funcs */
 };
