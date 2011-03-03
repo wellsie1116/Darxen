@@ -1,6 +1,6 @@
 /* ntbkProducts.c
 
-   Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+   Copyright (C) 2011 Kevin Wells <kevin@darxen.org>
 
    This file is part of darxen.
 
@@ -285,7 +285,8 @@ darxen_notebook_products_new(SettingsSite *site)
 
 			DarxenClient* client = settings_get_client();
 
-			if (!darxen_client_register_poller(client, site->name, ((SettingsViewProduct*)view->products->data)->code, &error))
+			//FIXME: implement
+			if (1) //(!darxen_client_register_poller(client, site->name, ((SettingsViewProduct*)view->products->data)->code, &error))
 			{
 				g_critical("Failed to add poller: %s", error->message);
 			}

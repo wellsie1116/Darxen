@@ -1,6 +1,6 @@
-/* Settings.cc
+/* Settings.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -141,16 +141,17 @@ settings_get_path_vals(const char* expr)
     	return NULL;
     }
 
-    if (!xpathObj->nodesetval)
+    if (xpathObj->type != XPATH_NODESET)
     {
     	g_critical("Result is not a nodeset");
     	xmlXPathFreeObject(xpathObj);
     	return NULL;
     }
+	int len = xpathObj->nodesetval ? xpathObj->nodesetval->nodeNr : 0;
 
-    char** res = (char**)calloc(xpathObj->nodesetval->nodeNr + 1, sizeof(char*));
+    char** res = (char**)calloc(len + 1, sizeof(char*));
     int i;
-    for (i = 0; i < xpathObj->nodesetval->nodeNr; i++)
+    for (i = 0; i < len; i++)
     {
     	if (!xpathObj->nodesetval->nodeTab[i]->children)
 			res[i] = strdup((char*)xpathObj->nodesetval->nodeTab[i]->content);

@@ -1,6 +1,6 @@
-/* RadarDataManager.cc
+/* RadarDataManager.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -19,13 +19,13 @@
  */
 
 #include "RadarDataManager.h"
-#include "soap.h"
 #include "Client.h"
 #include "Settings.h"
 #include "Callbacks.h"
 #include "FtpConnection.h"
 
 #include <time.h>
+#include <string.h>
 
 #define POLLING_DELAY (60 * 2)
 //#define POLLING_DELAY (20000)
@@ -56,10 +56,10 @@ static pthread_mutex_t lockSearches;
 static gint treeIntComparer(gconstpointer a, gconstpointer b);
 static gint listTimeComparer(gconstpointer a, gconstpointer b);
 
-static GList* searchYears(const gchar* path, struct DateTime* start, struct DateTime* end);
-static GList* searchMonths(int year, const gchar* path, struct DateTime* start, struct DateTime* end);
-static GList* searchDays(int year, int month, const gchar* path, struct DateTime* start, struct DateTime* end);
-static GList* searchDay(int year, int month, int day, const gchar* path, struct DateTime* start, struct DateTime* end);
+static GList* searchYears(const gchar* path, DateTime* start, DateTime* end);
+static GList* searchMonths(int year, const gchar* path, DateTime* start, DateTime* end);
+static GList* searchDays(int year, int month, const gchar* path, DateTime* start, DateTime* end);
+static GList* searchDay(int year, int month, int day, const gchar* path, DateTime* start, DateTime* end);
 
 static gboolean pollData(gpointer userData);
 static gboolean pollDataOnce(gpointer userData);
@@ -105,6 +105,7 @@ radar_data_manager_add_poller(DarxendClient* client, char* site, char* product)
 		}
 		pthread_mutex_lock(&productInfo->lockClients);
 		{
+			//FIXME: We should really validate that the product is valid...
 			productInfo->clients = g_list_prepend(productInfo->clients, client);
 		}
 		pthread_mutex_unlock(&productInfo->lockClients);
@@ -157,6 +158,51 @@ radar_data_manager_remove_poller(DarxendClient* client, char* site, char* produc
 	printPollers();
 }
 
+void
+radar_data_manager_iter_pollers(DarxendClient* client, PollerIterFunc callback, void* data)
+{
+	pthread_mutex_lock(&lockSites);
+	if (!sites)
+		return;
+	GList* sitesKeys = g_hash_table_get_keys(sites);
+	GList* psitesKeys = sitesKeys;
+	while (psitesKeys)
+	{
+		char* site = (char*)psitesKeys->data;
+		SitePollers* siteInfo = (SitePollers*)g_hash_table_lookup(sites, site);
+		pthread_mutex_lock(&siteInfo->lockProducts);
+		GList* products = g_hash_table_get_keys(siteInfo->products);
+		GList* pproducts = products;
+		while (pproducts)
+		{
+			char* product = (char*)pproducts->data;
+			SiteProductPollers* productInfo = (SiteProductPollers*)g_hash_table_lookup(siteInfo->products, product);
+			pthread_mutex_lock(&productInfo->lockClients);
+			{
+				GList* clients = productInfo->clients;
+				while (clients)
+				{
+					DarxendClient* other = (DarxendClient*)clients->data;
+					if (other && other->ID == client->ID)
+					{
+						callback(site, product, data);
+						break;
+					}
+					clients = clients->next;
+				}
+			}
+			pthread_mutex_unlock(&productInfo->lockClients);
+			pproducts = pproducts->next;
+		}
+		g_list_free(products);
+		pthread_mutex_unlock(&siteInfo->lockProducts);
+
+		psitesKeys = psitesKeys->next;
+	}
+	g_list_free(sitesKeys);
+	pthread_mutex_unlock(&lockSites);
+}
+
 int
 radar_data_manager_search_past_data(char* site, char* product, int frames)
 {
@@ -176,7 +222,7 @@ radar_data_manager_search_past_data(char* site, char* product, int frames)
 }
 
 int
-radar_data_manager_search(char* site, char* product, struct DateTime* start, struct DateTime* end)
+radar_data_manager_search(char* site, char* product, DateTime* start, DateTime* end)
 {
 	int searchID = intSearchCounter;
 	gchar* path = g_build_filename("archives", "level3", site, product, NULL);
@@ -197,7 +243,7 @@ radar_data_manager_search(char* site, char* product, struct DateTime* start, str
 		end->date.day = utc->tm_mday;
 		end->time.hour = utc->tm_hour;
 		end->time.minute = utc->tm_min;
-		searchYears(path, start, end);
+		resultList = searchYears(path, start, end);
 		g_free(end);
 		end = NULL;
 	}
@@ -262,7 +308,7 @@ gboolean
 radar_data_manager_free_search(int searchID)
 {
 	pthread_mutex_lock(&lockSearches);
-	GSList* data = (GSList*)g_tree_lookup(results, &searchID);
+	GSList* data = (GSList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
 	if (!data)
 	{
 		pthread_mutex_unlock(&lockSearches);
@@ -274,8 +320,8 @@ radar_data_manager_free_search(int searchID)
 	return TRUE;
 }
 
-char*
-radar_data_manager_read_data(char* site, char* product, DateTime date, unsigned int* length)
+FILE*
+radar_data_manager_read_data_file(char* site, char* product, DateTime date)
 {
 	char strYear[5];
 	char strMonth[3];
@@ -289,13 +335,20 @@ radar_data_manager_read_data(char* site, char* product, DateTime date, unsigned 
 	if (!settings_file_exists(path))
 	{
 		g_free(path);
-		*length = 0;
 		return NULL;
 	}
 	gchar* fullpath = settings_get_path(path);
 	g_free(path);
 	FILE* fin = fopen(fullpath, "rb");
 	g_free(fullpath);
+	return fin;
+}
+
+char*
+radar_data_manager_read_data(char* site, char* product, DateTime date, unsigned int* length)
+{
+	FILE* fin = radar_data_manager_read_data_file(site, product, date);
+
 	if (!fin)
 	{
 		*length = 0;
@@ -346,7 +399,7 @@ listTimeComparer(gconstpointer a, gconstpointer b)
 }
 
 static GList*
-searchYears(const gchar* path, struct DateTime* start, struct DateTime* end)
+searchYears(const gchar* path, DateTime* start, DateTime* end)
 {
 	GList* results = NULL;
 	GList* presults = NULL;
@@ -373,7 +426,7 @@ searchYears(const gchar* path, struct DateTime* start, struct DateTime* end)
 }
 
 static GList*
-searchMonths(int year, const gchar* path, struct DateTime* start, struct DateTime* end)
+searchMonths(int year, const gchar* path, DateTime* start, DateTime* end)
 {
 	int monthStart = (start->date.year == year) ? start->date.month : 1;
 	int monthEnd = (end->date.year == year) ? end->date.month : 12;
@@ -402,7 +455,7 @@ searchMonths(int year, const gchar* path, struct DateTime* start, struct DateTim
 }
 
 static GList*
-searchDays(int year, int month, const gchar* path, struct DateTime* start, struct DateTime* end)
+searchDays(int year, int month, const gchar* path, DateTime* start, DateTime* end)
 {
 	int dayStart = (start->date.year == year && start->date.month == month) ? start->date.day : 1;
 	int dayEnd = (end->date.year == year && end->date.month == month) ? end->date.day : 31;
@@ -431,7 +484,7 @@ searchDays(int year, int month, const gchar* path, struct DateTime* start, struc
 }
 
 static GList*
-searchDay(int year, int month, int day, const gchar* path, struct DateTime* start, struct DateTime* end)
+searchDay(int year, int month, int day, const gchar* path, DateTime* start, DateTime* end)
 {
 	gchar* abspath = settings_get_path(path);
 	GDir* dir = g_dir_open(abspath, 0, NULL);
@@ -466,8 +519,8 @@ searchDay(int year, int month, int day, const gchar* path, struct DateTime* star
 			if (strlen(fileName) == 4 && sscanf(fileName, "%02d%02d", &hour, &minute) == 2)
 			{
 				if ((hour > startHour && hour < endHour) ||
-					(hour == startHour && minute > startMinute) ||
-					(hour == endHour && minute < endMinute))
+					(hour == startHour && minute >= startMinute) ||
+					(hour == endHour && minute <= endMinute))
 				{
 					DateTime* entry = (DateTime*)malloc(sizeof(DateTime));
 					entry->date.year = year;

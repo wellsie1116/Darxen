@@ -1,6 +1,6 @@
 /* darxend.cc
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -28,7 +28,6 @@
 #include <curl/curl.h>
 
 #include "restapi.h"
-#include "../soap/server/soapH.h"
 #include "Settings.h"
 #include "ClientManager.h"
 #include "RadarDataManager.h"
@@ -43,9 +42,6 @@
  */
 
 #define BACKLOG 100
-
-void* thread_soap_server_run(void* data);
-void* process_request(struct soap* soap);
 
 static gboolean
 main_loop_keepalive(void* user_data)
@@ -79,7 +75,6 @@ main (int argc, char *argv[])
 	settings_ensure_path("archives/level3");
 
 	radar_data_manager_init();
-
 
 	char** sites = settings_get_path_vals("/Settings/Pollers/Site/@id");
 	char** psites = sites;
@@ -115,84 +110,13 @@ main (int argc, char *argv[])
 	else
 		printf("OK\n");
 
-
-	pthread_t threadSoap;
-	printf("Launching SOAP server\n");
-	pthread_create(&threadSoap, NULL, thread_soap_server_run, NULL);
-
-
 	printf("starting main loop\n");
 	g_main_loop_run(loop);
-	printf("Main loop killed, killing SOAP Server\n");
-	pthread_cancel(threadSoap);
 
+	printf("Main loop killed\n");
+	restapi_shutdown();
 	settings_cleanup();
 
-	return 1;
+	return 0;
 }
 
-void*
-thread_soap_server_run(void* data)
-{
-	printf("Server thread running.\n");
-
-	struct soap soap;
-	soap_init(&soap);
-
-	soap.send_timeout = 60;
-	soap.recv_timeout = 60;
-//	soap.accept_timeout = 3600;
-	soap.max_keep_alive = 100;
-
-	struct soap* tsoap;
-	pthread_t tid;
-
-	int port = 4888;
-	SOAP_SOCKET m, s;
-
-	pthread_cleanup_push((void(*)(void*))soap_done, &soap);
-
-	while ((int)(m = soap_bind(&soap, NULL, port, BACKLOG)) < 0)
-	{
-		printf("Server failed to bind...retrying...\n");
-		struct timespec delay = {5, 0};
-		nanosleep(&delay, NULL);
-
-	}
-	printf("Socket connection successful %d\n", m);
-
-	int i;
-	for (i = 1; ; i++)
-	{
-		s = soap_accept(&soap);
-		if (!soap_valid_socket(s))
-		{
-			if (soap.errnum)
-				soap_print_fault(&soap, stderr);
-			break;
-		}
-		fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n",
-				i, s, (int)(soap.ip >> 24)&0xFF, (int)(soap.ip >> 16)&0xFF, (int)(soap.ip >> 8)&0xFF, (int)soap.ip&0xFF);
-		tsoap = soap_copy(&soap);
-		if (!tsoap)
-			break;
-		pthread_create(&tid, NULL, (void*(*)(void*))process_request, (void*)tsoap);
-	}
-
-	pthread_cleanup_pop(1);
-
-	fprintf(stderr, "Server thread going down\n");
-
-	return NULL;
-}
-
-void* process_request(struct soap* soap)
-{
-	pthread_detach(pthread_self());
-	soap_serve(soap);
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_done(soap);
-	soap_free(soap);
-	return NULL;
-}

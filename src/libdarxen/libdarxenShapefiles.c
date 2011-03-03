@@ -15,9 +15,7 @@
 #include <shapefil.h>
 
 #include <libxml/xpath.h>
-#include <glib/gfileutils.h>
-#include <glib/glist.h>
-#include <glib/gtestutils.h>
+#include <glib.h>
 
 #include "libdarxenXml.h"
 #include "libdarxenFileSupport.h"

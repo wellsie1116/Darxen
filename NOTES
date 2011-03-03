@@ -60,5 +60,5 @@ GET cache/id/start/count
  Retrieve search result records
  @id - the search id
  @start - the index to start with
- @end - the number of records to retrieve
+ @count - the number of records to retrieve
 

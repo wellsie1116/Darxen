@@ -1,5 +1,5 @@
-/* libdarxeninit.c
- * 
+/* darxend_test.c
+ *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
@@ -18,12 +18,16 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "libdarxeninit.h"
+#include "TestingCommon.h"
 
-#include <curl/curl.h>
+#include <glib.h>
+#include <glib-object.h>
 
-void
-libdarxen_init()
-{
-	curl_global_init(CURL_GLOBAL_ALL);
+int
+main (int argc, char* argv[]) {
+	g_type_init();
+	g_test_init(&argc, &argv, 0);
+
+	testing_common_init();
+	return g_test_run();
 }

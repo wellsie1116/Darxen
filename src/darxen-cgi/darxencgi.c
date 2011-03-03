@@ -1,6 +1,6 @@
 /* darxencli.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -73,14 +73,14 @@ main2(int argc, char** argv)
 	GMainLoop* loop = g_main_loop_new(NULL, FALSE);
 	GError* error = NULL;
 
-	DarxenClient* client = darxen_client_new("localhost", FALSE);
+	DarxenClient* client = NULL; //darxen_client_new("localhost", FALSE);
 
 	g_signal_connect(client, "data-received", (GCallback)client_data_received, NULL);
 
-	if (!darxen_client_connect(client, &error))
-	{
-		//TODO: error
-	}
+	// if (!darxen_client_connect(client, &error))
+	// {
+	// 	//TODO: error
+	// }
 
 	const char* site = request_get_path_variable("site");
 	const char* product = request_get_path_variable("prod");
@@ -90,11 +90,11 @@ main2(int argc, char** argv)
 		frameCount = MAX(1, MIN(40, atoi(frames)));
 
 
-	if (!darxen_client_request_frames(client, site, product, frameCount, &error))
-	//if (!darxen_client_register_poller(client, (char*)site, (char*)product, &error))
-	{
-		//TODO: error
-	}
+	// if (!darxen_client_request_frames(client, site, product, frameCount, &error))
+	// //if (!darxen_client_register_poller(client, (char*)site, (char*)product, &error))
+	// {
+	// 	//TODO: error
+	// }
 
 	g_main_loop_run(loop);
 

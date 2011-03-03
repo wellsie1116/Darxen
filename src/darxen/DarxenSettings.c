@@ -1,6 +1,6 @@
 /* Settings.c
 
-   Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+   Copyright (C) 2011 Kevin Wells <kevin@darxen.org>
 
    This file is part of darxen.
 
@@ -123,7 +123,7 @@ settings_get_radar_viewer()
 	return &settings_get_main()->radview;
 }
 
-static DarxenClient* client = NULL;
+static DarxenRestfulClient* client = NULL;
 
 gboolean
 settings_create_client(GError** error)
@@ -138,16 +138,19 @@ settings_create_client(GError** error)
 	switch (settings_get_darxend_connection_type())
 	{
 	case DARXEND_CONNECTION_TYPE_LOCAL:
-		client = darxen_client_new("http://127.0.0.1:4888/DarxenService", settings_get_darxend_autostart());
+		//FIXME: implement
+		client = NULL; //darxen_client_new("http://127.0.0.1:4888/DarxenService", settings_get_darxend_autostart());
 		break;
 	case DARXEND_CONNECTION_TYPE_REMOTE:
 		address = settings_get_darxend_address();
-		client = darxen_client_new(address, FALSE);
+		//FIXME: implement
+		client = NULL; //darxen_client_new(address, FALSE);
 		free(address);
 		break;
 	}
 
-	if (!darxen_client_connect(client, error))
+	//FIXME: implement
+	if (1)//(!darxen_client_connect(client, error))
 	{
 		g_object_unref(G_OBJECT(client));
 		client = NULL;
@@ -157,7 +160,7 @@ settings_create_client(GError** error)
 	return TRUE;
 }
 
-DarxenClient*
+DarxenRestfulClient*
 settings_get_client()
 {
 	return client;

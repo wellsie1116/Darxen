@@ -1,6 +1,6 @@
 /* darxendWebServiceImp.cc
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -60,11 +60,7 @@ ns__add_radar_poller(soap* soap, int sessionID, char* site, char* product, xsd__
 	if (!client)
 		return die_bad_client(soap);
 
-	gchar* psite = g_ascii_strdown(site, -1);
-	gchar* pproduct = g_ascii_strup(product, -1);
 	darxend_client_add_poller(client, site, product);
-	g_free(psite);
-	g_free(pproduct);
 
 	*result = true_;
 	return SOAP_OK;
@@ -77,11 +73,7 @@ ns__remove_radar_poller(soap* soap, int sessionID, char* site, char* product, xs
 	if (!client)
 		return die_bad_client(soap);
 
-	gchar* psite = g_ascii_strdown(site, -1);
-	gchar* pproduct = g_ascii_strup(product, -1);
-	darxend_client_remove_poller(client, psite, pproduct);
-	g_free(psite);
-	g_free(pproduct);
+	darxend_client_remove_poller(client, site, product);
 
 	*result = true_;
 	return SOAP_OK;

@@ -1,6 +1,6 @@
-/* Client.cc
+/* Client.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -20,15 +20,19 @@
 
 
 #include "Client.h"
-#include "soap.h"
 #include "ClientManager.h"
 #include "RadarDataManager.h"
 #include "Callbacks.h"
 
 //TODO: threading locks (poller list)
 
+#include <errno.h>
+#include <ctype.h>
 #include <glib.h>
+#include <json-glib/json-glib.h>
 #include <time.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define PRUNE_TIME (60 * 5)
 
@@ -50,6 +54,7 @@ struct _DarxendClientPrivate
 	pthread_cond_t condQueue;
 };
 
+static void client_poller_iter_next(char* site, char* product, gpointer data);
 static gboolean watch_key_value_remove(gpointer key, gpointer value, gpointer data);
 
 static void
@@ -69,6 +74,8 @@ darxend_client_init(DarxendClient* self)
 	priv->table = NULL;
 	priv->pollQueue = NULL;
 	priv->searches = NULL;
+
+	self->password = NULL;
 }
 
 static void
@@ -85,6 +92,8 @@ darxend_client_finalize(GObject* gobject)
 		list = list->next;
 	}
 	g_slist_free(priv->searches);
+
+	g_free(self->password);
 
 	pthread_mutex_destroy(&priv->lockQueue);
 	pthread_cond_destroy(&priv->condQueue);
@@ -107,6 +116,15 @@ darxend_client_new(int id)
 	priv->table = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
 	priv->searches = NULL;
 	priv->pollQueue = g_queue_new();
+
+	int i;
+	self->password = g_strdup("xxxxxxxx");
+	for (i = 0; i < 8; i++)
+	{
+		self->password[i] = g_random_int_range('a', 'z'+1);
+		if (g_random_boolean())
+			self->password[i] = toupper(self->password[i]);
+	}
 
 	pthread_mutex_init(&priv->lockQueue, NULL);
 	pthread_cond_init(&priv->condQueue, NULL);
@@ -143,6 +161,9 @@ void
 darxend_client_add_poller(DarxendClient* self, char* site, char* product)
 {
 	USING_PRIVATE(self);
+	site = g_ascii_strdown(site, -1);
+	product = g_ascii_strup(product, -1);
+
 	gpointer data = g_hash_table_lookup(priv->table, site);
 	GSList* products = (GSList*)data;
 	products = g_slist_append(products, strdup(product));
@@ -173,12 +194,17 @@ darxend_client_add_poller(DarxendClient* self, char* site, char* product)
 	radar_data_manager_free_search(searchID);
 
 	radar_data_manager_add_poller(self, site, product);
+
+	g_free(site);
+	g_free(product);
 }
 
 void
 darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 {
 	USING_PRIVATE(self)
+	site = g_ascii_strdown(site, -1);
+	product = g_ascii_strup(product, -1);
 
 	gpointer data = g_hash_table_lookup(priv->table, site);
 	GSList* products = (GSList*)data;
@@ -186,6 +212,8 @@ darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 	if (!data)
 	{
 		g_warning("Client attempted to remove an invalid poller: %s/%s", site, product);
+		g_free(site);
+		g_free(product);
 		return;
 	}
 
@@ -200,9 +228,11 @@ darxend_client_remove_poller(DarxendClient* self, char* site, char* product)
 	}
 	else if (products != data)
 	{
-		g_hash_table_insert(priv->table, site, products);
+		g_hash_table_insert(priv->table, strdup(site), products);
 	}
 	radar_data_manager_remove_poller(self, site, product);
+	g_free(site);
+	g_free(product);
 }
 
 void
@@ -224,14 +254,26 @@ darxend_client_is_valid(DarxendClient* self)
 }
 
 int
-darxend_client_search(DarxendClient* self, char* site, char* product, struct DateTime* start, struct DateTime* end)
+darxend_client_search(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end)
 {
 	USING_PRIVATE(self)
 
 	int result = radar_data_manager_search(site, product, start, end);
 	priv->searches = g_slist_prepend(priv->searches, GINT_TO_POINTER(result));
 	return result;
-	//FIXME: searches not cleared through client requests
+}
+
+gboolean
+darxend_client_search_free(DarxendClient* self, int id)
+{
+	USING_PRIVATE(self);
+
+	//stop clients from deleting others' searches
+	if (!g_slist_find(priv->searches, GINT_TO_POINTER(id)))
+		return FALSE;
+
+	priv->searches = g_slist_remove(priv->searches, GINT_TO_POINTER(id));
+	return radar_data_manager_free_search(id);
 }
 
 void
@@ -274,8 +316,20 @@ darxend_client_wait_queue_length(DarxendClient* self)
 
 	int length;
 	pthread_mutex_lock(&priv->lockQueue);
-	while (darxend_client_is_valid(self) && ((length = g_queue_get_length(priv->pollQueue)) == 0))
-		pthread_cond_wait(&priv->condQueue, &priv->lockQueue);
+	{
+		struct timeval now;
+		struct timespec timeout;
+		int retcode;
+
+		gettimeofday(&now, NULL);
+		timeout.tv_sec = now.tv_sec + 30; //30 seconds
+		timeout.tv_nsec = now.tv_usec * 1000;
+		retcode = 0;
+		while (darxend_client_is_valid(self) && ((length = g_queue_get_length(priv->pollQueue)) == 0) && retcode != ETIMEDOUT)
+		{
+			retcode = pthread_cond_timedwait(&priv->condQueue, &priv->lockQueue, &timeout);
+		}
+	}
 	pthread_mutex_unlock(&priv->lockQueue);
 	return length;
 }
@@ -302,6 +356,43 @@ darxend_client_read_queue(DarxendClient* self, int count)
 	pthread_mutex_unlock(&priv->lockQueue);
 
 	return result;
+}
+
+gchar*
+darxend_client_serialize_pollers(DarxendClient* self, gsize* size)
+{
+	JsonArray* array = json_array_new();
+	radar_data_manager_iter_pollers(self, client_poller_iter_next, array);
+
+	JsonNode* node = json_node_new(JSON_NODE_ARRAY);
+	json_node_set_array(node, array);
+
+	JsonGenerator* gen = json_generator_new();
+	json_generator_set_root(gen, node);
+	gchar* dat = json_generator_to_data(gen, size);
+
+	g_object_unref(gen);
+	json_node_free(node);
+	json_array_unref(array);
+
+	return dat;
+}
+
+void
+client_poller_iter_next(char* site, char* product, gpointer data)
+{
+	JsonArray* array = (JsonArray*)data;
+
+	JsonObject* poller = json_object_new();
+	json_object_set_string_member(poller, "Site", site);
+	json_object_set_string_member(poller, "Product", product);
+
+	JsonNode* node = json_node_new(JSON_NODE_OBJECT);
+	json_node_set_object(node, poller);
+
+	json_array_add_element(array, node); //does not ref node
+
+	json_object_unref(poller);
 }
 
 gboolean

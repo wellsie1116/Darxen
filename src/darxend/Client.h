@@ -21,12 +21,10 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
+#include "restapi.h"
+
 #include <glib.h>
-
 #include <pthread.h>
-
-#include "../soap/server/soapH.h"
-
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -49,6 +47,8 @@ struct _DarxendClient
 
 	int ID;
 	long int intTime;
+
+	gchar* password;
 };
 
 struct _DarxendClientClass
@@ -67,21 +67,24 @@ typedef enum
 GType			darxend_client_get_type	() G_GNUC_CONST;
 DarxendClient*	darxend_client_new		(int id);
 
-void			darxend_client_add_poller		(DarxendClient* self, char* site, char* product);
-void			darxend_client_remove_poller	(DarxendClient* self, char* site, char* product);
+void			darxend_client_add_poller			(DarxendClient* self, char* site, char* product);
+void			darxend_client_remove_poller		(DarxendClient* self, char* site, char* product);
 
-void			darxend_client_validate			(DarxendClient* self);
-void			darxend_client_invalidate		(DarxendClient* self);
-gboolean		darxend_client_is_valid			(DarxendClient* self);
+void			darxend_client_validate				(DarxendClient* self);
+void			darxend_client_invalidate			(DarxendClient* self);
+gboolean		darxend_client_is_valid				(DarxendClient* self);
 
-int				darxend_client_search			(DarxendClient* self, char* site, char* product, struct DateTime* start, struct DateTime* end);
+int				darxend_client_search				(DarxendClient* self, char* site, char* product, DateTime* start, DateTime* end);
+gboolean		darxend_client_search_free			(DarxendClient* self, int id);
 
 void			darxend_client_add_to_queue			(DarxendClient* self, char* site, char* product, int year, int month, int day, int hour, int minute);
 int				darxend_client_get_queue_length		(DarxendClient* self);
 int				darxend_client_wait_queue_length	(DarxendClient* self);
-struct RadarDataInfo*	darxend_client_read_queue			(DarxendClient* self, int count);
+RadarDataInfo*	darxend_client_read_queue			(DarxendClient* self, int count);
 
-GQuark			darxend_client_error_quark	();
+gchar*			darxend_client_serialize_pollers	(DarxendClient* self, gsize* size);
+
+GQuark			darxend_client_error_quark			();
 
 G_END_DECLS
 

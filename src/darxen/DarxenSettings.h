@@ -24,7 +24,7 @@
 #include "DarxenCommon.h"
 
 #include "libdarxenRadarSites.h"
-#include "libdarxenClient.h"
+#include "libdarxenRestfulClient.h"
 
 #include <string.h>
 #include <gdk/gdkglconfig.h>
@@ -255,7 +255,7 @@ SettingsRadarViewer*	settings_get_radar_viewer();
 //char*					settings_get_palette_path(char* product, int vcp)
 
 gboolean				settings_create_client(GError** error);
-DarxenClient*			settings_get_client();
+DarxenRestfulClient*			settings_get_client();
 
 SettingsDarxendConnectionType	settings_get_darxend_connection_type();
 gboolean						settings_get_darxend_autostart();

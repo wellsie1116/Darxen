@@ -1,6 +1,6 @@
 /* darxen.c
 
-   Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+   Copyright (C) 2011 Kevin Wells <kevin@darxen.org>
 
    This file is part of darxen.
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-    printf("darxen Copyright (C) 2008 Kevin Wells <kevin@darxen.org>\n");
+    printf("darxen Copyright (C) 2011 Kevin Wells <kevin@darxen.org>\n");
     printf("This program comes with ABSOLUTELY NO WARRANTY; for details type `%s -w'.\n", g_path_get_basename(argv[0]));
     printf("This is free software, and you are welcome to redistribute it\n");
     printf("under certain conditions; type `%s -c' for details.\n\n\n", g_path_get_basename(argv[0]));

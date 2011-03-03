@@ -22,24 +22,27 @@
 #define RADARDATAMANAGER_H_
 
 #include <glib.h>
-#include "soap.h"
+#include "restapi.h"
 
 #include "Client.h"
 #include "FtpConnection.h"
 
+typedef void(*PollerIterFunc)(char* site, char* product, void* data);
 
 void		radar_data_manager_init					();
 
 void 		radar_data_manager_add_poller			(DarxendClient* client, char* site, char* product);
 void		radar_data_manager_remove_poller		(DarxendClient* client, char* site, char* product);
+void		radar_data_manager_iter_pollers			(DarxendClient* client, PollerIterFunc callback, void* data);
 
 int			radar_data_manager_search_past_data		(char* site, char* product, int frames);
 
-int			radar_data_manager_search				(char* site, char* product, struct DateTime* start, struct DateTime* end);
+int			radar_data_manager_search				(char* site, char* product, DateTime* start, DateTime* end);
 int			radar_data_manager_get_search_size		(int searchID);
 DateTime*	radar_data_manager_get_search_records	(int searchID, int start, int count);
 gboolean	radar_data_manager_free_search			(int searchID);
 
+FILE*		radar_data_manager_read_data_file		(char* site, char* product, DateTime date);
 char*		radar_data_manager_read_data			(char* site, char* product, DateTime date, unsigned int* length);
 
 

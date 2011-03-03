@@ -1,6 +1,6 @@
 /* ClientManager.cc
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -68,17 +68,18 @@ client_manager_validate_client(int ID)
 	return TRUE;
 }
 
-void
+int
 client_manager_kill_client(int ID)
 {
 	DarxendClient* client = client_manager_get_client(ID);
 	if (!client)
 	{
 		g_warning("Unable to find client to kill: %i", ID);
-		return;
+		return 1;
 	}
 	darxend_client_invalidate(client);
 	pruneClient(client, NULL);
+	return 0;
 }
 
 DarxendClient*
@@ -96,7 +97,10 @@ client_manager_get_client(int ID)
 	}
 
 	if (!pclients)
+	{
+		pthread_mutex_unlock(&lockClients);
 		return NULL;
+	}
 	DarxendClient* res = (DarxendClient*)pclients->data;
 
 	darxend_client_validate(res);
@@ -115,7 +119,6 @@ pruneClients(gpointer data)
 {
 	pthread_mutex_lock(&lockClients);
 
-	g_message("Pruning clients");
 	g_slist_foreach(clients, pruneClient, NULL);
 
 	pthread_mutex_unlock(&lockClients);
@@ -135,14 +138,3 @@ pruneClient(gpointer pclient, gpointer data)
 	g_object_unref(G_OBJECT(client));
 }
 
-/*static gint
-idClientComparer(gconstpointer a, gconstpointer b)
-{
-	int aID = ((DarxendClient*)a)->ID;
-	int bID = ((DarxendClient*)b)->ID;
-	if (aID == bID)
-		return 0;
-	if (aID < bID)
-		return -1;
-	return 1;
-}*/

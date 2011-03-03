@@ -1,6 +1,6 @@
 /* darxencli.c
  *
- * Copyright (C) 2009 - Kevin Wells <kevin@darxen.org>
+ * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
  * This file is part of darxen
  *
@@ -218,23 +218,23 @@ main_poll()
 {
 	GError* error = NULL;
 
-	DarxenClient* client = darxen_client_new("http://127.0.0.1:4888/DarxenService", FALSE);
+	DarxenClient* client = NULL; //darxen_client_new("http://127.0.0.1:4888/DarxenService", FALSE);
 
-	if (!darxen_client_connect(client, &error))
-	{
-		g_critical("Connect Failed: %s", error->message);
-		g_object_unref(client);
-		return 1;
-	}
+	//if (!darxen_client_connect(client, &error))
+	//{
+	//	g_critical("Connect Failed: %s", error->message);
+	//	g_object_unref(client);
+	//	return 1;
+	//}
 
 	gchar** pchrProducts = chrProducts;
 	while (*pchrProducts)
 	{
 		printf("Registering %s/%s\n", chrSite, *pchrProducts);
-		if (!darxen_client_register_poller(client, chrSite, *pchrProducts, &error))
-		{
-			g_critical("Failed to add poller: %s", error->message);
-		}
+		//if (!darxen_client_register_poller(client, chrSite, *pchrProducts, &error))
+		//{
+		//	g_critical("Failed to add poller: %s", error->message);
+		//}
 
 		pchrProducts++;
 	}
