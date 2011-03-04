@@ -19,9 +19,44 @@
  */
 
 #include "darxen-tablet.h"
+#include "darxenconfig.h"
+
+#include <libdarxenRestfulClient.h>
+
+#include <glib.h>
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
+	g_type_init();
+	DarxenRestfulClient* client = darxen_restful_client_new();
+	int id = darxen_restful_client_connect(client, NULL);
+	if (!id)
+	{
+		//attempt to spawn darxend ourselves
+		g_message("Darxend server not found, spawning one ourselves");
+		if (vfork())
+		{
+			sleep(1);
+		}
+		else
+		{
+			execl("./darxend", "darxend", NULL);
+			execl("../darxend/darxend", "darxend", NULL);
+			fprintf(stderr, "Failed to spawn darxend process, aborting");
+			_exit(1);
+		}
+		id = darxen_restful_client_connect(client, NULL);
+		if (!id)
+		{
+			g_error("Failed to connect to darxend process");
+		}
+	}
+	darxen_config_set_client(client);
+
 	int res;
 	res = initialize_gui(&argc, &argv);
 

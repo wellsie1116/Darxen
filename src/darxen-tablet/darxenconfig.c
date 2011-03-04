@@ -20,7 +20,9 @@
 
 #include "darxenconfig.h"
 
-GList* sites = NULL;
+
+static DarxenRestfulClient* client = NULL;
+static GList* sites = NULL;
 
 GList*
 darxen_config_get_sites()
@@ -32,51 +34,64 @@ darxen_config_get_sites()
 
 		//KLOT
 		site = g_new(DarxenSiteInfo, 1);
-		site->name = "KLOT";
+		site->name = "klot";
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
 		view->name = "Archived Reflectivity (0.5)";
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("200801030402");
-		view->source.archive.endId = g_strdup("200901030402");
+		view->source.archive.startId = g_strdup("201102101939");
+		view->source.archive.endId = g_strdup("201102102304");
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
 		view->name = "Archived Reflectivity (1.0)";
 		view->productCode = g_strdup("N1R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("200801030402");
-		view->source.archive.endId = g_strdup("200901030402");
+		view->source.archive.startId = g_strdup("201101121416");
+		view->source.archive.endId = g_strdup("201101121456");
 		site->views = g_list_append(site->views, view);
 
 		sites = g_list_append(sites, site);
 
 		//KIND
 		site = g_new(DarxenSiteInfo, 1);
-		site->name = "KIND";
+		site->name = "kind";
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
 		view->name = "Archived Reflectivity (0.5)";
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("200801030402");
-		view->source.archive.endId = g_strdup("200901030402");
+		view->source.archive.startId = g_strdup("201102091939");
+		view->source.archive.endId = g_strdup("201102092204");
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
 		view->name = "Archived Reflectivity (1.0)";
 		view->productCode = g_strdup("N1R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("200801030402");
-		view->source.archive.endId = g_strdup("200901030402");
+		view->source.archive.startId = g_strdup("201101121417");
+		view->source.archive.endId = g_strdup("201101121456");
 		site->views = g_list_append(site->views, view);
 
 		sites = g_list_append(sites, site);
 	}
 
 	return sites;
+}
+
+void
+darxen_config_set_client(DarxenRestfulClient* newClient)
+{
+	g_return_if_fail(DARXEN_IS_RESTFUL_CLIENT(newClient));
+	client = newClient;
+}
+
+DarxenRestfulClient*
+darxen_config_get_client()
+{
+	return client;
 }
 

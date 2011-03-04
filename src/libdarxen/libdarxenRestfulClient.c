@@ -330,7 +330,7 @@ darxen_restful_client_search_data(	DarxenRestfulClient* self,
 	if (!searchId) searchId = &dummy;
 	if (!count) count = &dummy;
 	
-	gchar* url = g_strdup_printf("/search/%s/%s/%s/%s", site, product, startId, endId);
+	gchar* url = g_strdup_printf("/cache/%s/%s/%s/%s", site, product, startId, endId);
 	CURL* curl = create_curl_client("PUT", url, priv->auth_token, NULL);
 	g_free(url);
 	g_assert(curl);
@@ -346,6 +346,14 @@ darxen_restful_client_search_data(	DarxenRestfulClient* self,
 	*searchId = nums[0];
 	*count = nums[1];
 
+	if (!*searchId)
+	{
+		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
+					DARXEN_RESTFUL_CLIENT_ERROR_FAILED,
+					"Search failed for unknown reason");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -360,7 +368,7 @@ darxen_restful_client_read_search(	DarxenRestfulClient* self,
 	USING_PRIVATE(self);
 	ResponseBody body = {0,};
 
-	gchar* url = g_strdup_printf("/search/%d/%d/%d", searchId, start, count);
+	gchar* url = g_strdup_printf("/cache/%d/%d/%d", searchId, start, count);
 	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
 	g_free(url);
 	g_assert(curl);
@@ -401,7 +409,7 @@ darxen_restful_client_free_search(	DarxenRestfulClient* self,
 	//TODO: test
 	USING_PRIVATE(self);
 
-	gchar* url = g_strdup_printf("/search/%d", searchId);
+	gchar* url = g_strdup_printf("/cache/%d", searchId);
 	CURL* curl = create_curl_client("DELETE", url, priv->auth_token, NULL);
 	g_free(url);
 	g_assert(curl);
@@ -417,11 +425,15 @@ darxen_restful_client_read_data(	DarxenRestfulClient* self,
 									const gchar* site,
 									const gchar* product,
 									const gchar* id,
+									size_t* len,
 									GError** error)
 {
 	//TODO: test
 	USING_PRIVATE(self);
 	ResponseBody body = {0,};
+
+	size_t dummy;
+	if (!len) len = &dummy;
 
 	gchar* url = g_strdup_printf("/data/%s/%s/%s", site, product, id);
 	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
@@ -430,6 +442,8 @@ darxen_restful_client_read_data(	DarxenRestfulClient* self,
 
 	if (go_curl(curl, error))
 		return NULL;
+
+	*len = body.len;
 
 	return body.data;
 }

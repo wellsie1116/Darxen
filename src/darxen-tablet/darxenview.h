@@ -58,7 +58,7 @@ typedef enum
 } DarxenViewError;
 
 GType			darxen_view_get_type	() G_GNUC_CONST;
-GltkWidget*		darxen_view_new			(DarxenViewInfo* viewInfo);
+GltkWidget*		darxen_view_new			(const gchar* site, DarxenViewInfo* viewInfo);
 
 /* Public functions here */
 

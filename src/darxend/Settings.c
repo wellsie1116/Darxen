@@ -118,6 +118,8 @@ settings_path_exists(const char* path)
 {
 	gchar* fullpath = settings_get_path(path);
 	gboolean result = g_file_test(fullpath, G_FILE_TEST_IS_DIR);
+	if (!result)
+		g_debug("Path does not exist: %s", fullpath);
 	g_free(fullpath);
 	return result;
 }

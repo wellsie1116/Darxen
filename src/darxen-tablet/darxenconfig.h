@@ -21,6 +21,8 @@
 #ifndef DARXENCONFIG_H_Y4AZDBSX
 #define DARXENCONFIG_H_Y4AZDBSX
 
+#include <libdarxenRestfulClient.h>
+
 #include <glib.h>
 
 typedef struct	_DarxenSiteInfo				DarxenSiteInfo;
@@ -65,5 +67,8 @@ struct _DarxenViewInfo
 
 
 GList* darxen_config_get_sites();
+
+void					darxen_config_set_client(DarxenRestfulClient* newClient);
+DarxenRestfulClient*	darxen_config_get_client();
 
 #endif

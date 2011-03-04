@@ -18,6 +18,9 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBDARXENRESTFULCLIENT_H_OQZJMI3
+#define LIBDARXENRESTFULCLIENT_H_OQZJMI3
+
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -121,6 +124,7 @@ char*					darxen_restful_client_read_data		(	DarxenRestfulClient* self,
 																const gchar* site,
 																const gchar* product,
 																const gchar* id,
+																size_t* len,
 																GError** error);
 
 
@@ -159,4 +163,5 @@ GQuark			darxen_poller_error_quark	();
 
 G_END_DECLS
 
+#endif
 

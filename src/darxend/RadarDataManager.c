@@ -271,13 +271,13 @@ int
 radar_data_manager_get_search_size(int searchID)
 {
 	pthread_mutex_lock(&lockSearches);
-	GSList* data = (GSList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
+	GList* data = (GList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
 	if (!data)
 	{
 		pthread_mutex_unlock(&lockSearches);
 		return -1;
 	}
-	int len = g_slist_length(data);
+	int len = g_list_length(data);
 	pthread_mutex_unlock(&lockSearches);
 	return len;
 }
@@ -286,14 +286,14 @@ DateTime*
 radar_data_manager_get_search_records(int searchID, int start, int count)
 {
 	pthread_mutex_lock(&lockSearches);
-	GSList* data = (GSList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
-	if (!data || count < 1 || (guint)(start + count) > g_slist_length(data))
+	GList* data = (GList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
+	if (!data || count < 1 || (guint)(start + count) > g_list_length(data))
 	{
 		pthread_mutex_unlock(&lockSearches);
 		return NULL;
 	}
 	DateTime* result = (DateTime*)calloc(count, sizeof(DateTime));
-	data = g_slist_nth(data, start);
+	data = g_list_nth(data, start);
 	int i;
 	for (i = 0; i < count; i++)
 	{
@@ -308,14 +308,14 @@ gboolean
 radar_data_manager_free_search(int searchID)
 {
 	pthread_mutex_lock(&lockSearches);
-	GSList* data = (GSList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
+	GList* data = (GList*)g_tree_lookup(results, GINT_TO_POINTER(searchID));
 	if (!data)
 	{
 		pthread_mutex_unlock(&lockSearches);
 		return FALSE;
 	}
-	g_slist_free(data);
-	g_tree_remove(results, &searchID);
+	g_list_free(data);
+	g_tree_remove(results, GINT_TO_POINTER(searchID));
 	pthread_mutex_unlock(&lockSearches);
 	return TRUE;
 }
@@ -401,6 +401,7 @@ listTimeComparer(gconstpointer a, gconstpointer b)
 static GList*
 searchYears(const gchar* path, DateTime* start, DateTime* end)
 {
+	g_message("Search years");
 	GList* results = NULL;
 	GList* presults = NULL;
 	int year;

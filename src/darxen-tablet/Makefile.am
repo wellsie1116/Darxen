@@ -14,15 +14,14 @@ darxen_tablet_SOURCES = darxen-tablet.c darxen-tablet.h \
 						darxengui.c \
 						darxenconfig.c darxenconfig.h \
 						darxenmainview.c darxenmainview.h \
+						darxenradarviewer.c darxenradarviewer.h \
 						darxenview.c darxenview.h \
 						darxenpanelmanager.c darxenpanelmanager.h \
 						darxensitelist.c darxensitelist.h \
-						../soap/client/soapC.c \
-						../soap/client/soapClient.c \
 						../libdarxen/libdarxen.la
 
-darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(gsoap_CFLAGS) -O0
-darxen_tablet_LDADD = $(gtkglext_LIBS) $(libgrip_LIBS)  $(gsoap_LIBS) ../libdarxen/libdarxen.la gltk/libgltk.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
+darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(json_LIBS) $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(curl_CFLAGS) -O0
+darxen_tablet_LDADD = $(json_LIBS) $(gtkglext_LIBS) $(libgrip_LIBS) $(curl_LIBS) ../libdarxen/libdarxen.la gltk/libgltk.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
 darxen_tablet_LDFLAGS = -g
 
 AM_LDFLAGS = -export-dynamic

@@ -124,7 +124,7 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 	g_return_if_fail(viewInfo);
 	USING_PRIVATE(manager);
 
-	DarxenView* view = (DarxenView*)darxen_view_new(viewInfo);
+	DarxenView* view = (DarxenView*)darxen_view_new(site, viewInfo);
 	g_object_ref(G_OBJECT(view));
 
 	g_hash_table_insert(priv->viewMap, site_view_pair_new(site, viewInfo->name), view);

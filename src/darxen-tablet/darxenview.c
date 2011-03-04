@@ -21,6 +21,7 @@
 #include "darxenview.h"
 
 #include "darxenconfig.h"
+#include "darxenradarviewer.h"
 
 G_DEFINE_TYPE(DarxenView, darxen_view, GLTK_TYPE_VBOX)
 
@@ -35,8 +36,10 @@ enum
 typedef struct _DarxenViewPrivate		DarxenViewPrivate;
 struct _DarxenViewPrivate
 {
+	gchar* site;
 	DarxenViewInfo* viewInfo;
 
+	DarxenRadarViewer* radarViewer;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -60,7 +63,9 @@ darxen_view_init(DarxenView* self)
 {
 	USING_PRIVATE(self);
 
+	priv->site = NULL;
 	priv->viewInfo = NULL;
+	priv->radarViewer = NULL;
 }
 
 static void
@@ -80,24 +85,29 @@ darxen_view_finalize(GObject* gobject)
 	DarxenView* self = DARXEN_VIEW(gobject);
 	USING_PRIVATE(self);
 
-	//free memory
+	g_free(priv->site);
 
 	G_OBJECT_CLASS(darxen_view_parent_class)->finalize(gobject);
 }
 
 GltkWidget*
-darxen_view_new(DarxenViewInfo* viewInfo)
+darxen_view_new(const gchar* site, DarxenViewInfo* viewInfo)
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW, NULL);
 	DarxenView* self = DARXEN_VIEW(gobject);
 
 	USING_PRIVATE(self);
 
+	priv->site = g_strdup(site);
 	priv->viewInfo = viewInfo;
 
 	gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
-	gltk_box_append_widget(GLTK_BOX(self), gltk_label_new(desc), TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(self), gltk_label_new(desc), FALSE, FALSE);
 	g_free(desc);
+
+	priv->radarViewer = darxen_radar_viewer_new(site, viewInfo);
+	g_object_ref(G_OBJECT(priv->radarViewer));
+	gltk_box_append_widget(GLTK_BOX(self), GLTK_WIDGET(priv->radarViewer), TRUE, TRUE);
 
 	return (GltkWidget*)gobject;
 }
