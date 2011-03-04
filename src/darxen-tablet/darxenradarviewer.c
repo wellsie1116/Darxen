@@ -55,7 +55,9 @@ struct _RenderData
 static void darxen_radar_viewer_dispose(GObject* gobject);
 static void darxen_radar_viewer_finalize(GObject* gobject);
 
-static void	darxen_radar_viewer_render(GltkWidget* widget);
+static gboolean darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch);
+static gboolean	darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event);
+static void		darxen_radar_viewer_render(GltkWidget* widget);
 
 static void
 darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
@@ -68,6 +70,8 @@ darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 	gobject_class->dispose = darxen_radar_viewer_dispose;
 	gobject_class->finalize = darxen_radar_viewer_finalize;
 
+	gltkwidget_class->touch_event = darxen_radar_viewer_touch_event;
+	gltkwidget_class->drag_event = darxen_radar_viewer_drag_event;
 	gltkwidget_class->render = darxen_radar_viewer_render;
 }
 
@@ -207,6 +211,40 @@ darxen_radar_viewer_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static gboolean
+darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch)
+{
+	switch (touch->touchType)
+	{
+		case TOUCH_BEGIN:
+			gltk_window_set_widget_pressed(widget->window, widget);
+			break;
+		case TOUCH_END:
+			gltk_window_set_widget_unpressed(widget->window, widget);
+			break;
+		default:
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event)
+{
+	USING_PRIVATE(widget);
+
+	if (event->longTouched)
+		return FALSE;
+
+	priv->renderer->offset.x += event->dx;
+	priv->renderer->offset.y += event->dy;
+
+	gltk_widget_invalidate(widget);
+	
+	return TRUE;
+}
 
 static void
 darxen_radar_viewer_render(GltkWidget* widget)
