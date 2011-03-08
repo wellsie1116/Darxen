@@ -37,6 +37,8 @@ typedef struct _GltkLabelPrivate		GltkLabelPrivate;
 struct _GltkLabelPrivate
 {
 	gchar* text;
+
+	gboolean drawBorder;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -68,6 +70,7 @@ gltk_label_init(GltkLabel* self)
 	USING_PRIVATE(self);
 
 	priv->text = NULL;
+	priv->drawBorder = FALSE;
 }
 
 static void
@@ -105,10 +108,21 @@ gltk_label_new(const gchar* text)
 void
 gltk_label_set_text	(GltkLabel* label, const gchar* text)
 {
+	g_return_if_fail(GLTK_IS_LABEL(label));
 	USING_PRIVATE(label);
 	if (priv->text)
 		g_free(priv->text);
 	priv->text = g_strdup(text);
+	//TODO: render
+}
+
+void
+gltk_label_set_draw_border(GltkLabel* label, gboolean drawBorder)
+{
+	g_return_if_fail(GLTK_IS_LABEL(label));
+	USING_PRIVATE(label);
+	priv->drawBorder = drawBorder;
+	//TODO: render
 }
 
 GQuark
@@ -158,16 +172,19 @@ gltk_label_render(GltkWidget* label)
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(label));
 
-	glBegin(GL_LINE_LOOP);
+	if (priv->drawBorder)
 	{
-		glColor3f(1.0f, 1.0f, 1.0f);
+		glBegin(GL_LINE_LOOP);
+		{
+			glColor3f(1.0f, 1.0f, 1.0f);
 
-		glVertex2i(0, 0);
-		glVertex2i(0, allocation.height);
-		glVertex2i(allocation.width, allocation.height);
-		glVertex2i(allocation.width, 0);
+			glVertex2i(0, 0);
+			glVertex2i(0, allocation.height);
+			glVertex2i(allocation.width, allocation.height);
+			glVertex2i(allocation.width, 0);
+		}
+		glEnd();
 	}
-	glEnd();
 
 	float width = allocation.width - 20;
 	if (width < 5.0f)

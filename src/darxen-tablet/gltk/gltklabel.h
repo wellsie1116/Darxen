@@ -59,7 +59,8 @@ typedef enum
 GType			gltk_label_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_label_new		(const gchar* text);
 
-void			gltk_label_set_text	(GltkLabel* label, const gchar* text);
+void			gltk_label_set_text			(GltkLabel* label, const gchar* text);
+void			gltk_label_set_draw_border	(GltkLabel* label, gboolean drawBorder);
 
 GQuark			gltk_label_error_quark	();
 
