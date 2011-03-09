@@ -112,6 +112,8 @@ struct _DarxenRendererPrivate
 	int width;
 	int height;
 
+	gboolean dirty;
+
 	gboolean hasSizeChanged;
 	gboolean hasDataChanged;
 
@@ -171,6 +173,8 @@ darxen_renderer_init(DarxenRenderer *renderer)
 
 	priv->width					= 0;
 	priv->height				= 0;
+
+	priv->dirty					= TRUE;
 
 	priv->hasSizeChanged		= TRUE;
 	priv->hasDataChanged		= TRUE;
@@ -260,6 +264,14 @@ darxen_renderer_get_data(DarxenRenderer *renderer)
 	return priv->objData;
 }
 
+gboolean
+darxen_renderer_is_dirty(DarxenRenderer* renderer)
+{
+	USING_PRIVATE(renderer);
+
+	return priv->dirty;
+}
+
 /* Set */
 void
 darxen_renderer_set_data(DarxenRenderer *renderer, ProductsLevel3Data *objData)
@@ -279,6 +291,9 @@ darxen_renderer_set_size(DarxenRenderer *renderer, int width, int height)
 	g_return_if_fail(DARXEN_IS_RENDERER(renderer));
 
 	USING_PRIVATE(renderer);
+
+	if (priv->width != width || priv->height != height)
+		priv->dirty = TRUE;
 
 	priv->width = width;
 	priv->height = height;
@@ -325,17 +340,22 @@ matrix_mult(const float* m1, float* res)
 void
 darxen_renderer_translate(DarxenRenderer* renderer, float dx, float dy)
 {
+	USING_PRIVATE(renderer);
+
 	float mat[16] = {	1.0f, 0.0f, 0.0f, dx ,
 						0.0f, 1.0f, 0.0f, dy ,
 						0.0f, 0.0f, 1.0f, 0.0f,
 						0.0f, 0.0f, 0.0f, 1.0f};
 
 	matrix_mult(mat, renderer->transform);
+	priv->dirty = TRUE;
 }
 
 void
 darxen_renderer_scale(DarxenRenderer* renderer, float scale)
 {
+	USING_PRIVATE(renderer);
+
 	float mat[16] = {	scale, 0.0f,  0.0f, 0.0f,
 						0.0f,  scale, 0.0f, 0.0f,
 						0.0f,  0.0f,  1.0f, 0.0f,
@@ -344,6 +364,7 @@ darxen_renderer_scale(DarxenRenderer* renderer, float scale)
 	renderer->scale *= scale;
 
 	matrix_mult(mat, renderer->transform);
+	priv->dirty = TRUE;
 }
 
 void
@@ -355,14 +376,17 @@ darxen_renderer_rotate(DarxenRenderer* renderer, float angle, float x, float y, 
 void
 darxen_renderer_render(DarxenRenderer *renderer)
 {
-	GTimer *timer;
-
 	g_return_if_fail(DARXEN_IS_RENDERER(renderer));
+	USING_PRIVATE(renderer);
+
+	GTimer *timer;
 
 	timer = g_timer_new();
 	g_timer_start(timer);
 
 	darxen_renderer_render_internal(renderer);
+	
+	priv->dirty = FALSE;
 
 	g_timer_stop(timer);
 	g_debug("Render Time: %f", g_timer_elapsed(timer, NULL));
@@ -386,6 +410,7 @@ darxen_renderer_data_changed(DarxenRenderer *renderer)
 	USING_PRIVATE(renderer);
 
 	priv->hasDataChanged = TRUE;
+	priv->dirty = TRUE;
 }
 
 static void

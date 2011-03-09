@@ -62,6 +62,8 @@ DarxenRenderer*	darxen_renderer_new(const gchar* siteName, const gchar* productC
 
 ProductsLevel3Data*	darxen_renderer_get_data(DarxenRenderer* renderer);
 
+gboolean darxen_renderer_is_dirty(DarxenRenderer* renderer);
+
 void darxen_renderer_set_data(DarxenRenderer* renderer, ProductsLevel3Data* objData);
 void darxen_renderer_set_size(DarxenRenderer* renderer, int width, int height);
 

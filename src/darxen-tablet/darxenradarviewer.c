@@ -41,6 +41,7 @@ struct _DarxenRadarViewerPrivate
 	DarxenViewInfo* viewInfo;
 
 	DarxenRenderer* renderer;
+	GLubyte* buffer;
 	GList* data; //RenderData
 };
 
@@ -87,6 +88,7 @@ darxen_radar_viewer_init(DarxenRadarViewer* self)
 	priv->viewInfo = NULL;
 
 	priv->renderer = NULL;
+	priv->buffer = NULL;
 	priv->data = NULL;
 }
 
@@ -224,6 +226,10 @@ darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation
 	
 	darxen_renderer_set_size(priv->renderer, allocation->width, allocation->height);
 
+	g_assert(allocation->width && allocation->height);
+
+	priv->buffer = g_renew(GLubyte, priv->buffer, allocation->width * allocation->height * 3);
+
 	GLTK_WIDGET_CLASS(darxen_radar_viewer_parent_class)->size_allocate(widget, allocation);
 }
 
@@ -309,39 +315,60 @@ darxen_radar_viewer_render(GltkWidget* widget)
 	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
 	GltkSize size = gltk_window_get_size(widget->window);
 
-	//setup our rendering window how we like it
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(allocation.x, size.height - allocation.height - allocation.y, allocation.width, allocation.height);
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	if (allocation.height > allocation.width)
+	if (darxen_renderer_is_dirty(priv->renderer) || !priv->buffer)
 	{
-		double aspect = (double)allocation.height / allocation.width;
-		glOrtho(-1, 1, -aspect, aspect, -1, 1);
+		//setup our rendering window how we like it
+		GLint viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+		int offsetX = allocation.x;
+		int offsetY = size.height - allocation.height - allocation.y;
+		glViewport(offsetX, offsetY, allocation.width, allocation.height);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		if (allocation.height > allocation.width)
+		{
+			double aspect = (double)allocation.height / allocation.width;
+			glOrtho(-1, 1, -aspect, aspect, -1, 1);
+		}
+		else
+		{
+			double aspect = (double)allocation.width / allocation.height;
+			glOrtho(-aspect, aspect, -1, 1, -1, 1);
+		}
+		glMatrixMode(GL_MODELVIEW);
+
+		glPushMatrix();
+		{
+			glLoadIdentity();
+			darxen_renderer_render(priv->renderer);
+		}
+		glPopMatrix();
+
+		//undo our changes to the state
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+		//save the rendered image for later
+		//glWindowPos2i(allocation.x, size.height - allocation.height - allocation.y);
+		glReadBuffer(GL_BACK);
+		if (priv->buffer)
+			glReadPixels(offsetX, offsetY, allocation.width-2, allocation.height-2, GL_RGB, GL_UNSIGNED_BYTE, priv->buffer);
 	}
 	else
 	{
-		double aspect = (double)allocation.width / allocation.height;
-		glOrtho(-aspect, aspect, -1, 1, -1, 1);
-	}
-	glMatrixMode(GL_MODELVIEW);
+		//GLint viewport[4];
+		//glGetIntegerv(GL_VIEWPORT, viewport);
+		//glViewport(allocation.x, size.height - allocation.height - allocation.y, allocation.width, allocation.height);
+		
+		//redraw our scene
+		glWindowPos2i(allocation.x, size.height - allocation.height - allocation.y);
+		glDrawPixels(allocation.width-2, allocation.height-2, GL_RGB, GL_UNSIGNED_BYTE, priv->buffer);
 
-	glPushMatrix();
-	{
-		glLoadIdentity();
-		//glTranslatef(allocation.width / 2, allocation.height / 2, 0.0f);
-		//glScalef(1.0f, -1.0f, 1.0f);
-		darxen_renderer_render(priv->renderer);
+		//glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 	}
-	glPopMatrix();
-
-	//undo our changes to the state
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 
