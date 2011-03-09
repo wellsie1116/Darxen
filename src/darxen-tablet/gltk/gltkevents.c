@@ -32,12 +32,14 @@ GltkEvent*
 gltk_event_clone(GltkEvent* event)
 {
 	GltkEvent* newEvent = gltk_event_new(event->type);
+	int i;
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
 			newEvent->touch = event->touch;
 			newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
-			*(newEvent->touch.positions) = *(event->touch.positions);
+			for (i = 0; i < event->touch.fingers; i++)
+				newEvent->touch.positions[i] = event->touch.positions[i];
 			break;
 		case GLTK_LONG_TOUCH:
 			newEvent->longTouch = event->longTouch;
@@ -47,6 +49,9 @@ gltk_event_clone(GltkEvent* event)
 			break;
 		case GLTK_PINCH:
 			newEvent->pinch = event->pinch;
+			newEvent->pinch.positions = g_new(GltkTouchPosition, event->pinch.fingers);
+			for (i = 0; i < event->touch.fingers; i++)
+				newEvent->pinch.positions[i] = event->pinch.positions[i];
 			break;
 		case GLTK_CLICK:
 			newEvent->click = event->click;
@@ -68,6 +73,7 @@ gltk_event_free(GltkEvent* event)
 		case GLTK_DRAG:
 			break;
 		case GLTK_PINCH:
+			g_free(event->pinch.positions);
 			break;
 		case GLTK_CLICK:
 			break;
@@ -76,7 +82,7 @@ gltk_event_free(GltkEvent* event)
 }
 
 gboolean
-gltk_accum_event(	GSignalInvocationHint* ihint,
+	gltk_accum_event(	GSignalInvocationHint* ihint,
 					GValue* return_accu,
 					const GValue* handler_return,
 					gpointer data)

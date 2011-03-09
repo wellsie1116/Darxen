@@ -105,10 +105,24 @@ gesture_callback(	GtkWidget* widget,
 				GltkEvent* newEvent = gltk_event_new(GLTK_PINCH);
 				GripEventGesturePinch* e = (GripEventGesturePinch*)event;
 
+				//FIXME: These numbers assume running Unity and that the window is maximized.  
+				//Essentially, we need to convert global coordinates to local window coordinates.
+				int offsetX = 58;
+				int offsetY = 24;
+
 				newEvent->pinch.dradius = e->radius_delta;
 				newEvent->pinch.radius = e->radius;
-				newEvent->pinch.center.x = e->focus_x;
-				newEvent->pinch.center.y = e->focus_y;
+				newEvent->pinch.center.x = e->focus_x - offsetX;
+				newEvent->pinch.center.y = e->focus_y - offsetY;
+
+				newEvent->pinch.fingers = e->fingers;
+				newEvent->pinch.positions = g_new(GltkTouchPosition, e->fingers);
+				int i;
+				for (i = 0; i < event->pinch.fingers; i++)
+				{
+					newEvent->pinch.positions[i].x = e->finger_x[i] - offsetX;
+					newEvent->pinch.positions[i].y = e->finger_y[i] - offsetY;
+				}
 
 				gltk_window_send_event(glWindow, newEvent);
 				gltk_event_free(newEvent);

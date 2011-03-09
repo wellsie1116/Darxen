@@ -58,7 +58,7 @@ struct _GltkWindowPrivate
 	GltkWidget* unpressed;
 
 	gboolean touchCount;
-	GltkTouchPosition touchPosition;
+	GltkTouchPosition* touchPositions;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -194,9 +194,17 @@ gltk_window_render(GltkWindow* window)
 	{
 		glColor3f(0.2f, 0.2f, 1.0f);
 		GLUquadric* quadric = gluNewQuadric();
-		glTranslatef(priv->touchPosition.x, priv->touchPosition.y, 0.0f);
-		gluDisk(quadric, 5.0, 20.0, 15, 5);
-		glTranslatef(-priv->touchPosition.x, -priv->touchPosition.y, 0.0f);
+		int i;
+		for (i = 0; i < priv->touchCount; i++)
+		{
+			g_message("Touch position (%i): %i %i", i, priv->touchPositions[i].x, priv->touchPositions[i].y);
+			glPushMatrix();
+			{
+				glTranslatef(priv->touchPositions[i].x, priv->touchPositions[i].y, 0.0f);
+				gluDisk(quadric, 5.0, 20.0, 15, 5);
+			}
+			glPopMatrix();
+		}
 		gluDeleteQuadric(quadric);
 	}
 }
@@ -214,7 +222,10 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	if (event->type == GLTK_TOUCH)
 	{
-		priv->touchPosition = *event->touch.positions;
+		if (priv->touchPositions)
+			g_free(priv->touchPositions);
+		priv->touchPositions = g_new(GltkTouchPosition, 1);
+		*priv->touchPositions = *event->touch.positions;
 		switch (event->touch.touchType)
 		{
 			case TOUCH_BEGIN:
@@ -226,6 +237,17 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			default:
 				break;
 		}
+		gltk_window_invalidate(window);
+	}
+	else if (event->type == GLTK_PINCH)
+	{
+		if (priv->touchPositions)
+			g_free(priv->touchPositions);
+		priv->touchPositions = g_new(GltkTouchPosition, event->pinch.fingers);
+		int i;
+		for (i = 0; i < event->pinch.fingers; i++)
+			priv->touchPositions[i] = event->pinch.positions[i];
+		priv->touchCount = event->pinch.fingers;
 		gltk_window_invalidate(window);
 	}
 

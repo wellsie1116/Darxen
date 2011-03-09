@@ -92,6 +92,9 @@ struct _GltkEventDrag
 struct _GltkEventPinch
 {
 	GltkEventType type;
+	
+	int fingers;
+	GltkTouchPosition* positions;
 
 	float dradius;
 	float radius;
