@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Shapefiles version="0.1">
+
+	<Shapefile id="Counties">
+		<File>c_15jl09</File>
+		<TextLabels />
+		<Points visible="false" />
+		<Lines visible="true">
+			<Width>1</Width>
+			<Color>
+				<R>179</R>
+				<G>179</G>
+				<B>179</B>
+				<A>127</A>
+			</Color>
+		</Lines>
+		<Polygons visible="false" />
+	</Shapefile>
+	
+	<Shapefile id="States">
+		<File>s_01au07</File>
+		<TextLabels />
+		<Points visible="false" />
+		<Lines visible="true">
+			<Width>2.5</Width>
+			<Color>
+				<R>255</R>
+				<G>255</G>
+				<B>255</B>
+				<A>127</A>
+			</Color>
+		</Lines>
+		<Polygons visible="false" />
+	</Shapefile>
+
+	<Shapefile id="Lakes">
+		<File>lk24ap09</File>
+		<TextLabels />
+		<Points visible="false" />
+		<Lines visible="false" />
+		<Polygons visible="true">
+			<Color>
+				<R>15</R>
+				<G>110</G>
+				<B>217</B>
+				<A>0</A>
+			</Color>
+		</Polygons>
+	</Shapefile>
+
+	<Shapefile id="Rivers">
+		<File>rs14fe02</File>
+		<TextLabels />
+		<Points visible="false" />
+		<Lines visible="true">
+			<Width>1.5</Width>
+			<Color>
+				<R>38</R>
+				<G>31</G>
+				<B>217</B>
+				<A>0</A>
+			</Color>
+		</Lines>
+		<Polygons visible="false" />
+	</Shapefile>
+	
+	<Shapefile id="Cities">
+		<File>ci10nv09</File>
+		<TextLabels visible="true">
+			<Field>Name</Field>
+			<Font>
+				<Size>8</Size>
+				<Color>
+					<R>255</R>
+					<G>255</G>
+					<B>255</B>
+					<A>255</A>
+				</Color>
+			</Font>
+		</TextLabels>
+		<Points visible="true">
+			<Radius>5</Radius>
+			<Color>
+				<R>128</R>
+				<G>128</G>
+				<B>255</B>
+				<A>204</A>
+			</Color>
+		</Points>
+		<Lines visible="false" />
+		<Polygons visible="false" />
+		<DataLevels field="population" comparison-type="min"> <!--pop_1990-->
+			<DataLevel>
+				<Scale>0.0</Scale>
+				<Value>100000</Value>
+			</DataLevel>
+			<DataLevel>
+				<Scale>10</Scale>
+				<Value>1000</Value>
+			</DataLevel>
+			<DataLevel>
+				<Scale>100</Scale>
+				<Value>100</Value>
+			</DataLevel>
+			<DataLevel>
+				<Scale>1000</Scale>
+				<Value>0</Value>
+			</DataLevel>
+		</DataLevels>
+	</Shapefile>
+
+	<Shapefile id="Sites">
+		<File>radarSites</File>
+		<TextLabels visible="true">
+			<Field>ID</Field>
+			<Font>
+				<Size>12</Size>
+				<Color>
+					<R>255</R>
+					<G>255</G>
+					<B>255</B>
+					<A>128</A>
+				</Color>
+			</Font>
+		</TextLabels>
+		<Points visible="true">
+			<Radius>5</Radius>
+			<Color>
+				<R>0</R>
+				<G>77</G>
+				<B>255</B>
+				<A>128</A>
+			</Color>
+		</Points>
+		<Lines visible="false" />
+		<Polygons visible="false" />
+	</Shapefile>
+	
+</Shapefiles>
