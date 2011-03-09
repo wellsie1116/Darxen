@@ -45,10 +45,11 @@ struct _DarxenRenderer
 	GObject parent_instance;
 
 	float scale;
-	struct {
-		float x;
-		float y;
-	} offset;
+	//struct {
+	//	float x;
+	//	float y;
+	//} offset;
+	float* transform;
 };
 
 struct _DarxenRendererClass
@@ -57,12 +58,16 @@ struct _DarxenRendererClass
 };
 
 GType			darxen_renderer_get_type() G_GNUC_CONST;
-DarxenRenderer*	darxen_renderer_new(const gchar* siteName, const gchar* productCode);
+DarxenRenderer*	darxen_renderer_new(const gchar* siteName, const gchar* productCode, GSList* shapefiles);
 
 ProductsLevel3Data*	darxen_renderer_get_data(DarxenRenderer* renderer);
 
-void darxen_renderer_set_data(DarxenRenderer*renderer, ProductsLevel3Data* objData);
+void darxen_renderer_set_data(DarxenRenderer* renderer, ProductsLevel3Data* objData);
 void darxen_renderer_set_size(DarxenRenderer* renderer, int width, int height);
+
+void darxen_renderer_translate(DarxenRenderer* renderer, float dx, float dy);
+void darxen_renderer_scale(DarxenRenderer* renderer, float scale);
+void darxen_renderer_rotate(DarxenRenderer* renderer, float angle, float x, float y, float z);
 
 void darxen_renderer_render(DarxenRenderer* renderer);
 

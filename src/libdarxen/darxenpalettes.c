@@ -58,7 +58,6 @@ darxen_palette_get_from_file(const char* path)
 			res->colors[i].g = json_array_get_int_element(color, 1) / 255.0;
 			res->colors[i].b = json_array_get_int_element(color, 2) / 255.0;
 			res->colors[i].a = json_array_get_length(color) == 4 ? json_array_get_int_element(color, 3) / 255.0 : 1.0f;
-			//g_message("Loaded color: %f %f %f %f", res->colors[i].r, res->colors[i].g, res->colors[i].b, res->colors[i].a);
 		}
 
 		g_object_unref(G_OBJECT(parser));

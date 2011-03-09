@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 #ifndef GLTK_WIDGET_DEF
 #define GLTK_WIDGET_DEF
 typedef struct _GltkWidget			GltkWidget;
+typedef struct _GltkSize			GltkSize;
 #endif
 typedef struct _GltkWindow			GltkWindow;
 typedef struct _GltkWindowClass		GltkWindowClass;
@@ -55,6 +56,8 @@ struct _GltkWindowClass
 	/* signals */
 	void	(*request_render)	(	);
 
+	void	(*close)			(	);
+
 	/* virtual funcs */
 };
 
@@ -68,11 +71,13 @@ GltkWindow*		gltk_window_new						();
 
 /* Public functions here */
 void			gltk_window_set_size				(GltkWindow* window, int width, int height);
+GltkSize		gltk_window_get_size				(GltkWindow* window);
 void			gltk_window_layout					(GltkWindow* window);
 void			gltk_window_render					(GltkWindow* window);
 gboolean		gltk_window_send_event				(GltkWindow* window, GltkEvent* event);
 
 void			gltk_window_set_root				(GltkWindow* window, GltkWidget* widget);
+void			gltk_window_close					(GltkWindow* window);
 
 void			gltk_window_invalidate				(GltkWindow* window);
 gboolean		gltk_window_set_widget_pressed		(GltkWindow* window, GltkWidget* widget);

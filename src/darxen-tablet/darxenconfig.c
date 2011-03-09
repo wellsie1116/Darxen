@@ -20,9 +20,12 @@
 
 #include "darxenconfig.h"
 
+#include <libdarxenShapefiles.h>
 
 static DarxenRestfulClient* client = NULL;
 static GList* sites = NULL;
+
+#define ADD_SHAPEFILE(id) sf = darxen_shapefiles_clone(darxen_shapefiles_load_by_id( id )); sf->visible=TRUE; view->shapefiles = g_slist_append(view->shapefiles, sf)
 
 GList*
 darxen_config_get_sites()
@@ -31,6 +34,7 @@ darxen_config_get_sites()
 	{
 		DarxenSiteInfo* site;
 		DarxenViewInfo* view;
+		DarxenShapefile* sf;
 
 		//KLOT
 		site = g_new(DarxenSiteInfo, 1);
@@ -43,6 +47,11 @@ darxen_config_get_sites()
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201102101939");
 		view->source.archive.endId = g_strdup("201102102304");
+		view->shapefiles = NULL;
+		ADD_SHAPEFILE("Counties");
+		ADD_SHAPEFILE("States");
+		ADD_SHAPEFILE("Lakes");
+		view->smoothing = FALSE;
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
@@ -51,6 +60,10 @@ darxen_config_get_sites()
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201101121416");
 		view->source.archive.endId = g_strdup("201101121456");
+		view->shapefiles = NULL;
+		ADD_SHAPEFILE("Counties");
+		ADD_SHAPEFILE("States");
+		view->smoothing = FALSE;
 		site->views = g_list_append(site->views, view);
 
 		sites = g_list_append(sites, site);
@@ -66,6 +79,13 @@ darxen_config_get_sites()
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201102091939");
 		view->source.archive.endId = g_strdup("201102092204");
+		view->shapefiles = NULL;
+		ADD_SHAPEFILE("Counties");
+		ADD_SHAPEFILE("States");
+		ADD_SHAPEFILE("Lakes");
+		ADD_SHAPEFILE("Rivers");
+		ADD_SHAPEFILE("Sites");
+		view->smoothing = FALSE;
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
@@ -74,6 +94,9 @@ darxen_config_get_sites()
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201101121417");
 		view->source.archive.endId = g_strdup("201101121456");
+		view->shapefiles = NULL;
+		ADD_SHAPEFILE("States");
+		view->smoothing = FALSE;
 		site->views = g_list_append(site->views, view);
 
 		sites = g_list_append(sites, site);

@@ -25,8 +25,7 @@
 
 #include "darxenpalettes.h"
 
-//#include "DarxenConversions.h"
-//#include "DarxenRendererShared.h"
+#include "DarxenConversions.h"
 
 #include "libdarxenRadarSites.h"
 #include "libdarxenShapefiles.h"
@@ -49,7 +48,7 @@
 #define DEG_TO_RAD(deg) ((deg/180.0)*G_PI)
 #define RAD_TO_DEG(rad) ((rad/G_PI)*180.0)
 
-#define VIEW_AREA 5.0
+#define VIEW_AREA 4.0
 
 typedef struct _DarxenRendererPrivate	DarxenRendererPrivate;
 typedef struct _ShapefileInfo			ShapefileInfo;
@@ -102,7 +101,7 @@ struct _ProductInfo
 {
 	gchar* productCode;
 	gboolean smoothing;
-	//GSList* shapefiles; /* ShapefileInfo */
+	GSList* shapefiles; /* ShapefileInfo */
 };
 
 struct _DarxenRendererPrivate
@@ -156,9 +155,16 @@ darxen_renderer_init(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
 
-	renderer->scale				= 1.0f;
-	renderer->offset.x			= 0.0f;
-	renderer->offset.y			= 0.0f;
+	int i;
+	renderer->transform = g_new(float, 16);
+	for (i = 1; i < 16; i++)
+		renderer->transform[i] = 0.0f;
+	renderer->transform[0] = 
+		renderer->transform[5] = 
+		renderer->transform[10] = 0.02f;
+	renderer->transform[15] = 1.0f;
+
+	renderer->scale				= 0.2f;
 
 	priv->objData				= NULL;
 	priv->siteName				= NULL;
@@ -179,9 +185,7 @@ darxen_renderer_init(DarxenRenderer *renderer)
 
 	priv->product.productCode	= NULL;
 	priv->product.smoothing		= FALSE;
-	//priv->product.shapefiles	= NULL;
-
-
+	priv->product.shapefiles	= NULL;
 }
 
 static void
@@ -190,6 +194,8 @@ darxen_renderer_finalize(GObject* gobject)
 	DarxenRenderer* self = DARXEN_RENDERER(gobject);
 
 	USING_PRIVATE(self);
+
+	g_free(self->transform);
 
 	darxen_rendering_common_font_cache_free(priv->fonts);
 
@@ -202,7 +208,7 @@ darxen_renderer_finalize(GObject* gobject)
  ********************/
 
 DarxenRenderer*
-darxen_renderer_new(const gchar* siteName, const gchar* productCode)
+darxen_renderer_new(const gchar* siteName, const gchar* productCode, GSList* shapefiles)
 {
 	GObject* gobject = g_object_new(DARXEN_TYPE_RENDERER, NULL);
 	DarxenRenderer* renderer = DARXEN_RENDERER(gobject);
@@ -215,44 +221,31 @@ darxen_renderer_new(const gchar* siteName, const gchar* productCode)
 
 	priv->fonts = darxen_rendering_common_font_cache_new();
 
-	// priv->products = NULL;
-	// GList* pProducts = viewSettings->products;
-	// while (pProducts)
-	// {
-	// 	SettingsViewProduct* product = (SettingsViewProduct*)pProducts->data;
-	// 	ProductInfo* productInfo = (ProductInfo*)malloc(sizeof(ProductInfo));
-	// 	priv->products = g_slist_append(priv->products, productInfo);
+	GSList* pShapefiles = shapefiles;
+	while (pShapefiles)
+	{
+		DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
+		ShapefileInfo* shapefileInfo = g_new(ShapefileInfo, 1);
 
-	// 	productInfo->product = product;
+		priv->product.shapefiles = g_slist_append(priv->product.shapefiles, shapefileInfo);
 
-	// 	productInfo->shapefiles = NULL;
-	// 	GList* pShapefiles = product->shapefiles;
-	// 	while (pShapefiles)
-	// 	{
-	// 		DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
-	// 		ShapefileInfo* shapefileInfo = (ShapefileInfo*)malloc(sizeof(ShapefileInfo));
-	// 		productInfo->shapefiles = g_slist_append(productInfo->shapefiles, shapefileInfo);
+		shapefileInfo->shapefile = shapefile;
 
-	// 		shapefileInfo->shapefile = shapefile;
+		int shapefileIndex;
+		int shapefileCount = (shapefile->dataLevels) ? g_slist_length(shapefile->dataLevels->levels) : 1;
 
-	// 		int shapefileIndex;
-	// 		int shapefileCount = (shapefile->dataLevels) ? g_slist_length(shapefile->dataLevels->levels) : 1;
+		shapefileInfo->dspDataLevels = g_new(GLuint*, shapefileCount);
 
-	// 		shapefileInfo->dspDataLevels = (GLuint**)calloc(shapefileCount, sizeof(GLuint*));
+		for (shapefileIndex = 0; shapefileIndex < shapefileCount; shapefileIndex++)
+		{
+			int partIndex;
+			shapefileInfo->dspDataLevels[shapefileIndex] = g_new(GLuint, SHAPEFILE_PART_COUNT);
+			for (partIndex = 0; partIndex < SHAPEFILE_PART_COUNT; partIndex++)
+				shapefileInfo->dspDataLevels[shapefileIndex][partIndex] = 0;
+		}
 
-	// 		for (shapefileIndex = 0; shapefileIndex < shapefileCount; shapefileIndex++)
-	// 		{
-	// 			int partIndex;
-	// 			shapefileInfo->dspDataLevels[shapefileIndex] = (GLuint*)calloc(SHAPEFILE_PART_COUNT, sizeof(GLuint));
-	// 			for (partIndex = 0; partIndex < SHAPEFILE_PART_COUNT; partIndex++)
-	// 				shapefileInfo->dspDataLevels[shapefileIndex][partIndex] = 0;
-	// 		}
-
-	// 		pShapefiles = pShapefiles->next;
-	// 	}
-
-	// 	pProducts = pProducts->next;
-	// }
+		pShapefiles = pShapefiles->next;
+	}
 
 	return renderer;
 }
@@ -293,7 +286,71 @@ darxen_renderer_set_size(DarxenRenderer *renderer, int width, int height)
 	darxen_renderer_resize(renderer);
 }
 
-/* Utility */
+void
+matrix_print(const char* name, float* mat)
+{
+	printf("%s ", name);
+	int i;
+	for (i = 0; i < 16; i++)
+		printf("%.3f ", mat[i]);
+	printf("\n");
+}
+
+void
+matrix_mult(const float* m1, float* res)
+{
+	float m2[16];
+	int i;
+	for (i = 0; i < 16; i++)
+		m2[i] = res[i];
+
+	// matrix_print("M1 ", m1);
+	// matrix_print("M2 ", m2);
+
+	int x;
+	int y;
+	for (y = 0; y < 4; y++)
+	{
+		for (x = 0; x < 4; x++)
+		{
+			float sum = 0.0f;
+			for (i = 0; i < 4; i++)
+				sum += m1[y*4+i] * m2[i*4+x];
+			res[y*4+x] = sum;
+		}
+	}
+	matrix_print("Res", res);
+}
+
+void
+darxen_renderer_translate(DarxenRenderer* renderer, float dx, float dy)
+{
+	float mat[16] = {	1.0f, 0.0f, 0.0f, dx ,
+						0.0f, 1.0f, 0.0f, dy ,
+						0.0f, 0.0f, 1.0f, 0.0f,
+						0.0f, 0.0f, 0.0f, 1.0f};
+
+	matrix_mult(mat, renderer->transform);
+}
+
+void
+darxen_renderer_scale(DarxenRenderer* renderer, float scale)
+{
+	float mat[16] = {	scale, 0.0f,  0.0f, 0.0f,
+						0.0f,  scale, 0.0f, 0.0f,
+						0.0f,  0.0f,  1.0f, 0.0f,
+						0.0f,  0.0f,  0.0f, 1.0f};
+
+	renderer->scale *= scale;
+
+	matrix_mult(mat, renderer->transform);
+}
+
+void
+darxen_renderer_rotate(DarxenRenderer* renderer, float angle, float x, float y, float z)
+{
+	g_warning("Rotate not implemented");
+}
 
 void
 darxen_renderer_render(DarxenRenderer *renderer)
@@ -347,8 +404,33 @@ darxen_renderer_render_internal(DarxenRenderer *renderer)
 	fltRangeBins = priv->objData->objDescription.objSymbologyBlock->objPackets->objRadialData.intNumRangeBins;
 
 	//NOTE: Units are in km
-	glScalef(renderer->scale, renderer->scale, 1.0);
-	glTranslatef(renderer->offset.x, renderer->offset.y, 0.0f);
+	//glScalef(renderer->scale, renderer->scale, 1.0);
+	//glTranslatef(renderer->offset.x, renderer->offset.y, 0.0f);
+
+	{
+		float trans[16];
+		float* transform = renderer->transform;
+
+		trans[0] =  transform[0];
+		trans[1] =  transform[4];
+		trans[2] =  transform[8];
+		trans[3] =  transform[12];
+		trans[4] =  transform[1];
+		trans[5] =  transform[5];
+		trans[6] =  transform[9];
+		trans[7] =  transform[13];
+		trans[8] =  transform[2];
+		trans[9] =  transform[6];
+		trans[10] = transform[10];
+		trans[11] = transform[14];
+		trans[12] = transform[3];
+		trans[13] = transform[7];
+		trans[14] = transform[11];
+		trans[15] = transform[15];
+
+		glMultMatrixf(trans);
+	}
+
 
 	darxen_renderer_render_underlay(renderer);
 
@@ -390,141 +472,136 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
 
-	// SettingsSite* site = priv->radarSite;
-	// DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(site->name);
+	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(priv->siteName);
 
-	// SettingsRenderer* renderSettings = &settings_get_main()->renderer;
-	// float fltScale = renderSettings->fltScale;
+	GSList* pShapefileInfos = priv->product.shapefiles;
+	while (pShapefileInfos)
+	{
+		ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
+		DarxenShapefile* shapefile = shapefileInfo->shapefile;
 
-	// GSList* pShapefileInfos = ((ProductInfo*)priv->products->data)->shapefiles;
-	// while (pShapefileInfos)
-	// {
-	// 	ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
-	// 	DarxenShapefile* shapefile = shapefileInfo->shapefile;
+		if (shapefile->visible)
+		{
+			int dataLevel = 0;
+			if (shapefile->dataLevels)
+			{
+				GSList* pDataLevels = shapefile->dataLevels->levels;
 
-	// 	if (shapefile->visible)
-	// 	{
-	// 		int dataLevel = 0;
-	// 		if (shapefile->dataLevels)
-	// 		{
-	// 			GSList* pDataLevels = shapefile->dataLevels->levels;
+				while (pDataLevels)
+				{
+					DarxenShapefileDataLevel* level = (DarxenShapefileDataLevel*)pDataLevels->data;
 
-	// 			while (pDataLevels)
-	// 			{
-	// 				DarxenShapefileDataLevel* level = (DarxenShapefileDataLevel*)pDataLevels->data;
+					if (level->scale > renderer->scale)
+						break;
 
-	// 				if (level->scale > fltScale)
-	// 					break;
+					dataLevel++;
 
-	// 				dataLevel++;
+					pDataLevels = pDataLevels->next;
+				}
+				dataLevel--;
+				if (dataLevel < 0)
+				{
+					g_warning("Data level does not fit with any specified ranges, defaulting to 0");
+					dataLevel = 0;
+				}
+			}
+			while (dataLevel >= 0)
+			{
+				//FIXME: shouldn't hardcode radius?
+				char* pathShp = darxen_shapefiles_filter_shp(shapefile, dataLevel, siteInfo->chrID, siteInfo->fltLatitude, siteInfo->fltLongitude, VIEW_AREA);
 
-	// 				pDataLevels = pDataLevels->next;
-	// 			}
-	// 			dataLevel--;
-	// 			if (dataLevel < 0)
-	// 			{
-	// 				g_warning("Data level does not fit with any specified ranges, defaulting to 0");
-	// 				dataLevel = 0;
-	// 			}
-	// 		}
-	// 		while (dataLevel >= 0)
-	// 		{
-	// 			//FIXME: site location should be taken from the radar data itself?
-	// 			//FIXME: shouldn't hardcode radius?
-	// 			char* pathShp = darxen_shapefiles_filter_shp(shapefile, dataLevel, siteInfo->chrID, siteInfo->fltLatitude, siteInfo->fltLongitude, 5.0);
+				if (shapefile->polygons && shapefile->polygons->visible)
+				{
+					glColor3fv(shapefile->polygons->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS])
+					{
+						int list = glGenLists(1);
 
-	// 			if (shapefile->polygons && shapefile->polygons->visible)
-	// 			{
-	// 				glColor3fv(shapefile->polygons->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_polygons(shapefile->polygons, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_polygons(shapefile->polygons, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS]);
+					}
+				}
+				if (shapefile->lines && shapefile->lines->visible)
+				{
+					glColor3fv(shapefile->lines->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS]);
-	// 				}
-	// 			}
-	// 			if (shapefile->lines && shapefile->lines->visible)
-	// 			{
-	// 				glColor3fv(shapefile->lines->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_lines(shapefile->lines, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_lines(shapefile->lines, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES]);
+					}
+				}
+				if (shapefile->points && shapefile->points->visible)
+				{
+					glColor3fv(shapefile->points->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES]);
-	// 				}
-	// 			}
-	// 			if (shapefile->points && shapefile->points->visible)
-	// 			{
-	// 				glColor3fv(shapefile->points->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_points(shapefile->points, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_points(shapefile->points, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS]);
+					}
+				}
+				if (shapefile->textLabels && shapefile->textLabels->visible)
+				{
+					glColor3fv(shapefile->textLabels->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS]);
-	// 				}
-	// 			}
-	// 			if (shapefile->textLabels && shapefile->textLabels->visible)
-	// 			{
-	// 				glColor3fv(shapefile->textLabels->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS])
-	// 				{
-	// 					int list = glGenLists(1);
+						gchar* fontname = g_strdup_printf("courier new %.1f", shapefile->textLabels->fontSize);
+						DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, fontname);
+						g_free(fontname);
 
-	// 					gchar* fontname = g_strdup_printf("courier new %.1f", shapefile->textLabels->fontSize);
-	// 					DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, fontname);
-	// 					g_free(fontname);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_text_labels(shapefile->textLabels, pathShp, siteInfo, font, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_text_labels(shapefile->textLabels, pathShp, siteInfo, font, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS]);
+					}
+				}
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS]);
-	// 				}
-	// 			}
+				free(pathShp);
+				dataLevel--;
+			}
+		}
 
-	// 			free(pathShp);
-	// 			dataLevel--;
-	// 		}
-	// 	}
-
-	// 	pShapefileInfos = pShapefileInfos->next;
-	// }
+		pShapefileInfos = pShapefileInfos->next;
+	}
 }
 
 static void
@@ -532,141 +609,136 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
 
-	// SettingsSite* site = priv->radarSite;
-	// DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(site->name);
+	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(priv->siteName);
 
-	// SettingsRenderer* renderSettings = &settings_get_main()->renderer;
-	// float fltScale = renderSettings->fltScale;
+	GSList* pShapefileInfos = priv->product.shapefiles;
+	while (pShapefileInfos)
+	{
+		ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
+		DarxenShapefile* shapefile = shapefileInfo->shapefile;
 
-	// GSList* pShapefileInfos = ((ProductInfo*)priv->products->data)->shapefiles;
-	// while (pShapefileInfos)
-	// {
-	// 	ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
-	// 	DarxenShapefile* shapefile = shapefileInfo->shapefile;
+		if (shapefile->visible)
+		{
+			int dataLevel = 0;
+			if (shapefile->dataLevels)
+			{
+				GSList* pDataLevels = shapefile->dataLevels->levels;
 
-	// 	if (shapefile->visible)
-	// 	{
-	// 		int dataLevel = 0;
-	// 		if (shapefile->dataLevels)
-	// 		{
-	// 			GSList* pDataLevels = shapefile->dataLevels->levels;
+				while (pDataLevels)
+				{
+					DarxenShapefileDataLevel* level = (DarxenShapefileDataLevel*)pDataLevels->data;
 
-	// 			while (pDataLevels)
-	// 			{
-	// 				DarxenShapefileDataLevel* level = (DarxenShapefileDataLevel*)pDataLevels->data;
+					if (level->scale > renderer->scale)
+						break;
 
-	// 				if (level->scale > fltScale)
-	// 					break;
+					dataLevel++;
 
-	// 				dataLevel++;
+					pDataLevels = pDataLevels->next;
+				}
+				dataLevel--;
+				if (dataLevel < 0)
+				{
+					g_warning("Data level does not fit with any specified ranges, defaulting to 0");
+					dataLevel = 0;
+				}
+			}
+			while (dataLevel >= 0)
+			{
+				//FIXME: shouldn't hardcode radius?
+				char* pathShp = darxen_shapefiles_filter_shp(shapefile, dataLevel, siteInfo->chrID, siteInfo->fltLatitude, siteInfo->fltLongitude, VIEW_AREA);
 
-	// 				pDataLevels = pDataLevels->next;
-	// 			}
-	// 			dataLevel--;
-	// 			if (dataLevel < 0)
-	// 			{
-	// 				g_warning("Data level does not fit with any specified ranges, defaulting to 0");
-	// 				dataLevel = 0;
-	// 			}
-	// 		}
-	// 		while (dataLevel >= 0)
-	// 		{
-	// 			//FIXME: site location should be taken from the radar data itself?
-	// 			//FIXME: shouldn't hardcode radius?
-	// 			char* pathShp = darxen_shapefiles_filter_shp(shapefile, dataLevel, siteInfo->chrID, siteInfo->fltLatitude, siteInfo->fltLongitude, VIEW_AREA);
+				if (shapefile->polygons && shapefile->polygons->visible)
+				{
+					glColor4fv(shapefile->polygons->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS])
+					{
+						int list = glGenLists(1);
 
-	// 			if (shapefile->polygons && shapefile->polygons->visible)
-	// 			{
-	// 				glColor4fv(shapefile->polygons->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_polygons(shapefile->polygons, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_polygons(shapefile->polygons, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS]);
+					}
+				}
+				if (shapefile->lines && shapefile->lines->visible)
+				{
+					glColor4fv(shapefile->lines->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS]);
-	// 				}
-	// 			}
-	// 			if (shapefile->lines && shapefile->lines->visible)
-	// 			{
-	// 				glColor4fv(shapefile->lines->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_lines(shapefile->lines, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_lines(shapefile->lines, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES]);
+					}
+				}
+				if (shapefile->points && shapefile->points->visible)
+				{
+					glColor4fv(shapefile->points->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES]);
-	// 				}
-	// 			}
-	// 			if (shapefile->points && shapefile->points->visible)
-	// 			{
-	// 				glColor4fv(shapefile->points->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS])
-	// 				{
-	// 					int list = glGenLists(1);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_points(shapefile->points, pathShp, siteInfo, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_points(shapefile->points, pathShp, siteInfo, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS]);
+					}
+				}
+				if (shapefile->textLabels && shapefile->textLabels->visible)
+				{
+					glColor4fv(shapefile->textLabels->color);
+					if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS])
+					{
+						int list = glGenLists(1);
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS]);
-	// 				}
-	// 			}
-	// 			if (shapefile->textLabels && shapefile->textLabels->visible)
-	// 			{
-	// 				glColor4fv(shapefile->textLabels->color);
-	// 				if (!shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS])
-	// 				{
-	// 					int list = glGenLists(1);
+						gchar* fontname = g_strdup_printf("courier new %.1f", shapefile->textLabels->fontSize);
+						DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, fontname);
+						g_free(fontname);
 
-	// 					gchar* fontname = g_strdup_printf("courier new %.1f", shapefile->textLabels->fontSize);
-	// 					DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, fontname);
-	// 					g_free(fontname);
+						glNewList(list, GL_COMPILE_AND_EXECUTE);
+						{
+							darxen_shapefile_renderer_render_text_labels(shapefile->textLabels, pathShp, siteInfo, font, FALSE);
+						}
+						glEndList();
 
-	// 					glNewList(list, GL_COMPILE_AND_EXECUTE);
-	// 					{
-	// 						darxen_shapefile_renderer_render_text_labels(shapefile->textLabels, pathShp, siteInfo, font, FALSE);
-	// 					}
-	// 					glEndList();
+						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
+					}
+					else
+					{
+						glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS]);
+					}
+				}
 
-	// 					shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
-	// 				}
-	// 				else
-	// 				{
-	// 					glCallList(shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS]);
-	// 				}
-	// 			}
+				free(pathShp);
+				dataLevel--;
+			}
+		}
 
-	// 			free(pathShp);
-	// 			dataLevel--;
-	// 		}
-	// 	}
-
-	// 	pShapefileInfos = pShapefileInfos->next;
-	// }
+		pShapefileInfos = pShapefileInfos->next;
+	}
 
 	darxen_renderer_shared_render_overlay_legend(renderer);
 }
@@ -677,41 +749,58 @@ darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
 
-	// SettingsRenderer *renderSettings;
-	// SettingsPalette *objPalette;
-	// gint i;
-	// int intBorderWidth = 2;
-	// int intBoxSize = 20;
-	// char *chrMessage = (char*)malloc(sizeof(char) * 25);
+	const DarxenPalette* palette;
+	gint i;
+	int intBorderWidth = 2;
+	int intBoxSize = 20;
+	char *chrMessage = (char*)malloc(sizeof(char) * 25);
+	DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, "courier new 12");
 
-	// renderSettings = &settings_get_main()->renderer;
-	// objPalette = renderSettings->objPaletteReflectivity;
+	palette = darxen_palette_get_from_file("palettes/reflectivity.palette");
 
-	// glMatrixMode(GL_PROJECTION);
-	// glPushMatrix();
-	// glLoadIdentity();
-	// glOrtho(0, priv->intWidth, priv->intHeight, 0, -1, 1);
-	// glMatrixMode(GL_MODELVIEW);
-	// glPushMatrix();
-	// glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, priv->width, priv->height, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 
-	// glColor3f(0.0f, 0.0f, 0.0f);
-	// glRectf(0.0f, 0.0f, (float)(16 * intBoxSize + 2 * intBorderWidth), (float)(intBoxSize + 2 * intBorderWidth));
-	// for (i = 0; i < 16; i++)
-	// {
-	// 	glColor4f(objPalette->fltRed[i], objPalette->fltGreen[i], objPalette->fltBlue[i], objPalette->fltAlpha[i]);
-	// 	glRectf((float)(i * intBoxSize + intBorderWidth), (float)intBorderWidth, (float)((i + 1) * intBoxSize + intBorderWidth), (float)(intBoxSize + intBorderWidth));
-	// }
 
-	// sprintf(chrMessage, "VCP %i\nMX: %idBZ", priv->objData->objDescription.intVolCovPat, priv->objData->objDescription.intProdCodes[3]);
-	// glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	// darxen_renderer_shared_render_text(chrMessage, TEXT_UPPER_LEFT, TRUE, 5.0f, (float)(intBoxSize + 2 * intBorderWidth + 5));
-	// darxen_renderer_shared_render_text_line(darxen_conversions_format_date_time(priv->objData->objDescription.objScanDate, priv->objData->objDescription.intScanTime), TEXT_LOWER_RIGHT, TRUE, (float)(priv->intWidth - 3), (float)(priv->intHeight - 3));
 
-	// glPopMatrix();
-	// glMatrixMode(GL_PROJECTION);
-	// glPopMatrix();
-	// glMatrixMode(GL_MODELVIEW);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glRectf(0.0f, 0.0f, (float)(16 * intBoxSize + 2 * intBorderWidth), (float)(intBoxSize + 2 * intBorderWidth));
+	for (i = 0; i < 16; i++)
+	{
+		glColor4fv((float*)(palette->colors+i));
+		glRectf((float)(i * intBoxSize + intBorderWidth), (float)intBorderWidth, (float)((i + 1) * intBoxSize + intBorderWidth), (float)(intBoxSize + intBorderWidth));
+	}
+
+	sprintf(chrMessage, "VCP %i\nMX: %idBZ",	priv->objData->objDescription.intVolCovPat,
+												priv->objData->objDescription.intProdCodes[3]);
+	GLfloat textColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+	darxen_rendering_common_draw_string	(	chrMessage,
+											TEXT_ORIGIN_UPPER_LEFT, 
+											5.0f, 
+											(float)(intBoxSize + 2 * intBorderWidth + 5),
+											font,
+											textColor,
+											TRUE);
+
+	darxen_rendering_common_draw_string	(	darxen_conversions_format_date_time(
+												priv->objData->objDescription.objScanDate, 
+												priv->objData->objDescription.intScanTime), 
+											TEXT_ORIGIN_LOWER_RIGHT, 
+											(float)(priv->width - 3), 
+											(float)(priv->height - 3),
+											font,
+											textColor,
+											TRUE);
+
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 }
 
 typedef enum

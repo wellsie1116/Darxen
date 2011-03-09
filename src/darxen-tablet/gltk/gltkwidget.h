@@ -29,11 +29,11 @@
 
 G_BEGIN_DECLS
 
-typedef struct
+struct _GltkSize
 {
 	int width;
 	int height;
-} GltkSize;
+};
 
 typedef struct
 {
@@ -55,6 +55,7 @@ typedef struct
 #ifndef GLTK_WIDGET_DEF
 #define GLTK_WIDGET_DEF
 typedef struct _GltkWidget			GltkWidget;
+typedef struct _GltkSize			GltkSize;
 #endif
 typedef struct _GltkWidgetClass		GltkWidgetClass;
 
@@ -92,6 +93,9 @@ struct _GltkWidgetClass
 	gboolean (*drag_event)			(	GltkWidget* widget,
 										GltkEventDrag* event);
 
+	gboolean (*pinch_event)			(	GltkWidget* widget,
+										GltkEventPinch* event);
+
 	gboolean (*click_event)			(	GltkWidget* widget,
 										GltkEventClick* event);
 
@@ -107,30 +111,29 @@ typedef enum
 	GLTK_WIDGET_ERROR_FAILED
 } GltkWidgetError;
 
-GType			gltk_widget_get_type		() G_GNUC_CONST;
-GltkWidget*		gltk_widget_new				();
+GType			gltk_widget_get_type				() G_GNUC_CONST;
+GltkWidget*		gltk_widget_new						();
 
-GltkWidget*		gltk_widget_get_parent		(GltkWidget* widget);
-void			gltk_widget_set_parent		(GltkWidget* widget, GltkWidget* parent);
-void			gltk_widget_unparent		(GltkWidget* widget);
+GltkWidget*		gltk_widget_get_parent				(GltkWidget* widget);
+void			gltk_widget_set_parent				(GltkWidget* widget, GltkWidget* parent);
+void			gltk_widget_unparent				(GltkWidget* widget);
 
-void			gltk_widget_set_window		(GltkWidget* widget, GltkWindow* window);
+void			gltk_widget_set_window				(GltkWidget* widget, GltkWindow* window);
 
-void			gltk_widget_set_visible		(GltkWidget* widget, gboolean visible);
-gboolean		gltk_widget_get_visible		(GltkWidget* widget);
-void			gltk_widget_size_request	(GltkWidget* widget, GltkSize* size);
-void			gltk_widget_size_allocate	(GltkWidget* widget, GltkAllocation allocation);
-GltkAllocation	gltk_widget_get_allocation	(GltkWidget* widget);
-void			gltk_widget_invalidate		(GltkWidget* widget);
-void			gltk_widget_layout			(GltkWidget* widget);
+void			gltk_widget_set_visible				(GltkWidget* widget, gboolean visible);
+gboolean		gltk_widget_get_visible				(GltkWidget* widget);
+void			gltk_widget_size_request			(GltkWidget* widget, GltkSize* size);
+void			gltk_widget_size_allocate			(GltkWidget* widget, GltkAllocation allocation);
+GltkAllocation	gltk_widget_get_allocation			(GltkWidget* widget);
+GltkAllocation	gltk_widget_get_global_allocation	(GltkWidget* widget);
+void			gltk_widget_invalidate				(GltkWidget* widget);
+void			gltk_widget_layout					(GltkWidget* widget);
 
-void			gltk_widget_render			(GltkWidget* widget);
+void			gltk_widget_render					(GltkWidget* widget);
 
-gboolean		gltk_widget_send_event		(GltkWidget* widget, GltkEvent* event);
+gboolean		gltk_widget_send_event				(GltkWidget* widget, GltkEvent* event);
 
-GQuark			gltk_widget_error_quark		();
-
-GltkAllocation	gltk_allocation_translate_to_global	(GltkWidget* widget);
+GQuark			gltk_widget_error_quark				();
 
 G_END_DECLS
 

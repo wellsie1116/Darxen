@@ -26,7 +26,8 @@
 #include <glib.h>
 #include <GL/gl.h>
 
-typedef struct _GltkGLFont		GltkGLFont;
+typedef struct _GltkGLFont			GltkGLFont;
+typedef struct _GltkGLFontBounds	GltkGLFontBounds;
 
 struct _GltkGLFont
 {
@@ -36,10 +37,18 @@ struct _GltkGLFont
 	float descender;
 };
 
+struct _GltkGLFontBounds
+{
+	float width;
+	float height;
+};
+
 #define 			GLTK_FONTS_BASE					"UnBatang.ttf"
 
 void				gltk_fonts_cache_free			();
 GltkGLFont*			gltk_fonts_cache_get_font		(const char* path, int size, gboolean renderable);
+GltkGLFontBounds	gltk_fonts_measure_string		(GltkGLFont* font, const char* txt);
+
 
 //void				gltk_fonts_test_string			(const char* message);
 #endif

@@ -27,16 +27,34 @@
 //	return TRUE;
 //}
 
+GltkWidget* label_widget(GltkWidget* child, const char* message)
+{
+	GltkWidget* vbox = gltk_vbox_new();
+
+	gltk_box_append_widget(GLTK_BOX(vbox), gltk_label_new(message), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), child, TRUE, TRUE);
+
+	return vbox;
+}
+
 GltkWidget* 
 create_label_list()
 {
 	GltkWidget* list = gltk_list_new();
 
-	gltk_list_add_item(GLTK_LIST(list), gltk_label_new("Item 1"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_label_new("Item 2"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_label_new("Item 3"), NULL);
+	GltkWidget* label1 = gltk_label_new("Item 1");
+	GltkWidget* label2 = gltk_label_new("Item 2");
+	GltkWidget* label3 = gltk_label_new("Item 3");
 
-	return list;
+	gltk_label_set_draw_border(GLTK_LABEL(label1), TRUE);
+	gltk_label_set_draw_border(GLTK_LABEL(label2), TRUE);
+	gltk_label_set_draw_border(GLTK_LABEL(label3), TRUE);
+
+	gltk_list_add_item(GLTK_LIST(list), label1, NULL);
+	gltk_list_add_item(GLTK_LIST(list), label2, NULL);
+	gltk_list_add_item(GLTK_LIST(list), label3, NULL);
+
+	return label_widget(list, "The three labels below are\ncontained in a list so that they\ncan be reordered dynamically.");
 }
 
 GltkWidget* 
@@ -48,7 +66,7 @@ create_button_list()
 	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 2"), NULL);
 	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 3"), NULL);
 
-	return list;
+	return label_widget(list, "Buttons can be added to\nlists also.");
 }
 
 GltkWidget*
@@ -71,7 +89,7 @@ create_composite_list()
 	gltk_list_add_item(GLTK_LIST(list), create_composite_list_item("Item 2", "Btn 2"), NULL);
 	gltk_list_add_item(GLTK_LIST(list), create_composite_list_item("Item 3", "Btn 3"), NULL);
 
-	return list;
+	return label_widget(list, "Any widget can be added to a list.\nThis includes composite widgets and\neven additional lists.");
 }
 
 GltkWindow*
@@ -81,7 +99,7 @@ create_window()
 
 	GltkWidget* hbox = gltk_hbox_new();
 
-	gltk_box_append_widget(GLTK_BOX(hbox), create_label_list(), TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(hbox), create_label_list(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), create_button_list(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), create_composite_list(), TRUE, FALSE);
 

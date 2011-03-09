@@ -80,7 +80,7 @@ darxen_rendering_common_font_cache_get_font(DarxenGLFontCache* cache, const char
 		font->width = pango_font_metrics_get_approximate_char_width(metrics) / PANGO_SCALE;
 		font->ascent = pango_font_metrics_get_ascent(metrics) / PANGO_SCALE;
 		font->descent = pango_font_metrics_get_descent(metrics) / PANGO_SCALE;
-		font->height = font->ascent + font->descent;
+		font->height = font->ascent ;
 		pango_font_metrics_unref(metrics);
 
 		g_hash_table_insert(cache->fonts, strdup(desc), font);
@@ -109,25 +109,27 @@ darxen_rendering_common_draw_string(const char* message, DarxenTextOrigin origin
 	}
 
 	int len = strlen(message);
+	float textWidth;
 
 	if (drawBackground)
 	{
 		if (color)
 			glColor4f(1.0f - color[0], 1.0f - color[1], 1.0f - color[2], color[3]);
 
+		textWidth = (font->width - 2) * len + 4;
 		switch (origin)
 		{
 		case TEXT_ORIGIN_UPPER_LEFT:
-			glRectf(x, y, x + font->width * len + 4, y + font->height + 4);
+			glRectf(x, y, x + textWidth, y + font->height + 4);
 			break;
 		case TEXT_ORIGIN_LOWER_RIGHT:
-			glRectf(x - (font->width * len + 4), y - (font->height + 4), x, y);
+			glRectf(x - textWidth, y - (font->height + 4), x, y);
 			break;
 		case TEXT_ORIGIN_UPPER_RIGHT:
-			glRectf(x - (font->width * len + 4), y, x, y + font->height + 4);
+			glRectf(x - textWidth, y, x, y + font->height + 4);
 			break;
 		case TEXT_ORIGIN_LOWER_LEFT:
-			glRectf(x, y - (font->height + 4), x + font->width * len + 4, y);
+			glRectf(x, y - (font->height + 4), x + textWidth, y);
 			break;
 		}
 
@@ -142,31 +144,32 @@ darxen_rendering_common_draw_string(const char* message, DarxenTextOrigin origin
 
 	int offsetX = 0;
 	int offsetY = 0;
+	textWidth = (font->width - 2) * len + 2;
 
 	switch (origin)
 	{
 	case TEXT_ORIGIN_UPPER_LEFT:
 		offsetX = 2;
 		offsetY = 2 + font->height;
-//		glRasterPos2f(x + 2, y + 2 + font->height);
+		glRasterPos2f(x + 2, y + 2 + font->height);
 		break;
 	case TEXT_ORIGIN_LOWER_RIGHT:
 		offsetX = -(font->width * len + 2);
 		offsetY = -2;
-//		glRasterPos2f(x - (font->width * len + 2), y - 2);
+		glRasterPos2f(x - textWidth, y - 2);
 		break;
 	case TEXT_ORIGIN_UPPER_RIGHT:
 		offsetX = -(font->width * len + 2);
 		offsetY = 2 + font->height;
-//		glRasterPos2f(x - (font->width * len + 2), y + 2 + font->height);
+		glRasterPos2f(x - textWidth, y + 2 + font->height);
 		break;
 	case TEXT_ORIGIN_LOWER_LEFT:
 		offsetX = 2;
 		offsetY = -2;
-//		glRasterPos2f(x + 2, y - 2);
+		glRasterPos2f(x + 2, y - 2);
 		break;
 	}
-//	glBitmap(0.0f, 0.0f, 0.0f, 0.0f, offsetX, offsetY, NULL);
+	//glBitmap(0.0f, 0.0f, 0.0f, 0.0f, offsetX, offsetY, NULL);
 	glListBase(font->dspTextBase);
 	glCallLists(len, GL_UNSIGNED_BYTE, message);
 }

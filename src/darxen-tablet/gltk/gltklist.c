@@ -232,9 +232,9 @@ gltk_list_render(GltkWidget* widget)
 
 		glPushMatrix();
 		{
-			GltkAllocation myAllocation = gltk_widget_get_allocation(widget);
-			g_message("Allocation: %i %i", myAllocation.x, myAllocation.y);
-			glTranslatef(myAllocation.x, myAllocation.y, 0.0f);
+			//GltkAllocation myAllocation = gltk_widget_get_allocation(widget);
+			//g_message("Allocation: %i %i", myAllocation.x, myAllocation.y);
+			//glTranslatef(myAllocation.x, myAllocation.y, 0.0f);
 
 			//overlay a rectangle on top of the widget in the list
 			GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
@@ -359,7 +359,6 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			break;
 		pChildren = pChildren->next;
 		pItems = pItems->next;
-		g_message("Next child");
 	}
 	g_assert(pChildren && pItems);
 
@@ -394,7 +393,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 
 	gltk_widget_invalidate(GLTK_WIDGET(item->list));
 
-	g_message("A bin in a list was dragged, nomming event");
+	//g_message("A bin in a list was dragged, nomming event");
 	return TRUE;
 }
 

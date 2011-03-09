@@ -45,6 +45,9 @@ gltk_event_clone(GltkEvent* event)
 		case GLTK_DRAG:
 			newEvent->drag = event->drag;
 			break;
+		case GLTK_PINCH:
+			newEvent->pinch = event->pinch;
+			break;
 		case GLTK_CLICK:
 			newEvent->click = event->click;
 			break;
@@ -63,6 +66,8 @@ gltk_event_free(GltkEvent* event)
 		case GLTK_LONG_TOUCH:
 			break;
 		case GLTK_DRAG:
+			break;
+		case GLTK_PINCH:
 			break;
 		case GLTK_CLICK:
 			break;

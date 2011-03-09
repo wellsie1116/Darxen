@@ -22,6 +22,9 @@
 
 #include "gltkwidget.h"
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 #include <math.h>
 
 G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
@@ -31,6 +34,7 @@ G_DEFINE_TYPE(GltkWindow, gltk_window, G_TYPE_OBJECT)
 enum
 {
 	REQUEST_RENDER,
+	CLOSE,
    	LAST_SIGNAL
 };
 
@@ -52,6 +56,9 @@ struct _GltkWindowPrivate
 	gboolean longPressed;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
+
+	gboolean touchCount;
+	GltkTouchPosition touchPosition;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -72,6 +79,15 @@ gltk_window_class_init(GltkWindowClass* klass)
 						g_cclosure_marshal_VOID__VOID,
 						G_TYPE_NONE, 0);
 	
+	signals[CLOSE] = 
+		g_signal_new(	"close",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(GltkWindowClass, close),
+						NULL, NULL,
+						g_cclosure_marshal_VOID__VOID,
+						G_TYPE_NONE, 0);
+	
 	gobject_class->dispose = gltk_window_dispose;
 	gobject_class->finalize = gltk_window_finalize;
 }
@@ -87,6 +103,8 @@ gltk_window_init(GltkWindow* self)
 	priv->longPressPending = 0;
 	priv->pressed = NULL;
 	priv->unpressed = NULL;
+
+	priv->touchCount = 0;
 }
 
 static void
@@ -131,6 +149,21 @@ gltk_window_set_size(GltkWindow* window, int width, int height)
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }
+
+GltkSize
+gltk_window_get_size(GltkWindow* window)
+{
+	GltkSize size = {-1, -1};
+	g_return_val_if_fail(GLTK_IS_WINDOW(window), size);
+
+	USING_PRIVATE(window);
+
+	size.width = priv->width;
+	size.height = priv->height;
+
+	return size;
+}
+
 void
 gltk_window_layout(GltkWindow* window)
 {
@@ -155,6 +188,17 @@ gltk_window_render(GltkWindow* window)
 	g_return_if_fail(priv->root);
 	
 	gltk_widget_render(priv->root);
+
+	//render touch points
+	if (priv->touchCount)
+	{
+		glColor3f(0.2f, 0.2f, 1.0f);
+		GLUquadric* quadric = gluNewQuadric();
+		glTranslatef(priv->touchPosition.x, priv->touchPosition.y, 0.0f);
+		gluDisk(quadric, 5.0, 20.0, 15, 5);
+		glTranslatef(-priv->touchPosition.x, -priv->touchPosition.y, 0.0f);
+		gluDeleteQuadric(quadric);
+	}
 }
 
 gboolean
@@ -167,6 +211,23 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 	g_return_val_if_fail(priv->root, FALSE);
 
 	gboolean returnValue = FALSE;
+
+	if (event->type == GLTK_TOUCH)
+	{
+		priv->touchPosition = *event->touch.positions;
+		switch (event->touch.touchType)
+		{
+			case TOUCH_BEGIN:
+				priv->touchCount = 1;
+				break;
+			case TOUCH_END:
+				priv->touchCount = 0;
+				break;
+			default:
+				break;
+		}
+		gltk_window_invalidate(window);
+	}
 
 	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_BEGIN)
 		priv->pressedPosition = *event->touch.positions;
@@ -252,6 +313,14 @@ gltk_window_set_root(GltkWindow* window, GltkWidget* widget)
 	gltk_widget_set_window(widget, window);
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
+}
+
+void
+gltk_window_close(GltkWindow* window)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+
+	g_signal_emit(G_OBJECT(window), signals[CLOSE], 0);
 }
 
 void

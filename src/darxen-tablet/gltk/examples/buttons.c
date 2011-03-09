@@ -30,11 +30,12 @@ button_clicked(GltkWidget* widget, GltkEventClick* event, GltkWidget* label)
 	return TRUE;
 }
 
-//static gboolean
-//btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
-//{
-//	return TRUE;
-//}
+static gboolean
+btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
+{
+	gltk_window_close(widget->window);
+	return TRUE;
+}
 
 GltkWidget* 
 create_vbox()
@@ -46,15 +47,18 @@ create_vbox()
 	GltkWidget* button1 = gltk_button_new("Button 1");
 	GltkWidget* button2 = gltk_button_new("Second Button");
 	GltkWidget* button3 = gltk_button_new("Yet Another Button");
+	GltkWidget* btnQuit = gltk_button_new("Quit");
 
 	gltk_box_append_widget(GLTK_BOX(vbox), label, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), button1, TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), button2, TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), button3, TRUE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(vbox), btnQuit, TRUE, FALSE);
 
 	g_signal_connect(button1, "click-event", G_CALLBACK(button_clicked), label);
 	g_signal_connect(button2, "click-event", G_CALLBACK(button_clicked), label);
 	g_signal_connect(button3, "click-event", G_CALLBACK(button_clicked), label);
+	g_signal_connect(btnQuit, "click-event", G_CALLBACK(btnQuit_clicked), NULL);
 
 	return vbox;
 }

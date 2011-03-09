@@ -62,6 +62,8 @@ struct _DarxenViewInfo
 	DarxenViewSourceType sourceType;
 	DarxenViewSource source;
 
+	GSList* shapefiles; //DarxenShapefile
+
 	gboolean smoothing;
 };
 

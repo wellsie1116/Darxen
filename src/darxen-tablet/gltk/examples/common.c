@@ -248,6 +248,25 @@ request_render(GltkWindow* window, gpointer user_data)
 	gtk_widget_queue_draw(darea);
 }
 
+static void
+hide_cursor(GtkWidget* root)
+{
+	gchar bits[] = { 0 };
+	GdkColor color = { 0, 0, 0, 0 };
+	GdkPixmap *pixmap;
+	GdkCursor *cursor;
+
+	pixmap = gdk_bitmap_create_from_data(NULL, bits, 1, 1);
+	cursor = gdk_cursor_new_from_pixmap(pixmap, pixmap, &color, &color, 0, 0);
+	gdk_window_set_cursor(root->window, cursor);
+}
+
+static void
+request_close(GltkWindow* window, gpointer user_data)
+{
+	gtk_main_quit();
+}
+
 int initialize_gui(int* argc, char** argv[])
 {
 	GdkGLConfig* glconfig;
@@ -294,9 +313,12 @@ int initialize_gui(int* argc, char** argv[])
 
 	glWindow = create_window();
 	g_signal_connect(G_OBJECT(glWindow), "request-render", (GCallback)request_render, NULL);
+	g_signal_connect(G_OBJECT(glWindow), "close", (GCallback)request_close, NULL);
 
 	gtk_widget_show_all(window);
 	
+	hide_cursor(darea);
+
 	return 0;
 }
 

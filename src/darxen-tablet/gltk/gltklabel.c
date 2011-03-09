@@ -140,6 +140,7 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, FALSE);
+	g_assert(font);
 
 	size->height = 20;
 	size->width = 0;
@@ -148,19 +149,24 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 	gchar** pLines = lines;
 	while (*pLines)
 	{
-		float bbox[6];
-		ftglGetFontBBox(font->font, *pLines, -1, bbox);
-		float width = bbox[3] - bbox[0];
-		float height = bbox[4] - bbox[1];
+		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, *pLines);
+		// float bbox[6];
+		// ftglGetFontBBox(font->font, *pLines, -1, bbox);
+		// float width = bbox[3] - bbox[0];
+		// float height = bbox[4] - bbox[1];
 
-		size->height += height + 5;
-		size->width = MAX(size->width, width);
+		//printf("Request line size: %f %f\n", bounds.width, bounds.height);
+
+		size->height += bounds.height + 5;
+		size->width = MAX(size->width, bounds.width);
 
 		pLines++;
 	}
 	g_strfreev(lines);
 
 	size->width += 20;
+
+	// g_message("Request: %i %i", size->width, size->height);
 
 	GLTK_WIDGET_CLASS(gltk_label_parent_class)->size_request(widget, size);
 }
@@ -171,6 +177,7 @@ gltk_label_render(GltkWidget* label)
 	USING_PRIVATE(label);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(label));
+	// g_message("Allocation: %i %i %i %i", allocation.x, allocation.y, allocation.width, allocation.height);
 
 	if (priv->drawBorder)
 	{

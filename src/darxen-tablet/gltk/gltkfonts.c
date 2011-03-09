@@ -74,6 +74,29 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 	return font;
 }
 
+GltkGLFontBounds
+gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
+{
+	GltkGLFontBounds res;
+	// float width = ftglGetFontAdvance(font->font, txt);
+	// float height = ftglGetFontLineHeight(font->font);
+
+	float bbox[6];
+	ftglGetFontBBox(font->font, txt, -1, bbox);
+	float width = bbox[3] - bbox[0];
+	float height = bbox[4] - bbox[1];
+	
+	if (width < 0.01 || height < 0.01)
+	{
+		width = strlen(txt) * 15;
+		height = 30;
+	}
+
+	res.width = width;
+	res.height = height;
+	return res;
+}
+
 
 //void
 //gltk_fonts_test_string			(const char* message)

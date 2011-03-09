@@ -28,7 +28,7 @@ libdarxen_la_SOURCES = libdarxen.h \
 	darxenrenderer.c darxenrenderer.h \
 	libdarxenCommon.h
 libdarxen_la_LDFLAGS = -g -version-info 1:1:0
-libdarxen_la_CFLAGS = $(glib_CFLAGS) $(pango_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(gtkglext_CFLAGS) $(json_CFLAGS)
+libdarxen_la_CFLAGS = -g -Wall -O0 $(glib_CFLAGS) $(pango_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(gtkglext_CFLAGS) $(json_CFLAGS)
 libdarxen_la_LIBADD = $(glib_LIBS) $(pango_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(gtkglext_LIBS) $(json_LIBS)
 
 #../shared/libdarxenshared.la

@@ -55,8 +55,10 @@ struct _RenderData
 static void darxen_radar_viewer_dispose(GObject* gobject);
 static void darxen_radar_viewer_finalize(GObject* gobject);
 
+static void		darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 static gboolean	darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event);
+static gboolean darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPinch* event);
 static void		darxen_radar_viewer_render(GltkWidget* widget);
 
 static void
@@ -70,8 +72,10 @@ darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 	gobject_class->dispose = darxen_radar_viewer_dispose;
 	gobject_class->finalize = darxen_radar_viewer_finalize;
 
+	gltkwidget_class->size_allocate = darxen_radar_viewer_size_allocate;
 	gltkwidget_class->touch_event = darxen_radar_viewer_touch_event;
 	gltkwidget_class->drag_event = darxen_radar_viewer_drag_event;
+	gltkwidget_class->pinch_event = darxen_radar_viewer_pinch_event;
 	gltkwidget_class->render = darxen_radar_viewer_render;
 }
 
@@ -125,7 +129,8 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 	priv->site = g_strdup(site);
 	priv->viewInfo = viewInfo;
 
-	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode);
+	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode, priv->viewInfo->shapefiles);
+	priv->renderer->scale = 0.02;
 
 	DarxenRestfulClient* client = darxen_config_get_client();
 	switch (viewInfo->sourceType)
@@ -212,6 +217,16 @@ darxen_radar_viewer_error_quark()
  * Private Functions *
  *********************/
 
+static void
+darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
+{
+	USING_PRIVATE(widget);
+	
+	darxen_renderer_set_size(priv->renderer, allocation->width, allocation->height);
+
+	GLTK_WIDGET_CLASS(darxen_radar_viewer_parent_class)->size_allocate(widget, allocation);
+}
+
 static gboolean
 darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 {
@@ -238,8 +253,45 @@ darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event)
 	if (event->longTouched)
 		return FALSE;
 
-	priv->renderer->offset.x += event->dx;
-	priv->renderer->offset.y += event->dy;
+	//1. Convert screen coordinates to renderer coordinates (determined by current aspect ratio)
+
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	float scaleFactor = MIN(allocation.width, allocation.height) / 2.0f;
+
+	darxen_renderer_translate(priv->renderer, event->dx / scaleFactor, -event->dy / scaleFactor);
+
+	gltk_widget_invalidate(widget);
+	
+	return TRUE;
+}
+
+static gboolean
+darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPinch* event)
+{
+	USING_PRIVATE(widget);
+
+	//TODO: this method works, but it assumes the center of the event is unchanging, which is not always true
+
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	//g_message("Pinch (%i %i) %f - %f", (int)event->center.x, (int)event->center.y, event->radius, event->dradius);
+	
+	float scaleFactor = MIN(allocation.width, allocation.height) / 2.0f;
+
+	int centerX = allocation.width / 2;
+	int centerY = allocation.height / 2;
+	
+	//1. Translate to center of zoom
+	int dCenterX = event->center.x - centerX;
+	int dCenterY = event->center.y - centerY;
+	darxen_renderer_translate(priv->renderer, -dCenterX / scaleFactor, dCenterY / scaleFactor);
+	
+	//2. Scale
+	float oldRadius = event->radius - event->dradius;
+	float factor = event->radius / oldRadius;
+	darxen_renderer_scale(priv->renderer, factor);
+
+	//3. Translate back to old center
+	darxen_renderer_translate(priv->renderer, dCenterX / scaleFactor, -dCenterY / scaleFactor);
 
 	gltk_widget_invalidate(widget);
 	
@@ -254,14 +306,42 @@ darxen_radar_viewer_render(GltkWidget* widget)
 	if (!priv->data)
 		return;
 
-	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
+	GltkSize size = gltk_window_get_size(widget->window);
+
+	//setup our rendering window how we like it
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glViewport(allocation.x, size.height - allocation.height - allocation.y, allocation.width, allocation.height);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	if (allocation.height > allocation.width)
+	{
+		double aspect = (double)allocation.height / allocation.width;
+		glOrtho(-1, 1, -aspect, aspect, -1, 1);
+	}
+	else
+	{
+		double aspect = (double)allocation.width / allocation.height;
+		glOrtho(-aspect, aspect, -1, 1, -1, 1);
+	}
+	glMatrixMode(GL_MODELVIEW);
 
 	glPushMatrix();
 	{
-		glTranslatef(allocation.width / 2, allocation.height / 2, 0.0f);
+		glLoadIdentity();
+		//glTranslatef(allocation.width / 2, allocation.height / 2, 0.0f);
+		//glScalef(1.0f, -1.0f, 1.0f);
 		darxen_renderer_render(priv->renderer);
 	}
 	glPopMatrix();
+
+	//undo our changes to the state
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 

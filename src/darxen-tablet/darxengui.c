@@ -46,6 +46,18 @@ gesture_callback(	GtkWidget* widget,
 {
 	if (time_type == GRIP_TIME_START)
 	{
+	//GltkEvent* e = gltk_event_new(GLTK_TOUCH);
+
+	//e->touch.id = -1;
+	//e->touch.touchType = TOUCH_BEGIN;
+	//e->touch.fingers = 1;
+	//e->touch.positions = g_new(GltkTouchPosition, 1);
+	//e->touch.positions->x = (int)event->x;
+	//e->touch.positions->y = (int)event->y;
+
+	//gltk_window_send_event(glWindow, e);
+
+	//gltk_event_free(e);
 		switch (event->type)
 		{
 			case GRIP_GESTURE_DRAG:
@@ -64,10 +76,50 @@ gesture_callback(	GtkWidget* widget,
 	}
 	else if (time_type == GRIP_TIME_END)
 	{
-		g_message("Gesture ended");
+		switch (event->type)
+		{
+			case GRIP_GESTURE_DRAG:
+				g_message("Gesture ended: Drag");
+			break;
+			case GRIP_GESTURE_PINCH:
+				g_message("Gesture ended: Pinch");
+			break;
+			case GRIP_GESTURE_ROTATE:
+				g_message("Gesture ended: Rotate");
+			break;
+			case GRIP_GESTURE_TAP:
+				g_message("Gesture ended: Tap");
+			break;
+		}
 	}
 	else // (time_type == GRIP_TIME_UPDATE)
 	{
+		switch (event->type)
+		{
+			case GRIP_GESTURE_DRAG:
+				g_message("Gesture move: Drag");
+			break;
+			case GRIP_GESTURE_PINCH:
+			{
+				g_message("Gesture move: Pinch");
+				GltkEvent* newEvent = gltk_event_new(GLTK_PINCH);
+				GripEventGesturePinch* e = (GripEventGesturePinch*)event;
+
+				newEvent->pinch.dradius = e->radius_delta;
+				newEvent->pinch.radius = e->radius;
+				newEvent->pinch.center.x = e->focus_x;
+				newEvent->pinch.center.y = e->focus_y;
+
+				gltk_window_send_event(glWindow, newEvent);
+				gltk_event_free(newEvent);
+			} break;
+			case GRIP_GESTURE_ROTATE:
+				g_message("Gesture move: Rotate");
+			break;
+			case GRIP_GESTURE_TAP:
+				g_message("Gesture move: Tap");
+			break;
+		}
 	}
 }
 
@@ -311,14 +363,14 @@ int initialize_gui(int* argc, char** argv[])
 	gtk_container_add(GTK_CONTAINER(window), darea);
 	gtk_widget_add_events(darea, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
 
-	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_PINCH,
-	//									 2, gesture_callback, NULL, NULL);
-	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_ROTATE,
-	//									 2, gesture_callback, NULL, NULL);
-	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_DRAG,
-	//									 2, gesture_callback, NULL, NULL);
-	//grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_TAP,
-	//									 2, gesture_callback, NULL, NULL);
+	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_PINCH,
+										 2, gesture_callback, NULL, NULL);
+	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_ROTATE,
+										 2, gesture_callback, NULL, NULL);
+	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_DRAG,
+										 2, gesture_callback, NULL, NULL);
+	grip_gesture_manager_register_window(manager, darea, GRIP_GESTURE_TAP,
+										 2, gesture_callback, NULL, NULL);
 
 	g_signal_connect(darea, "button-press-event", (GCallback)button_press_event, NULL);
 	g_signal_connect(darea, "button-release-event", (GCallback)button_release_event, NULL);

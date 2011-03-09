@@ -195,15 +195,13 @@ gltk_box_render(GltkWidget* widget)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 	
-		glPushMatrix();
-		{
-			GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
-			
-			glTranslated(allocation.x, allocation.y, 0);
+		GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+		
+		glTranslated(allocation.x, allocation.y, 0);
 
-			gltk_widget_render(child->widget);
-		}
-		glPopMatrix();		
+		gltk_widget_render(child->widget);
+
+		glTranslated(-allocation.x, -allocation.y, 0);
 	
 		pChildren = pChildren->next;
 	}
@@ -220,11 +218,30 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
+		case GLTK_PINCH:
 		{
 			GltkEvent* childEvent = gltk_event_clone(event);
-			GltkEventTouch eventTouch = childEvent->touch;
-			eventTouch.positions->x -= allocation.x;
-			eventTouch.positions->y -= allocation.y;
+
+			int x;
+			int y;
+
+			switch (event->type)
+			{
+				case GLTK_TOUCH:
+					childEvent->touch.positions->x -= allocation.x;
+					childEvent->touch.positions->y -= allocation.y;
+					x = childEvent->touch.positions->x;
+					y = childEvent->touch.positions->y;
+					break;
+				case GLTK_PINCH:
+					childEvent->pinch.center.x -= allocation.x;
+					childEvent->pinch.center.y -= allocation.y;
+					x = childEvent->pinch.center.x;
+					y = childEvent->pinch.center.y;
+					break;
+				default:
+					g_assert_not_reached();
+			}
 
 			GList* pChildren = box->children;
 			while (pChildren && !returnValue)
@@ -232,9 +249,6 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 				GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 
 				GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
-
-				int x = eventTouch.positions->x;
-				int y = eventTouch.positions->y;
 
 				if (childAllocation.x < x && childAllocation.x + childAllocation.width > x &&
 					childAllocation.y < y && childAllocation.y + childAllocation.height > y)
