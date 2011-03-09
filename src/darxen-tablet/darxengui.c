@@ -105,10 +105,11 @@ gesture_callback(	GtkWidget* widget,
 				GltkEvent* newEvent = gltk_event_new(GLTK_PINCH);
 				GripEventGesturePinch* e = (GripEventGesturePinch*)event;
 
-				//FIXME: These numbers assume running Unity and that the window is maximized.  
-				//Essentially, we need to convert global coordinates to local window coordinates.
-				int offsetX = 58;
-				int offsetY = 24;
+				//Point information from multitouch events are in global coordinates.  Find
+				//our window's global offset so we can convert.
+				int offsetX;
+				int offsetY;
+				gdk_window_get_origin(darea->window, &offsetX, &offsetY);
 
 				newEvent->pinch.dradius = e->radius_delta;
 				newEvent->pinch.radius = e->radius;
