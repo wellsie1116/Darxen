@@ -352,13 +352,13 @@ darxen_radar_viewer_render(GltkWidget* widget)
 		glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
 		//save the rendered image for later
-		//glWindowPos2i(allocation.x, size.height - allocation.height - allocation.y);
 		glReadBuffer(GL_BACK);
 		if (priv->buffer)
 			glReadPixels(offsetX, offsetY, allocation.width-2, allocation.height-2, GL_RGB, GL_UNSIGNED_BYTE, priv->buffer);
 	}
 	else
 	{
+		//TODO: use texture to render and redraw instead
 		//GLint viewport[4];
 		//glGetIntegerv(GL_VIEWPORT, viewport);
 		//glViewport(allocation.x, size.height - allocation.height - allocation.y, allocation.width, allocation.height);
