@@ -40,6 +40,9 @@ typedef struct _GltkButtonClass		GltkButtonClass;
 struct _GltkButton
 {
 	GltkWidget parent;
+	
+	gchar* text;
+	gboolean isDown;
 };
 
 struct _GltkButtonClass

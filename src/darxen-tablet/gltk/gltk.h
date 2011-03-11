@@ -34,6 +34,7 @@
 #include <gltk/gltklist.h>
 #include <gltk/gltklabel.h>
 #include <gltk/gltkbutton.h>
+#include <gltk/gltkslidebutton.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>

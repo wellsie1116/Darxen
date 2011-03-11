@@ -39,9 +39,7 @@ enum
 typedef struct _GltkButtonPrivate		GltkButtonPrivate;
 struct _GltkButtonPrivate
 {
-	gchar* text;
-	gboolean isDown;
-
+	int dummy;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -74,8 +72,8 @@ gltk_button_init(GltkButton* self)
 {
 	USING_PRIVATE(self);
 
-	priv->text = NULL;
-	priv->isDown = FALSE;
+	self->text = NULL;
+	self->isDown = FALSE;
 }
 
 static void
@@ -90,7 +88,7 @@ gltk_button_finalize(GObject* gobject)
 	GltkButton* self = GLTK_BUTTON(gobject);
 	USING_PRIVATE(self);
 
-	g_free(priv->text);
+	g_free(self->text);
 
 	G_OBJECT_CLASS(gltk_button_parent_class)->finalize(gobject);
 }
@@ -103,7 +101,7 @@ gltk_button_new(const gchar* text)
 
 	USING_PRIVATE(self);
 
-	priv->text = g_strdup(text);
+	self->text = g_strdup(text);
 
 	return (GltkWidget*)gobject;
 }
@@ -113,7 +111,7 @@ gltk_button_get_text(GltkButton* button)
 {
 	USING_PRIVATE(button);
 	
-	return priv->text;
+	return button->text;
 }
 
 GQuark
@@ -133,7 +131,7 @@ gltk_button_size_request(GltkWidget* widget, GltkSize* size)
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, FALSE);
 
 	float bbox[6];
-	ftglGetFontBBox(font->font, priv->text, -1, bbox);
+	ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
 	size->height = bbox[4] - bbox[1] + 30;
 	size->width = bbox[3] - bbox[0] + 40;
 
@@ -159,7 +157,7 @@ gltk_button_render(GltkWidget* widget)
 		float* bright = colorBright;
 		float* dark = colorDark;
 
-		if (priv->isDown)
+		if (GLTK_BUTTON(widget)->isDown)
 		{
 			bright = colorHighlightBright;
 			dark = colorHighlightDark;
@@ -179,7 +177,7 @@ gltk_button_render(GltkWidget* widget)
 		glColor3f(0.0f, 0.0f, 0.0f);
 
 		float bbox[6];
-		ftglGetFontBBox(font->font, priv->text, -1, bbox);
+		ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
 		float height = bbox[4] - bbox[1];
 		float width = bbox[3] - bbox[0];
 
@@ -191,7 +189,7 @@ gltk_button_render(GltkWidget* widget)
 		glTranslatef(x, y, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
-		ftglRenderFont(font->font, priv->text, FTGL_RENDER_ALL);
+		ftglRenderFont(font->font, GLTK_BUTTON(widget)->text, FTGL_RENDER_ALL);
 	}
 	glPopMatrix();
 }
@@ -203,12 +201,12 @@ gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 
 	if (touch->touchType == TOUCH_BEGIN)
 	{
-		priv->isDown = TRUE;
+		GLTK_BUTTON(widget)->isDown = TRUE;
 		gltk_window_set_widget_pressed(widget->window, widget);
 	}
 	else if (touch->touchType == TOUCH_END)
 	{
-		priv->isDown = FALSE;
+		GLTK_BUTTON(widget)->isDown = FALSE;
 		gltk_window_set_widget_unpressed(widget->window, widget);
 	}
 	else

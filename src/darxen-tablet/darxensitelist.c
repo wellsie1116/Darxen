@@ -199,7 +199,7 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	View* viewInfo = g_new(View, 1);
 	viewInfo->site = siteInfo;
 	viewInfo->name = g_strdup(view);
-	viewInfo->button = gltk_button_new(view);
+	viewInfo->button = gltk_slide_button_new(view);
 	g_object_ref(G_OBJECT(viewInfo->button));
 	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
 	
