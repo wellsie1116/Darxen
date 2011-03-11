@@ -49,6 +49,8 @@ struct _GltkWindowPrivate
 	int width;
 	int height;
 
+	gboolean rendered;
+
 	GltkWidget* root;
 
 	GltkTouchPosition pressedPosition;
@@ -99,6 +101,7 @@ gltk_window_init(GltkWindow* self)
 
 	priv->width = -1;
 	priv->height = -1;
+	priv->rendered = FALSE;
 	priv->root = NULL;
 	priv->longPressPending = 0;
 	priv->pressed = NULL;
@@ -206,6 +209,11 @@ gltk_window_render(GltkWindow* window)
 			glPopMatrix();
 		}
 		gluDeleteQuadric(quadric);
+	}
+	if (!priv->rendered)
+	{
+		priv->rendered = TRUE;
+		gltk_window_layout(window);
 	}
 }
 
