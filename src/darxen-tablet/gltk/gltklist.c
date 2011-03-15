@@ -45,6 +45,8 @@ struct _GltkListPrivate
 	GList* items; //GltkListItem
 
 	GltkListItem* drag;
+
+	guint renderOverlayId;
 };
 
 struct _GltkListItemPrivate
@@ -90,6 +92,8 @@ gltk_list_init(GltkList* self)
 
 	priv->items = NULL;
 	priv->drag = NULL;
+
+	priv->renderOverlayId = 0;
 }
 
 static void
@@ -186,29 +190,9 @@ gltk_list_error_quark()
  *********************/
 
 static void
-gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen)
+gltk_list_render_overlay(GltkScreen* screen, GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
-
-	GList* pItems = priv->items;
-	while (pItems)
-	{
-		GltkListItem* item = (GltkListItem*)pItems->data;
-	
-		gltk_widget_set_screen(item->widget, screen);
-	
-		pItems = pItems->next;
-	}
-
-	GLTK_WIDGET_CLASS(gltk_list_parent_class)->set_screen(widget, screen);
-}
-
-static void
-gltk_list_render(GltkWidget* widget)
-{
-	USING_PRIVATE(widget);
-
-	GLTK_WIDGET_CLASS(gltk_list_parent_class)->render(widget);
 
 	if (priv->drag)
 	{
@@ -238,7 +222,7 @@ gltk_list_render(GltkWidget* widget)
 			//glTranslatef(myAllocation.x, myAllocation.y, 0.0f);
 
 			//overlay a rectangle on top of the widget in the list
-			GltkAllocation allocation = gltk_widget_get_allocation(child->widget);
+			GltkAllocation allocation = gltk_widget_get_global_allocation(child->widget);
 			glColor4fv(colorHighlightDark);
 			glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
 
@@ -262,6 +246,33 @@ gltk_list_render(GltkWidget* widget)
 		}
 		glPopMatrix();
 	}
+}
+
+static void
+gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen)
+{
+	USING_PRIVATE(widget);
+     
+	//setup/teardown hook for render-overlay
+	if (!screen && priv->renderOverlayId)
+	{
+		g_signal_handler_disconnect(widget->screen, priv->renderOverlayId);
+		priv->renderOverlayId = 0;
+	}
+	else if (screen)
+	{
+		priv->renderOverlayId = g_signal_connect(screen, "render-overlay", (GCallback)gltk_list_render_overlay, widget);   
+	}
+
+	GLTK_WIDGET_CLASS(gltk_list_parent_class)->set_screen(widget, screen);
+}
+
+static void
+gltk_list_render(GltkWidget* widget)
+{
+	//USING_PRIVATE(widget);
+
+	GLTK_WIDGET_CLASS(gltk_list_parent_class)->render(widget);
 }
 
 static gboolean

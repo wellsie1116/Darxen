@@ -133,7 +133,8 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 	priv->offset.x = 0;
 	priv->offset.y = 0;
 	gltk_widget_set_parent(widget, GLTK_WIDGET(scrollable));
-	gltk_widget_set_screen(widget, GLTK_WIDGET(scrollable)->screen);
+	if (GLTK_WIDGET(scrollable)->screen)
+		gltk_widget_set_screen(widget, GLTK_WIDGET(scrollable)->screen);
 }
 
 void
