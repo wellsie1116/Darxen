@@ -21,6 +21,7 @@
 #include "gltkbutton.h"
 
 #include "gltkfonts.h"
+#include "gltkscreen.h"
 
 #include <string.h>
 
@@ -202,12 +203,12 @@ gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	if (touch->touchType == TOUCH_BEGIN)
 	{
 		GLTK_BUTTON(widget)->isDown = TRUE;
-		gltk_window_set_widget_pressed(widget->window, widget);
+		gltk_screen_set_widget_pressed(widget->screen, widget);
 	}
 	else if (touch->touchType == TOUCH_END)
 	{
 		GLTK_BUTTON(widget)->isDown = FALSE;
-		gltk_window_set_widget_unpressed(widget->window, widget);
+		gltk_screen_set_widget_unpressed(widget->screen, widget);
 	}
 	else
 	{

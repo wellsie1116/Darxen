@@ -25,8 +25,6 @@
 
 #include "gltkevents.h"
 
-#include "gltkwindow.h"
-
 G_BEGIN_DECLS
 
 struct _GltkSize
@@ -57,13 +55,17 @@ typedef struct
 typedef struct _GltkWidget			GltkWidget;
 typedef struct _GltkSize			GltkSize;
 #endif
+#ifndef GLTK_SCREEN_DEF
+#define GLTK_SCREEN_DEF
+typedef struct _GltkScreen			GltkScreen;
+#endif
 typedef struct _GltkWidgetClass		GltkWidgetClass;
 
 struct _GltkWidget
 {
 	GInitiallyUnowned parent;
 
-	GltkWindow* window;
+	GltkScreen* screen;
 
 	GltkWidget* parentWidget;
 
@@ -100,8 +102,8 @@ struct _GltkWidgetClass
 										GltkEventClick* event);
 
 	/* virtual funcs */
-	void (*set_window)				(	GltkWidget* widget,
-										GltkWindow* window);
+	void (*set_screen)				(	GltkWidget* widget,
+										GltkScreen* screen);
 
 	void (*render)					(	GltkWidget* widget);
 };
@@ -118,7 +120,7 @@ GltkWidget*		gltk_widget_get_parent				(GltkWidget* widget);
 void			gltk_widget_set_parent				(GltkWidget* widget, GltkWidget* parent);
 void			gltk_widget_unparent				(GltkWidget* widget);
 
-void			gltk_widget_set_window				(GltkWidget* widget, GltkWindow* window);
+void			gltk_widget_set_screen				(GltkWidget* widget, GltkScreen* screen);
 
 void			gltk_widget_set_visible				(GltkWidget* widget, gboolean visible);
 gboolean		gltk_widget_get_visible				(GltkWidget* widget);

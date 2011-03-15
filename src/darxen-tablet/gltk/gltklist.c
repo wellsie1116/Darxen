@@ -23,6 +23,7 @@
 #include "gltkvbox.h"
 #include "gltkbin.h"
 #include "gltklabel.h"
+#include "gltkscreen.h"
 
 #include <stdlib.h>
 #include <GL/gl.h>
@@ -60,7 +61,7 @@ struct _GltkListItemPrivate
 static void gltk_list_dispose(GObject* gobject);
 static void gltk_list_finalize(GObject* gobject);
 
-static void gltk_list_set_window(GltkWidget* widget, GltkWindow* window);
+static void gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_list_render(GltkWidget* widget);
 
 static gboolean gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item);
@@ -78,7 +79,7 @@ gltk_list_class_init(GltkListClass* klass)
 	gobject_class->dispose = gltk_list_dispose;
 	gobject_class->finalize = gltk_list_finalize;
 
-	gltkwidget_class->set_window = gltk_list_set_window;
+	gltkwidget_class->set_screen = gltk_list_set_screen;
 	gltkwidget_class->render = gltk_list_render;
 }
 
@@ -185,7 +186,7 @@ gltk_list_error_quark()
  *********************/
 
 static void
-gltk_list_set_window(GltkWidget* widget, GltkWindow* window)
+gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen)
 {
 	USING_PRIVATE(widget);
 
@@ -194,12 +195,12 @@ gltk_list_set_window(GltkWidget* widget, GltkWindow* window)
 	{
 		GltkListItem* item = (GltkListItem*)pItems->data;
 	
-		gltk_widget_set_window(item->widget, window);
+		gltk_widget_set_screen(item->widget, screen);
 	
 		pItems = pItems->next;
 	}
 
-	GLTK_WIDGET_CLASS(gltk_list_parent_class)->set_window(widget, window);
+	GLTK_WIDGET_CLASS(gltk_list_parent_class)->set_screen(widget, screen);
 }
 
 static void
@@ -271,14 +272,14 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 	switch (event->touchType)
 	{
 		case TOUCH_BEGIN:
-			gltk_window_set_widget_pressed(widget->window, widget);
+			gltk_screen_set_widget_pressed(widget->screen, widget);
 			break;
 		case TOUCH_END:
-			gltk_window_set_widget_unpressed(widget->window, widget);
+			gltk_screen_set_widget_unpressed(widget->screen, widget);
 			if (priv->drag && priv->drag == item)
 			{
 				priv->drag = NULL;
-				gltk_window_invalidate(widget->window);
+				gltk_screen_invalidate(widget->screen);
 			}
 			break;
 		default:
@@ -297,7 +298,7 @@ gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkLi
 	item->priv->offset.x = 0;
 	item->priv->offset.y = 0;
 
-	gltk_window_invalidate(widget->window);
+	gltk_screen_invalidate(widget->screen);
 
 	return TRUE;
 }
@@ -375,7 +376,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			GLTK_BOX(item->list)->children = move_node_forward(GLTK_BOX(item->list)->children, pChildren);
 			priv->items = move_node_forward(priv->items, pItems);
 
-			gltk_window_layout(widget->window);
+			gltk_screen_layout(widget->screen);
 		}
 	}
 	else if (item->priv->offset.y < -allocation.height)
@@ -387,7 +388,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			GLTK_BOX(item->list)->children = move_node_back(GLTK_BOX(item->list)->children, pChildren);
 			priv->items = move_node_back(priv->items, pItems);
 
-			gltk_window_layout(widget->window);
+			gltk_screen_layout(widget->screen);
 		}
 	}
 

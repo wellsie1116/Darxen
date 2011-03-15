@@ -222,7 +222,7 @@ expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 	else
 		glFlush ();
 	gdk_gl_drawable_gl_end(gldrawable);
-
+	
 	return TRUE;
 }
 
@@ -319,14 +319,10 @@ create_sidebar(GltkWidget* siteList)
 	return vbox;
 }
 
-static GltkWindow*
-create_window()
+static GltkScreen*
+create_screen()
 {
-	GltkWindow* win;
-
-	win = gltk_window_new();
-	g_signal_connect(G_OBJECT(win), "request-render", (GCallback)request_render, NULL);
-
+	GltkScreen* screen = gltk_screen_new();
 	GltkWidget* hbox = gltk_hbox_new();
 
 	GltkWidget* siteList = darxen_site_list_new();
@@ -353,8 +349,23 @@ create_window()
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_sidebar(siteList), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), (GltkWidget*)panelManager, TRUE, TRUE);
-	
-	gltk_window_set_root(win, hbox);
+
+	gltk_screen_set_root(screen, hbox);
+
+	return screen;
+}
+
+static GltkWindow*
+create_window()
+{
+	GltkWindow* win;
+
+	win = gltk_window_new();
+	g_signal_connect(G_OBJECT(win), "request-render", (GCallback)request_render, NULL);
+
+	GltkScreen* screen = create_screen();
+
+	gltk_window_push_screen(win, screen);
 
 	return win;
 }

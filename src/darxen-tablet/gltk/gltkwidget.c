@@ -21,6 +21,9 @@
 #include "gltkwidget.h"
 #include "gltkmarshal.h"
 
+#include "gltkscreen.h"
+
+
 G_DEFINE_TYPE(GltkWidget, gltk_widget, G_TYPE_INITIALLY_UNOWNED)
 
 #define USING_PRIVATE(obj) GltkWidgetPrivate* priv = GLTK_WIDGET_GET_PRIVATE(obj)
@@ -56,7 +59,7 @@ static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
 
-static void	gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window);
+static void	gltk_widget_set_screen_default(GltkWidget* widget, GltkScreen* screen);
 static void gltk_widget_render_default(GltkWidget* widget);
 
 static void
@@ -158,7 +161,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->pinch_event = NULL;
 	klass->click_event = NULL;
 
-	klass->set_window = gltk_widget_set_window_default;
+	klass->set_screen = gltk_widget_set_screen_default;
 	klass->render = gltk_widget_render_default;
 }
 
@@ -170,7 +173,7 @@ gltk_widget_init(GltkWidget* self)
 
 	static GltkAllocation initialAllocation = {0, 0, -1, -1};
 
-	self->window = NULL;
+	self->screen = NULL;
 	self->parentWidget = NULL;
 
 	priv->allocation = initialAllocation;
@@ -181,12 +184,6 @@ static void
 gltk_widget_dispose(GObject* gobject)
 {
 	GltkWidget* self = GLTK_WIDGET(gobject);
-
-	if (self->window)
-	{
-		g_object_unref(G_OBJECT(self->window));
-		self->window = NULL;
-	}
 
 	if (self->parentWidget)
 	{
@@ -243,12 +240,12 @@ gltk_widget_unparent(GltkWidget* widget)
 
 
 void
-gltk_widget_set_window(GltkWidget* widget, GltkWindow* window)
+gltk_widget_set_screen(GltkWidget* widget, GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
-	g_return_if_fail(!window || GLTK_IS_WINDOW(window));
+	g_return_if_fail(!screen || GLTK_IS_SCREEN(screen));
 
-	GLTK_WIDGET_GET_CLASS(widget)->set_window(widget, window);
+	GLTK_WIDGET_GET_CLASS(widget)->set_screen(widget, screen);
 }
 
 void
@@ -315,8 +312,8 @@ gltk_widget_invalidate(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	if (widget->window)
-		gltk_window_invalidate(widget->window);
+	if (widget->screen)
+		gltk_screen_invalidate(widget->screen);
 }
 
 void
@@ -324,8 +321,8 @@ gltk_widget_layout(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	if (widget->window)
-		gltk_window_layout(widget->window);
+	if (widget->screen)
+		gltk_screen_layout(widget->screen);
 }
 
 void
@@ -414,14 +411,9 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 }
 
 static void
-gltk_widget_set_window_default(GltkWidget* widget, GltkWindow* window)
+gltk_widget_set_screen_default(GltkWidget* widget, GltkScreen* screen)
 {
-	if (widget->window)
-		g_object_unref(G_OBJECT(widget->window));
-
-	if (window)
-		g_object_ref(G_OBJECT(window));
-	widget->window = window;
+	widget->screen = screen;
 }
 
 static void

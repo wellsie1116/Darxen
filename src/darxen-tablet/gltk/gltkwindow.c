@@ -21,6 +21,7 @@
 #include "gltkwindow.h"
 
 #include "gltkwidget.h"
+#include "gltkscreen.h"
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -51,7 +52,7 @@ struct _GltkWindowPrivate
 
 	gboolean rendered;
 
-	GltkWidget* root;
+	GQueue* screens;
 
 	GltkTouchPosition pressedPosition;
 	guint longPressPending;
@@ -102,7 +103,7 @@ gltk_window_init(GltkWindow* self)
 	priv->width = -1;
 	priv->height = -1;
 	priv->rendered = FALSE;
-	priv->root = NULL;
+	priv->screens = NULL;
 	priv->longPressPending = 0;
 	priv->pressed = NULL;
 	priv->unpressed = NULL;
@@ -116,10 +117,17 @@ gltk_window_dispose(GObject* gobject)
 	GltkWindow* self = GLTK_WINDOW(gobject);
 	USING_PRIVATE(self);
 
-	if (priv->root)
+	if (priv->screens)
 	{
-		g_object_unref(priv->root);
-		priv->root = NULL;
+		GltkScreen* screen;
+		while ((screen = g_queue_pop_head(priv->screens)))
+		{
+			gltk_screen_set_window(screen, NULL);
+			gltk_widget_unparent(GLTK_WIDGET(screen));
+			g_object_unref(G_OBJECT(screen));
+		}
+		g_queue_free(priv->screens);
+		priv->screens = NULL;
 	}
 
 	G_OBJECT_CLASS(gltk_window_parent_class)->dispose(gobject);
@@ -135,6 +143,9 @@ GltkWindow*
 gltk_window_new()
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_WINDOW, NULL);
+	USING_PRIVATE(gobject);
+
+	priv->screens = g_queue_new();
 
 	return (GltkWindow*)gobject;
 }
@@ -168,16 +179,39 @@ gltk_window_get_size(GltkWindow* window)
 }
 
 void
+layout_screen(GltkScreen* screen, GltkWindow* window)
+{
+	USING_PRIVATE(window);
+
+	if (screen->maximized)
+	{
+		//fill the window
+		GltkAllocation allocation = {0, 0, priv->width, priv->height};
+		gltk_widget_size_allocate(GLTK_WIDGET(screen), allocation);
+	}
+	else
+	{
+		//center the screen in the window
+		GltkSize size;
+		gltk_widget_size_request(GLTK_WIDGET(screen), &size);
+
+		int dw = MAX(0, priv->width - size.width);
+		int dh = MAX(0, priv->height - size.height);
+		GltkAllocation allocation = {dw/2, dh/2, priv->width - dw, priv->height - dh};
+		gltk_widget_size_allocate(GLTK_WIDGET(screen), allocation);
+	}
+}
+
+void
 gltk_window_layout(GltkWindow* window)
 {
 	g_return_if_fail(GLTK_IS_WINDOW(window));
 
 	USING_PRIVATE(window);
 
-	if (priv->root)
+	if (priv->screens)
 	{
-		GltkAllocation allocation = {0, 0, priv->width, priv->height};
-		gltk_widget_size_allocate(priv->root, allocation);
+		g_queue_foreach(priv->screens, (GFunc)layout_screen, window);
 	}
 }
 
@@ -188,9 +222,17 @@ gltk_window_render(GltkWindow* window)
 
 	USING_PRIVATE(window);
 
-	g_return_if_fail(priv->root);
-	
-	gltk_widget_render(priv->root);
+	GList* pScreens = priv->screens->head;
+	while (pScreens)
+	{
+		GltkScreen* screen = (GltkScreen*)pScreens->data;
+
+		//TODO check if windows are obscured before rendering them
+		//How should transparency be handled?
+		gltk_widget_render(GLTK_WIDGET(screen));
+
+		pScreens = pScreens->next;
+	}
 
 	//render touch points
 	if (priv->touchCount)
@@ -224,7 +266,7 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 
 	USING_PRIVATE(window);
 
-	g_return_val_if_fail(priv->root, FALSE);
+	g_return_val_if_fail(g_queue_get_length(priv->screens), FALSE);
 
 	gboolean returnValue = FALSE;
 
@@ -318,7 +360,15 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 	//}
 	else
 	{
-		returnValue = gltk_widget_send_event(priv->root, event);
+		GList* pScreens = priv->screens->tail;
+		while (pScreens && !returnValue)
+		{
+			GltkScreen* screen = (GltkScreen*)pScreens->data;
+
+			returnValue = gltk_widget_send_event(GLTK_WIDGET(screen), event);
+
+			pScreens = pScreens->prev;
+		}
 	}
 
 	//check to spawn a click event
@@ -328,19 +378,53 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 	return returnValue;
 }
 
-
 void
-gltk_window_set_root(GltkWindow* window, GltkWidget* widget)
+gltk_window_push_screen(GltkWindow* window, GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_WINDOW(window));
-	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
 
 	USING_PRIVATE(window);
 
-	g_object_ref(G_OBJECT(widget));
+	g_object_ref(G_OBJECT(screen));
 
-	priv->root = widget;
-	gltk_widget_set_window(widget, window);
+	g_queue_push_tail(priv->screens, screen);
+
+	gltk_screen_set_window(screen, window);
+
+	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
+}
+
+void
+gltk_window_pop_screen(GltkWindow* window, GltkScreen* screen)
+{
+	g_return_if_fail(GLTK_IS_WINDOW(window));
+	g_return_if_fail(!screen || GLTK_IS_SCREEN(screen));
+
+	USING_PRIVATE(window);
+
+	if (!g_queue_get_length(priv->screens))
+	{
+		g_critical("Popping from an empty stack of screens");
+		return;
+	}
+
+	if (!screen)
+	{
+		g_queue_pop_tail(priv->screens);
+	}
+	else
+	{
+		if (!g_queue_find(priv->screens, screen))
+		{
+			g_critical("Screen not in stack of screens");
+			return;
+		}
+
+		g_queue_remove(priv->screens, screen);
+		gltk_screen_set_window(screen, NULL);
+		g_object_unref(G_OBJECT(screen));
+	}
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }

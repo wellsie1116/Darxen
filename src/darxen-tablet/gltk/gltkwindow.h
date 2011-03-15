@@ -24,6 +24,7 @@
 #include <glib-object.h>
 
 #include "gltkevents.h"
+#include "gltkwidget.h"
 
 G_BEGIN_DECLS
 
@@ -36,10 +37,9 @@ G_BEGIN_DECLS
 #define GLTK_IS_WINDOW_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_WINDOW))
 #define GLTK_WINDOW_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_WINDOW, GltkWindowClass))
 
-#ifndef GLTK_WIDGET_DEF
-#define GLTK_WIDGET_DEF
-typedef struct _GltkWidget			GltkWidget;
-typedef struct _GltkSize			GltkSize;
+#ifndef GLTK_SCREEN_DEF
+#define GLTK_SCREEN_DEF
+typedef struct _GltkScreen			GltkScreen;
 #endif
 typedef struct _GltkWindow			GltkWindow;
 typedef struct _GltkWindowClass		GltkWindowClass;
@@ -69,14 +69,14 @@ typedef enum
 GType			gltk_window_get_type				() G_GNUC_CONST;
 GltkWindow*		gltk_window_new						();
 
-/* Public functions here */
 void			gltk_window_set_size				(GltkWindow* window, int width, int height);
 GltkSize		gltk_window_get_size				(GltkWindow* window);
 void			gltk_window_layout					(GltkWindow* window);
 void			gltk_window_render					(GltkWindow* window);
 gboolean		gltk_window_send_event				(GltkWindow* window, GltkEvent* event);
 
-void			gltk_window_set_root				(GltkWindow* window, GltkWidget* widget);
+void			gltk_window_push_screen				(GltkWindow* window, GltkScreen* screen);
+void			gltk_window_pop_screen				(GltkWindow* window, GltkScreen* screen);
 void			gltk_window_close					(GltkWindow* window);
 
 void			gltk_window_invalidate				(GltkWindow* window);

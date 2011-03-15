@@ -19,6 +19,7 @@
  */
 
 #include "gltkbox.h"
+#include "gltkscreen.h"
 
 #include <GL/gl.h>
 
@@ -44,7 +45,7 @@ struct _GltkBoxPrivate
 static void gltk_box_dispose(GObject* gobject);
 static void gltk_box_finalize(GObject* gobject);
 
-static void gltk_box_set_window(GltkWidget* widget, GltkWindow* window);
+static void gltk_box_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_box_render(GltkWidget* widget);
 static gboolean gltk_box_event(GltkWidget* widget, GltkEvent* event);
 
@@ -59,7 +60,7 @@ gltk_box_class_init(GltkBoxClass* klass)
 	gobject_class->dispose = gltk_box_dispose;
 	gobject_class->finalize = gltk_box_finalize;
 
-	gltkwidget_class->set_window = gltk_box_set_window;
+	gltkwidget_class->set_screen = gltk_box_set_screen;
 	gltkwidget_class->render = gltk_box_render;
 	gltkwidget_class->event = gltk_box_event;
 }
@@ -126,7 +127,7 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 	box->children = g_list_append(box->children, child);
 
 	gltk_widget_set_parent(widget, GLTK_WIDGET(box));
-	gltk_widget_set_window(widget, GLTK_WIDGET(box)->window);
+	gltk_widget_set_screen(widget, GLTK_WIDGET(box)->screen);
 }
 
 void
@@ -168,7 +169,7 @@ gltk_box_error_quark()
  *********************/
 
 static void
-gltk_box_set_window(GltkWidget* widget, GltkWindow* window)
+gltk_box_set_screen(GltkWidget* widget, GltkScreen* screen)
 {
 	GltkBox* box = GLTK_BOX(widget);
 
@@ -177,12 +178,12 @@ gltk_box_set_window(GltkWidget* widget, GltkWindow* window)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 	
-		gltk_widget_set_window(child->widget, window);
+		gltk_widget_set_screen(child->widget, screen);
 	
 		pChildren = pChildren->next;
 	}
 
-	GLTK_WIDGET_CLASS(gltk_box_parent_class)->set_window(widget, window);
+	GLTK_WIDGET_CLASS(gltk_box_parent_class)->set_screen(widget, screen);
 }
 
 static void

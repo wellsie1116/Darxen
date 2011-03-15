@@ -239,10 +239,10 @@ darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	switch (touch->touchType)
 	{
 		case TOUCH_BEGIN:
-			gltk_window_set_widget_pressed(widget->window, widget);
+			gltk_screen_set_widget_pressed(widget->screen, widget);
 			break;
 		case TOUCH_END:
-			gltk_window_set_widget_unpressed(widget->window, widget);
+			gltk_screen_set_widget_unpressed(widget->screen, widget);
 			break;
 		default:
 			return FALSE;
@@ -313,7 +313,7 @@ darxen_radar_viewer_render(GltkWidget* widget)
 		return;
 
 	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
-	GltkSize size = gltk_window_get_size(widget->window);
+	GltkSize size = gltk_screen_get_window_size(widget->screen);
 
 	if (darxen_renderer_is_dirty(priv->renderer) || !priv->buffer)
 	{

@@ -20,6 +20,8 @@
 
 #include "gltkscrollable.h"
 
+#include "gltkscreen.h"
+
 #include <glib.h>
 #include <GL/gl.h>
 
@@ -52,7 +54,7 @@ static void gltk_scrollable_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean gltk_scrollable_event(GltkWidget* widget, GltkEvent* event);
 static void gltk_scrollable_render(GltkWidget* widget);
-static void gltk_scrollable_set_window(GltkWidget* widget, GltkWindow* window);
+static void gltk_scrollable_set_screen(GltkWidget* widget, GltkScreen* screen);
 static gboolean gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event);
 
 static void
@@ -70,7 +72,7 @@ gltk_scrollable_class_init(GltkScrollableClass* klass)
 	gltkwidget_class->size_allocate = gltk_scrollable_size_allocate;
 	gltkwidget_class->event = gltk_scrollable_event;
 	gltkwidget_class->render = gltk_scrollable_render;
-	gltkwidget_class->set_window = gltk_scrollable_set_window;
+	gltkwidget_class->set_screen = gltk_scrollable_set_screen;
 	gltkwidget_class->drag_event = gltk_scrollable_drag_event;
 }
 
@@ -131,7 +133,7 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 	priv->offset.x = 0;
 	priv->offset.y = 0;
 	gltk_widget_set_parent(widget, GLTK_WIDGET(scrollable));
-	gltk_widget_set_window(widget, GLTK_WIDGET(scrollable)->window);
+	gltk_widget_set_screen(widget, GLTK_WIDGET(scrollable)->screen);
 }
 
 void
@@ -230,13 +232,13 @@ gltk_scrollable_render(GltkWidget* widget)
 }
 
 static void
-gltk_scrollable_set_window(GltkWidget* widget, GltkWindow* window)
+gltk_scrollable_set_screen(GltkWidget* widget, GltkScreen* screen)
 {
 	USING_PRIVATE(widget);
 
-	gltk_widget_set_window(priv->widget, window);
+	gltk_widget_set_screen(priv->widget, screen);
 
-	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->set_window(widget, window);
+	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->set_screen(widget, screen);
 }
 
 static gboolean
@@ -257,7 +259,7 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 
 	gltk_widget_size_allocate(priv->widget, childAllocation);
 
-	gltk_window_invalidate(widget->window);
+	gltk_screen_invalidate(widget->screen);
 
 	return TRUE; //or FALSE if we cannot scroll at all?
 }
