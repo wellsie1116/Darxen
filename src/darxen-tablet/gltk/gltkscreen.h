@@ -56,6 +56,7 @@ struct _GltkScreenClass
 	void	(*render_overlay)	(	);
 
 	/* virtual funcs */
+	void	(*layout)			(GltkScreen* screen	);
 };
 
 typedef enum
@@ -71,6 +72,7 @@ void			gltk_screen_set_root	(GltkScreen* screen, GltkWidget* widget);
 
 GltkSize		gltk_screen_get_window_size			(GltkScreen* screen);
 
+void			gltk_screen_close_window			(GltkScreen* screen);
 void			gltk_screen_invalidate				(GltkScreen* screen);
 void			gltk_screen_layout					(GltkScreen* screen);
 gboolean		gltk_screen_set_widget_pressed		(GltkScreen* screen, GltkWidget* widget);

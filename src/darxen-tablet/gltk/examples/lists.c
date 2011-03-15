@@ -95,6 +95,7 @@ create_composite_list()
 GltkWindow*
 create_window()
 {
+	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
 	GltkWidget* hbox = gltk_hbox_new();
@@ -103,7 +104,8 @@ create_window()
 	gltk_box_append_widget(GLTK_BOX(hbox), create_button_list(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), create_composite_list(), TRUE, FALSE);
 
-	gltk_window_set_root(window, hbox);
+	gltk_screen_set_root(screen, hbox);
+	gltk_window_push_screen(window, screen);
 
 	return window;
 }

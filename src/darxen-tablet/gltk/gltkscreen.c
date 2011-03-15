@@ -20,6 +20,7 @@
 
 #include "gltkscreen.h"
 
+#include <GL/gl.h>
 #include <glib.h>
 
 G_DEFINE_TYPE(GltkScreen, gltk_screen, GLTK_TYPE_WIDGET)
@@ -46,6 +47,7 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void gltk_screen_dispose(GObject* gobject);
 static void gltk_screen_finalize(GObject* gobject);
 
+static void gltk_screen_real_layout(GltkScreen* screen);
 static void gltk_screen_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_screen_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean gltk_screen_event(GltkWidget* widget, GltkEvent* event);
@@ -76,6 +78,8 @@ gltk_screen_class_init(GltkScreenClass* klass)
 	gltkwidget_class->size_allocate = gltk_screen_size_allocate;
 	gltkwidget_class->event = gltk_screen_event;
 	gltkwidget_class->render = gltk_screen_render;
+
+	klass->layout = gltk_screen_real_layout;
 }
 
 static void
@@ -166,6 +170,16 @@ gltk_screen_get_window_size(GltkScreen* screen)
 }
 
 void
+gltk_screen_close_window(GltkScreen* screen)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->window);
+	
+	gltk_window_close(priv->window);
+}
+
+void
 gltk_screen_invalidate(GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
@@ -179,13 +193,8 @@ void
 gltk_screen_layout(GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
-	USING_PRIVATE(screen);
-	g_return_if_fail(priv->widget);
 
-	GltkAllocation myAllocation = gltk_widget_get_allocation(GLTK_WIDGET(screen));
-
-	GltkAllocation allocation = {0, 0, myAllocation.width, myAllocation.height};
-	gltk_widget_size_allocate(priv->widget, allocation);
+	GLTK_SCREEN_GET_CLASS(screen)->layout(screen);
 }
 
 gboolean
@@ -221,6 +230,19 @@ gltk_screen_error_quark()
 
 
 static void
+gltk_screen_real_layout(GltkScreen* screen)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->widget);
+
+	GltkAllocation myAllocation = gltk_widget_get_allocation(GLTK_WIDGET(screen));
+
+	GltkAllocation allocation = {0, 0, myAllocation.width, myAllocation.height};
+	gltk_widget_size_allocate(priv->widget, allocation);
+}
+
+static void
 gltk_screen_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
@@ -229,10 +251,13 @@ gltk_screen_size_request(GltkWidget* widget, GltkSize* size)
 	{
 		size->width = 0;
 		size->height = 0;
-		return;
 	}
-
-	gltk_widget_size_request(priv->widget, size);
+	else
+	{
+		gltk_widget_size_request(priv->widget, size);
+	}
+	
+	GLTK_WIDGET_CLASS(gltk_screen_parent_class)->size_request(widget, size);
 }
 
 static gboolean
@@ -269,7 +294,24 @@ gltk_screen_render(GltkWidget* widget)
 	if (!priv->widget)
 		return;
 
+	if (GLTK_SCREEN(widget)->maximized)
+	{
+		GltkAllocation allocation = gltk_widget_get_allocation(widget);
+		glColor4f(0.0f, 0.0f, 0.0f, 0.9f);
+		glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
+	}
+
 	gltk_widget_render(priv->widget);
 	
 	g_signal_emit(G_OBJECT(widget), signals[RENDER_OVERLAY], 0);
 }
+
+GltkWidget*
+gltk_screen_get_root(GltkScreen* screen)
+{
+	USING_PRIVATE(screen);
+
+	return priv->widget;
+}
+
+

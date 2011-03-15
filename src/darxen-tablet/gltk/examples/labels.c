@@ -43,6 +43,7 @@ create_hbox()
 GltkWindow*
 create_window()
 {
+	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
 	GltkWidget* vbox = gltk_vbox_new();
@@ -51,7 +52,8 @@ create_window()
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, TRUE);
 
-	gltk_window_set_root(window, vbox);
+	gltk_screen_set_root(screen, vbox);
+	gltk_window_push_screen(window, screen);
 
 	return window;
 }

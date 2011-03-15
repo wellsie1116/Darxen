@@ -365,7 +365,7 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 		{
 			GltkScreen* screen = (GltkScreen*)pScreens->data;
 
-			returnValue = gltk_widget_send_event(GLTK_WIDGET(screen), event);
+			returnValue = gltk_widget_send_event(GLTK_WIDGET(screen), event) || screen->maximized;
 
 			pScreens = pScreens->prev;
 		}
@@ -391,6 +391,7 @@ gltk_window_push_screen(GltkWindow* window, GltkScreen* screen)
 	g_queue_push_tail(priv->screens, screen);
 
 	gltk_screen_set_window(screen, window);
+	layout_screen(screen, window);
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }

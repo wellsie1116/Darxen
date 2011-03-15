@@ -28,6 +28,7 @@
 #include <gltk/gltkscrollable.h>
 #include <gltk/gltkwindow.h>
 #include <gltk/gltkscreen.h>
+#include <gltk/gltkminiscreen.h>
 #include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>

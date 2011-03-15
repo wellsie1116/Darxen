@@ -33,7 +33,7 @@ button_clicked(GltkWidget* widget, GltkEventClick* event, GltkWidget* label)
 static gboolean
 btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 {
-	gltk_window_close(widget->window);
+	gltk_screen_close_window(widget->screen);
 	return TRUE;
 }
 
@@ -66,13 +66,15 @@ create_vbox()
 GltkWindow*
 create_window()
 {
+	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
 	GltkWidget* hbox = gltk_hbox_new();
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_vbox(), FALSE, FALSE);
 
-	gltk_window_set_root(window, hbox);
+	gltk_screen_set_root(screen, hbox);
+	gltk_window_push_screen(window, screen);
 
 	return window;
 }

@@ -97,10 +97,22 @@ gesture_callback(	GtkWidget* widget,
 				GltkEvent* newEvent = gltk_event_new(GLTK_PINCH);
 				GripEventGesturePinch* e = (GripEventGesturePinch*)event;
 
+				int offsetX, offsetY;
+				gdk_window_get_origin(darea->window, &offsetX, &offsetY);
+
 				newEvent->pinch.dradius = e->radius_delta;
 				newEvent->pinch.radius = e->radius;
 				newEvent->pinch.center.x = e->focus_x;
 				newEvent->pinch.center.y = e->focus_y;
+
+				newEvent->pinch.fingers = e->fingers;
+				newEvent->pinch.positions = g_new(GltkTouchPosition, e->fingers);
+				int i;
+				for (i = 0; i < event->pinch.fingers; i++)
+				{
+					newEvent->pinch.positions[i].x = e->finger_x[i] - offsetX;
+					newEvent->pinch.positions[i].y = e->finger_y[i] - offsetY;
+				}
 
 				gltk_window_send_event(glWindow, newEvent);
 				gltk_event_free(newEvent);
