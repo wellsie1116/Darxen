@@ -75,7 +75,7 @@ gltk_window_class_init(GltkWindowClass* klass)
 	signals[REQUEST_RENDER] = 
 		g_signal_new(	"request-render",
 						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_FIRST,
+						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWindowClass, request_render),
 						NULL, NULL,
 						g_cclosure_marshal_VOID__VOID,
@@ -84,7 +84,7 @@ gltk_window_class_init(GltkWindowClass* klass)
 	signals[CLOSE] = 
 		g_signal_new(	"close",
 						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_FIRST,
+						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkWindowClass, close),
 						NULL, NULL,
 						g_cclosure_marshal_VOID__VOID,
