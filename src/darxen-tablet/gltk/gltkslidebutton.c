@@ -139,7 +139,7 @@ static void
 gltk_slide_button_size_request(GltkWidget* widget, GltkSize* size)
 {
 	GLTK_WIDGET_CLASS(gltk_slide_button_parent_class)->size_request(widget, size);
-	size->width += 50;
+	//size->width += 50;
 }
 
 static float colorBright[] = {0.87f, 0.87f, 0.87f};
@@ -292,6 +292,9 @@ static gboolean
 gltk_slide_button_drag_event(GltkWidget* widget, GltkEventDrag* event)
 {
 	USING_PRIVATE(widget);
+
+	if (event->longTouched)
+		return FALSE;
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 
