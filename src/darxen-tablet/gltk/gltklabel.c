@@ -113,7 +113,7 @@ gltk_label_set_text	(GltkLabel* label, const gchar* text)
 	if (priv->text)
 		g_free(priv->text);
 	priv->text = g_strdup(text);
-	//TODO: render
+	gltk_widget_invalidate(GLTK_WIDGET(label));
 }
 
 void
@@ -122,7 +122,7 @@ gltk_label_set_draw_border(GltkLabel* label, gboolean drawBorder)
 	g_return_if_fail(GLTK_IS_LABEL(label));
 	USING_PRIVATE(label);
 	priv->drawBorder = drawBorder;
-	//TODO: render
+	gltk_widget_invalidate(GLTK_WIDGET(label));
 }
 
 GQuark
