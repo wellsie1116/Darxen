@@ -1280,11 +1280,11 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 	}
 	else
 	{
-		int intRangeStart;
-		int intRangeStartColor;
-
 		glBegin(GL_QUADS);
 		{
+			int quads = 0;
+			//number to beat: 82800 quads
+			//current number: 13008 quads
 			for (i = 0; i < 16; i++)
 			{
 				/* set the current color */
@@ -1302,20 +1302,29 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 					CosX2 = (float)cos(DEG_TO_RAD(fltEnd));
 					SinY2 = (float)sin(DEG_TO_RAD(fltEnd));
 
-					intRangeStart = 0;
-					intRangeStartColor = 0;
+					int startRange = 0;
 					for (range = 0; range < objData->intNumRangeBins; range++)
 					{
-						if (objData->objRadials[az].chrColorCode[range] == i)
+						gboolean isInColor = objData->objRadials[az].chrColorCode[range] == i;
+						if (!startRange && isInColor)
 						{
-							glVertex2f(range * kmPerRangeBin * CosX1, range * kmPerRangeBin * SinY1);
-							glVertex2f((range + 1.0f) * kmPerRangeBin * CosX1, (range + 1.0f) * kmPerRangeBin * SinY1);
-							glVertex2f((range + 1.0f) * kmPerRangeBin * CosX2, (range + 1.0f) * kmPerRangeBin * SinY2);
-							glVertex2f(range * kmPerRangeBin * CosX2, range * kmPerRangeBin * SinY2);
+							startRange = range+1;
+						}
+
+						if ((startRange && !isInColor) || 
+								(startRange && (range == objData->intNumRangeBins-1) && range++))
+						{
+							glVertex2f((startRange - 1) * kmPerRangeBin * CosX1, (startRange - 1) * kmPerRangeBin * SinY1);
+							glVertex2f((range) * kmPerRangeBin * CosX1, (range) * kmPerRangeBin * SinY1);
+							glVertex2f((range) * kmPerRangeBin * CosX2, (range) * kmPerRangeBin * SinY2);
+							glVertex2f((startRange - 1) * kmPerRangeBin * CosX2, (startRange - 1) * kmPerRangeBin * SinY2);
+							quads++;
+							startRange = 0;
 						}
 					}
 				}
 			}
+			g_warning("Rendered %i quads\n", quads);
 		}
 		glEnd();
 	}
