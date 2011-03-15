@@ -1285,6 +1285,7 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 			int quads = 0;
 			//number to beat: 82800 quads
 			//current number: 13008 quads
+			//next number   :  8119 quads
 			for (i = 0; i < 16; i++)
 			{
 				/* set the current color */
@@ -1305,13 +1306,19 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 					int startRange = 0;
 					for (range = 0; range < objData->intNumRangeBins; range++)
 					{
-						gboolean isInColor = objData->objRadials[az].chrColorCode[range] == i;
+						char color = objData->objRadials[az].chrColorCode[range];
+						gboolean isInColor = color == i;
+
 						if (!startRange && isInColor)
 						{
 							startRange = range+1;
 						}
 
-						if ((startRange && !isInColor) || 
+						//it is okay to render a lighter intensity range bin in
+						//the place of a higher intensity range bin because it
+						//will be overwritten by the higher intensity bin later
+						//and reduces the number of quads we need to render
+						if ((startRange && color < i) || 
 								(startRange && (range == objData->intNumRangeBins-1) && range++))
 						{
 							glVertex2f((startRange - 1) * kmPerRangeBin * CosX1, (startRange - 1) * kmPerRangeBin * SinY1);
