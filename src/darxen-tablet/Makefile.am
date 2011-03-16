@@ -16,6 +16,7 @@ darxen_tablet_SOURCES = darxen-tablet.c darxen-tablet.h \
 						darxenmainview.c darxenmainview.h \
 						darxenradarviewer.c darxenradarviewer.h \
 						darxenview.c darxenview.h \
+						darxenviewconfig.c darxenviewconfig.h \
 						darxenpanelmanager.c darxenpanelmanager.h \
 						darxensitelist.c darxensitelist.h \
 						../libdarxen/libdarxen.la gltk/libgltk.la

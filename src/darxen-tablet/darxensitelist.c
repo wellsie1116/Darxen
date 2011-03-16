@@ -33,6 +33,7 @@ enum
 	//views reordered
 	//view deleted
 	VIEW_SELECTED,
+	VIEW_CONFIG,
 	LAST_SIGNAL
 };
 
@@ -77,6 +78,16 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, view_selected),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_POINTER);
+	
+	signals[VIEW_CONFIG] = 
+		g_signal_new(	"view-config",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(DarxenSiteListClass, view_config),
 						NULL, NULL,
 						g_cclosure_user_marshal_VOID__POINTER_POINTER,
 						G_TYPE_NONE, 2,
@@ -185,6 +196,13 @@ view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
 	return TRUE;
 }
 
+static gboolean
+view_slide(GltkButton* button, GltkEventSlide* event, View* viewInfo)
+{
+	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_CONFIG], 0, viewInfo->site->name, viewInfo->name);
+	return TRUE;
+}
+
 void
 darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* view)
 {
@@ -202,6 +220,7 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	viewInfo->button = gltk_slide_button_new(view);
 	g_object_ref(G_OBJECT(viewInfo->button));
 	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
+	g_signal_connect(viewInfo->button, "slide-event", (GCallback)view_slide, viewInfo);
 	
 	gltk_list_add_item(GLTK_LIST(siteInfo->views), viewInfo->button, viewInfo);
 }

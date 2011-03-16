@@ -22,6 +22,7 @@
 
 #include "darxenmainview.h"
 #include "darxenview.h"
+#include "darxenviewconfig.h"
 
 G_DEFINE_TYPE(DarxenPanelManager, darxen_panel_manager, GLTK_TYPE_BIN)
 
@@ -35,6 +36,7 @@ enum
 
 typedef struct _DarxenPanelManagerPrivate		DarxenPanelManagerPrivate;
 typedef struct _SiteViewPair					SiteViewPair;
+typedef struct _ViewPair						ViewPair;
 
 struct _DarxenPanelManagerPrivate
 {
@@ -48,6 +50,12 @@ struct _SiteViewPair
 	gchar* view;
 };
 
+struct _ViewPair
+{
+	DarxenView* view;
+	DarxenViewConfig* config;
+};
+
 //static guint signals[LAST_SIGNAL] = {0,};
 
 static void darxen_panel_manager_dispose(GObject* gobject);
@@ -57,7 +65,7 @@ static SiteViewPair*	site_view_pair_new		(const gchar* site, const gchar* view);
 static void				site_view_pair_free		(SiteViewPair* pair);
 static guint			site_view_pair_hash		(SiteViewPair* pair);
 static gboolean			site_view_pair_equal	(const SiteViewPair* o1, const SiteViewPair* o2);
-static void				view_free				(DarxenView* view);
+static void				view_pair_free			(ViewPair* view);
 
 static void
 darxen_panel_manager_class_init(DarxenPanelManagerClass* klass)
@@ -85,7 +93,11 @@ darxen_panel_manager_dispose(GObject* gobject)
 	DarxenPanelManager* self = DARXEN_PANEL_MANAGER(gobject);
 	USING_PRIVATE(self);
 
-	//free and release references
+	if (priv->viewMap)
+	{
+		g_hash_table_destroy(priv->viewMap);
+		priv->viewMap = NULL;
+	}
 
 	G_OBJECT_CLASS(darxen_panel_manager_parent_class)->dispose(gobject);
 }
@@ -93,11 +105,6 @@ darxen_panel_manager_dispose(GObject* gobject)
 static void
 darxen_panel_manager_finalize(GObject* gobject)
 {
-	DarxenPanelManager* self = DARXEN_PANEL_MANAGER(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(darxen_panel_manager_parent_class)->finalize(gobject);
 }
 
@@ -109,7 +116,7 @@ darxen_panel_manager_new()
 
 	USING_PRIVATE(self);
 
-	priv->viewMap = g_hash_table_new_full((GHashFunc)site_view_pair_hash, (GEqualFunc)site_view_pair_equal, (GDestroyNotify)site_view_pair_free, (GDestroyNotify)view_free);
+	priv->viewMap = g_hash_table_new_full((GHashFunc)site_view_pair_hash, (GEqualFunc)site_view_pair_equal, (GDestroyNotify)site_view_pair_free, (GDestroyNotify)view_pair_free);
 
 	darxen_panel_manager_view_main(self);
 
@@ -124,10 +131,14 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 	g_return_if_fail(viewInfo);
 	USING_PRIVATE(manager);
 
-	DarxenView* view = (DarxenView*)darxen_view_new(site, viewInfo);
-	g_object_ref(G_OBJECT(view));
+	ViewPair* pair = g_new(ViewPair, 1);
 
-	g_hash_table_insert(priv->viewMap, site_view_pair_new(site, viewInfo->name), view);
+	pair->view = (DarxenView*)darxen_view_new(site, viewInfo);
+	pair->config = (DarxenViewConfig*)darxen_view_config_new(site, viewInfo);
+	g_object_ref_sink(G_OBJECT(pair->view));
+	g_object_ref_sink(G_OBJECT(pair->config));
+
+	g_hash_table_insert(priv->viewMap, site_view_pair_new(site, viewInfo->name), pair);
 }
 
 void
@@ -147,10 +158,11 @@ darxen_panel_manager_view_view(DarxenPanelManager* manager, gchar* site, gchar* 
 	g_return_if_fail(view);
 	USING_PRIVATE(manager);
 
-	DarxenView* widget = g_hash_table_lookup(priv->viewMap, site_view_pair_new(site, view));
-	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, site_view_pair_new(site, view));
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->view));
 
-	gltk_bin_set_widget(GLTK_BIN(manager), (GltkWidget*)widget);
+	gltk_bin_set_widget(GLTK_BIN(manager), (GltkWidget*)pair->view);
 }
 
 void
@@ -159,9 +171,13 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
 	g_return_if_fail(site);
 	g_return_if_fail(view);
-	//USING_PRIVATE(manager);
+	USING_PRIVATE(manager);
 
-	g_critical("Not implemented");
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, site_view_pair_new(site, view));
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+
+	gltk_bin_set_widget(GLTK_BIN(manager), (GltkWidget*)pair->config);
 }
 
 GQuark
@@ -204,8 +220,9 @@ site_view_pair_equal(const SiteViewPair* o1, const SiteViewPair* o2)
 }
 
 static void
-view_free(DarxenView* view)
+view_pair_free(ViewPair* pair)
 {
-	g_object_unref(G_OBJECT(view));
+	g_object_unref(G_OBJECT(pair->view));
+	g_object_unref(G_OBJECT(pair->config));
 }
 

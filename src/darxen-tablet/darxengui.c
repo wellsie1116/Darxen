@@ -291,6 +291,13 @@ view_selected(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelMan
 	darxen_panel_manager_view_view(panelManager, site, view);
 }
 
+static void
+view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
+{
+	g_message("%s/%s configuring", site, view);
+	darxen_panel_manager_view_view_config(panelManager, site, view);
+}
+
 //END GLTK Events
 
 static GltkWidget*
@@ -346,6 +353,7 @@ create_screen()
 	}
 
 	g_signal_connect(G_OBJECT(siteList), "view-selected", G_CALLBACK(view_selected), panelManager);
+	g_signal_connect(G_OBJECT(siteList), "view-config", G_CALLBACK(view_config), panelManager);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_sidebar(siteList), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), (GltkWidget*)panelManager, TRUE, TRUE);

@@ -38,6 +38,8 @@ typedef struct _GltkEventPinch			GltkEventPinch;
 
 typedef struct _GltkEventClick			GltkEventClick;
 
+typedef struct _GltkEventSlide			GltkEventSlide;
+
 typedef union  _GltkEvent				GltkEvent;
 
 enum _GltkEventType
@@ -46,7 +48,8 @@ enum _GltkEventType
 	GLTK_LONG_TOUCH,
 	GLTK_DRAG,
 	GLTK_PINCH,
-	GLTK_CLICK
+	GLTK_CLICK,
+	GLTK_SLIDE
 };
 
 
@@ -109,6 +112,12 @@ struct _GltkEventClick
 	GltkEventType type;
 };
 
+struct _GltkEventSlide
+{
+	GltkEventType type;
+
+	gboolean dirRight;
+};
 
 union _GltkEvent
 {
@@ -119,6 +128,7 @@ union _GltkEvent
 	GltkEventDrag drag;
 	GltkEventPinch pinch;
 	GltkEventClick click;
+	GltkEventSlide slide;
 };
 
 GltkEvent*	gltk_event_new					(	GltkEventType type);

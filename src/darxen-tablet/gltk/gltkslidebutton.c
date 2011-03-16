@@ -78,6 +78,8 @@ gltk_slide_button_class_init(GltkSlideButtonClass* klass)
 	gltkwidget_class->drag_event = gltk_slide_button_drag_event;
 
 	klass->slide_event = NULL;
+
+	//TODO connec to to button's clicked event so we can handle if a slide event is raised
 }
 
 static void
@@ -171,77 +173,74 @@ gltk_slide_button_render(GltkWidget* widget)
 		glBegin(GL_QUADS);
 		{
 			float offset = priv->slideOffset;
-			if (offset < 0.1 && offset > -0.1)
-				offset = 0.0f;
-			float* bright = colorHighlightBright;
-			float* dark = colorHighlightDark;
 
-			if (offset >= 0.0f)
+			if (offset < 0.1f && offset > -0.1f)
+			{
+				//left gradient
+				glColor3fv(colorDark);
+				glVertex2i(0, 0);
+				glVertex2i(0, allocation.height);
+				glColor3fv(colorHighlightBright);
+				glVertex2i(allocation.width * (offset+0.1), allocation.height);
+				glVertex2i(allocation.width * (offset+0.1), 0);
+
+				//slide part
+				glVertex2i(allocation.width * (offset+0.1), 0);
+				glVertex2i(allocation.width * (offset+0.1), allocation.height);
+				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
+				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
+
+				//right gradient
+				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
+				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
+				glColor3fv(colorDark);
+				glVertex2i(allocation.width, allocation.height);
+				glVertex2i(allocation.width, 0);
+			}
+			else if (offset >= 0.1f)
 			{
 				//render slide part
 				glColor3fv(colorDark);
-				if (offset > 0.1)
-				{
-					glVertex2i(0, allocation.height);
-					glVertex2i(0, 0);
-					glVertex2i(allocation.width * (offset-0.1), 0);
-					glVertex2i(allocation.width * (offset-0.1), allocation.height);
-				}
+				glVertex2i(0, allocation.height);
+				glVertex2i(0, 0);
+				glVertex2i(allocation.width * (offset-0.1), 0);
+				glVertex2i(allocation.width * (offset-0.1), allocation.height);
 				
 				//render slide gradient
-				if (offset > 0.1)
-				{
-					glVertex2i(allocation.width * (offset-0.1), 0);
-					glVertex2i(allocation.width * (offset-0.1), allocation.height);
-				}
-				else
-				{
-					glVertex2i(0, 0);
-					glVertex2i(0, allocation.height);
-				}
-				glColor3fv(bright);
+				glVertex2i(allocation.width * (offset-0.1), 0);
+				glVertex2i(allocation.width * (offset-0.1), allocation.height);
+				glColor3fv(colorHighlightBright);
 				glVertex2i(allocation.width * (offset+0.1), allocation.height);
 				glVertex2i(allocation.width * (offset+0.1), 0);
 
 				//render selection
 				glVertex2i(allocation.width, 0);
 				glVertex2i(allocation.width * (offset+0.1), 0);
-				glColor3fv(dark);
+				glColor3fv(colorHighlightBright);
 				glVertex2i(allocation.width * (offset+0.1), allocation.height);
 				glVertex2i(allocation.width, allocation.height);
 
 			}
-			else
+			else // (offset <= -0.1f)
 			{
 				//render slide part
 				glColor3fv(colorDark);
-				if (offset < -0.1)
-				{
-					glVertex2i(allocation.width, allocation.height);
-					glVertex2i(allocation.width, 0);
-					glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
-					glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
-				}
-
+				glVertex2i(allocation.width, allocation.height);
+				glVertex2i(allocation.width, 0);
+				glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
+				glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
+					
 				//render slide gradient
-				if (offset < -0.1)
-				{
-					glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
-					glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
-				}
-				else
-				{
-					glVertex2i(allocation.width, 0);
-					glVertex2i(allocation.width, allocation.height);
-				}
-				glColor3fv(bright);
+				glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
+				glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
+				glColor3fv(colorHighlightBright);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
 
 				//render selection
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
 				glVertex2i(0, 0);
-				glColor3fv(dark);
+				glColor3fv(colorHighlightBright);
 				glVertex2i(0, allocation.height);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
 			}
@@ -283,6 +282,19 @@ gltk_slide_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	if (touch->touchType == TOUCH_BEGIN)
 	{
 		priv->slideOffset = 0.0f;
+	} 
+	else if (touch->touchType == TOUCH_END)
+	{
+		if (priv->slideOffset > 0.5f || priv->slideOffset < -0.5f)
+		{
+			GltkEvent* event = gltk_event_new(GLTK_SLIDE);
+			event->slide.dirRight = priv->slideOffset > 0.0f;
+
+			gboolean returnValue;
+			g_signal_emit(widget, signals[SLIDE_EVENT], 0, event, &returnValue);
+
+			gltk_event_free(event);
+		}
 	}
 
 	return GLTK_WIDGET_CLASS(gltk_slide_button_parent_class)->touch_event(widget, touch);
@@ -299,7 +311,7 @@ gltk_slide_button_drag_event(GltkWidget* widget, GltkEventDrag* event)
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 
 	priv->slideOffset += (float)event->dx / allocation.width;
-	priv->slideOffset = CLAMP(priv->slideOffset, -1.0, 1.0);
+	priv->slideOffset = CLAMP(priv->slideOffset, -0.9, 0.9);
 
 	gltk_widget_invalidate(widget);
 

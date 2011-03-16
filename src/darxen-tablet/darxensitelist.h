@@ -52,6 +52,9 @@ struct _DarxenSiteListClass
 
 	void (*view_selected)	(	gchar* site,
 								gchar* view);
+	
+	void (*view_config)		(	gchar* site,
+								gchar* view);
 	/* virtual funcs */
 };
 
