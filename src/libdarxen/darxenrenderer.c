@@ -1282,10 +1282,6 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 	{
 		glBegin(GL_QUADS);
 		{
-			int quads = 0;
-			//number to beat: 82800 quads
-			//current number: 13008 quads
-			//next number   :  8119 quads
 			for (i = 0; i < 16; i++)
 			{
 				/* set the current color */
@@ -1325,13 +1321,11 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 							glVertex2f((range) * kmPerRangeBin * CosX1, (range) * kmPerRangeBin * SinY1);
 							glVertex2f((range) * kmPerRangeBin * CosX2, (range) * kmPerRangeBin * SinY2);
 							glVertex2f((startRange - 1) * kmPerRangeBin * CosX2, (startRange - 1) * kmPerRangeBin * SinY2);
-							quads++;
 							startRange = 0;
 						}
 					}
 				}
 			}
-			g_warning("Rendered %i quads\n", quads);
 		}
 		glEnd();
 	}
