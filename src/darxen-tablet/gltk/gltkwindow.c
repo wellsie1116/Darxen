@@ -391,6 +391,7 @@ gltk_window_push_screen(GltkWindow* window, GltkScreen* screen)
 	g_queue_push_tail(priv->screens, screen);
 
 	gltk_screen_set_window(screen, window);
+	gltk_widget_set_screen(GLTK_WIDGET(screen), screen);
 	layout_screen(screen, window);
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
@@ -424,6 +425,7 @@ gltk_window_pop_screen(GltkWindow* window, GltkScreen* screen)
 
 		g_queue_remove(priv->screens, screen);
 		gltk_screen_set_window(screen, NULL);
+		gltk_widget_set_screen(GLTK_WIDGET(screen), NULL);
 		g_object_unref(G_OBJECT(screen));
 	}
 

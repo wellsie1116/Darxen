@@ -61,6 +61,7 @@ GltkWidget*		gltk_label_new		(const gchar* text);
 
 void			gltk_label_set_text			(GltkLabel* label, const gchar* text);
 void			gltk_label_set_draw_border	(GltkLabel* label, gboolean drawBorder);
+void			gltk_label_set_font_size	(GltkLabel* label, int size);
 
 GQuark			gltk_label_error_quark	();
 

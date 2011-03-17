@@ -72,6 +72,8 @@ void			gltk_screen_set_root	(GltkScreen* screen, GltkWidget* widget);
 
 GltkSize		gltk_screen_get_window_size			(GltkScreen* screen);
 
+void			gltk_screen_push_screen				(GltkScreen* screen, GltkScreen* newScreen);
+void			gltk_screen_pop_screen				(GltkScreen* screen, GltkScreen* newScreen);
 void			gltk_screen_close_window			(GltkScreen* screen);
 void			gltk_screen_invalidate				(GltkScreen* screen);
 void			gltk_screen_layout					(GltkScreen* screen);

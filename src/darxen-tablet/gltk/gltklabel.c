@@ -39,6 +39,7 @@ struct _GltkLabelPrivate
 	gchar* text;
 
 	gboolean drawBorder;
+	int fontSize;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -71,6 +72,7 @@ gltk_label_init(GltkLabel* self)
 
 	priv->text = NULL;
 	priv->drawBorder = FALSE;
+	priv->fontSize = 16;
 }
 
 static void
@@ -125,6 +127,15 @@ gltk_label_set_draw_border(GltkLabel* label, gboolean drawBorder)
 	gltk_widget_invalidate(GLTK_WIDGET(label));
 }
 
+void
+gltk_label_set_font_size(GltkLabel* label, int size)
+{
+	g_return_if_fail(GLTK_IS_LABEL(label));
+	USING_PRIVATE(label);
+	priv->fontSize = size;
+	gltk_widget_layout(GLTK_WIDGET(label));
+}
+
 GQuark
 gltk_label_error_quark()
 {
@@ -139,7 +150,7 @@ static void
 gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
-	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, FALSE);
+	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, priv->fontSize, FALSE);
 	g_assert(font);
 
 	size->height = 20;
@@ -199,7 +210,7 @@ gltk_label_render(GltkWidget* label)
 
 	glPushMatrix();
 	{
-		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 16, TRUE);
+		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, priv->fontSize, TRUE);
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);

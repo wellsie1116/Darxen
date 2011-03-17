@@ -29,19 +29,20 @@
 #include <gltk/gltkwindow.h>
 #include <gltk/gltkscreen.h>
 #include <gltk/gltkminiscreen.h>
+#include <gltk/gltkdialog.h>
 #include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>
 #include <gltk/gltkbin.h>
 #include <gltk/gltklist.h>
 #include <gltk/gltklabel.h>
+#include <gltk/gltkkeyboard.h>
 #include <gltk/gltkbutton.h>
+#include <gltk/gltkentry.h>
 #include <gltk/gltkslidebutton.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-
-//void gltk_init(
 
 #endif
 

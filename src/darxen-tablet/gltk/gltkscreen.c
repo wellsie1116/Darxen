@@ -170,6 +170,26 @@ gltk_screen_get_window_size(GltkScreen* screen)
 }
 
 void
+gltk_screen_push_screen(GltkScreen* screen, GltkScreen* newScreen)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->window);
+
+	gltk_window_push_screen(priv->window, newScreen);
+}
+
+void
+gltk_screen_pop_screen(GltkScreen* screen, GltkScreen* newScreen)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->window);
+
+	gltk_window_pop_screen(priv->window, newScreen);
+}
+
+void
 gltk_screen_close_window(GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
@@ -195,6 +215,8 @@ gltk_screen_layout(GltkScreen* screen)
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
 
 	GLTK_SCREEN_GET_CLASS(screen)->layout(screen);
+
+	gltk_screen_invalidate(screen);
 }
 
 gboolean

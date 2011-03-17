@@ -425,6 +425,7 @@ int initialize_gui(int* argc, char** argv[])
 	glWindow = create_window();
 
 	gtk_window_maximize(GTK_WINDOW(window));
+	//gtk_window_fullscreen(GTK_WINDOW(window));
 	gtk_widget_show_all(window);
 	
 	return 0;

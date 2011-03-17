@@ -38,11 +38,21 @@ create_second_screen()
 	GltkWidget* hbox = gltk_hbox_new();
 
 	GltkWidget* label = gltk_label_new("This is a second screen that fills the entire window");
+
+	GltkWidget* vboxEntry = gltk_vbox_new();
+	{
+		GltkWidget* entry = gltk_entry_new("Change Me");
+		
+		gltk_box_append_widget(GLTK_BOX(vboxEntry), gltk_label_new("Entry Field:"), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(vboxEntry), entry, FALSE, FALSE);
+	}
+
 	GltkWidget* btnCloseSecondScreen = gltk_button_new("Close Screen");
 
 	g_signal_connect(btnCloseSecondScreen, "click-event", (GCallback)btn_closeScreen_clicked, screen);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), label, TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(hbox), vboxEntry, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), btnCloseSecondScreen, FALSE, FALSE);
 
 	gltk_screen_set_root(screen, hbox);

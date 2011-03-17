@@ -80,6 +80,12 @@ darxen_view_config_finalize(GObject* gobject)
 	G_OBJECT_CLASS(darxen_view_config_parent_class)->finalize(gobject);
 }
 
+static void
+txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
+{
+	g_debug("Name has changed, do something about it");
+}
+
 GltkWidget*
 darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 {
@@ -91,13 +97,51 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	priv->site = g_strdup(site);
 	priv->viewInfo = viewInfo;
 
-	GltkWidget* description = gltk_label_new("This is a view configuration window!");
 	//Change Name - Text box
 	//Change Product - Selectable/Scrollable List box OR Combo box
 	//Change Source Type - Radio buttons
 	//Select Date Range - Text Box (with numeric filter) OR Number spinners
+	
+	GltkWidget* hboxName = gltk_hbox_new();
+	{
+		GltkWidget* lblName = gltk_label_new("Name: ");
+		gltk_label_set_font_size(GLTK_LABEL(lblName), 28);
+		GltkWidget* txtName = gltk_entry_new(viewInfo->name);
 
-	gltk_box_append_widget(GLTK_BOX(self), description, TRUE, TRUE);
+		g_signal_connect(txtName, "text-changed", (GCallback)txtName_textChanged, self);
+
+		gltk_box_append_widget(GLTK_BOX(hboxName), lblName, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hboxName), txtName, FALSE, FALSE);
+	}
+
+	GltkWidget* hboxProduct = gltk_hbox_new();
+	{
+		GltkWidget* lblProduct = gltk_label_new("Product: ");
+		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
+		
+		gltk_box_append_widget(GLTK_BOX(hboxProduct), lblProduct, FALSE, FALSE);
+	}
+
+	GltkWidget* hboxShapefiles = gltk_hbox_new();
+	{
+		GltkWidget* lblShapefiles = gltk_label_new("Shapefiles: ");
+		gltk_label_set_font_size(GLTK_LABEL(lblShapefiles), 28);
+		
+		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), lblShapefiles, FALSE, FALSE);
+	}
+
+	GltkWidget* hboxSource = gltk_hbox_new();
+	{
+		GltkWidget* lblSource = gltk_label_new("Source: ");
+		gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);
+		
+		gltk_box_append_widget(GLTK_BOX(hboxSource), lblSource, FALSE, FALSE);
+	}
+
+	gltk_box_append_widget(GLTK_BOX(self), hboxName, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(self), hboxProduct, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(self), hboxShapefiles, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(self), hboxSource, FALSE, FALSE);
 
 	return (GltkWidget*)gobject;
 }

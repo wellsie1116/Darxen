@@ -172,27 +172,30 @@ gltk_button_render(GltkWidget* widget)
 	}
 	glEnd();
 
-	glPushMatrix();
+	if (GLTK_BUTTON(widget)->text)
 	{
-		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
-		glColor3f(0.0f, 0.0f, 0.0f);
+		glPushMatrix();
+		{
+			GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
+			glColor3f(0.0f, 0.0f, 0.0f);
 
-		float bbox[6];
-		ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
-		float height = bbox[4] - bbox[1];
-		float width = bbox[3] - bbox[0];
+			float bbox[6];
+			ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
+			float height = bbox[4] - bbox[1];
+			float width = bbox[3] - bbox[0];
 
-		float x;
-	   	float y;
-		x = (allocation.width - width) / 2.0;
-		y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
+			float x;
+			float y;
+			x = (allocation.width - width) / 2.0;
+			y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
 
-		glTranslatef(x, y, 0.1f);
-		glScalef(1.0f, -1.0f, 1.0f);
+			glTranslatef(x, y, 0.1f);
+			glScalef(1.0f, -1.0f, 1.0f);
 
-		ftglRenderFont(font->font, GLTK_BUTTON(widget)->text, FTGL_RENDER_ALL);
+			ftglRenderFont(font->font, GLTK_BUTTON(widget)->text, FTGL_RENDER_ALL);
+		}
+		glPopMatrix();
 	}
-	glPopMatrix();
 }
 
 static gboolean
