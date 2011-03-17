@@ -40,6 +40,7 @@ typedef struct _GltkKeyboardClass		GltkKeyboardClass;
 struct _GltkKeyboard
 {
 	GltkVBox parent;
+
 };
 
 struct _GltkKeyboardClass
@@ -55,10 +56,10 @@ typedef enum
 	GLTK_KEYBOARD_ERROR_FAILED
 } GltkKeyboardError;
 
-GType			gltk_keyboard_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_keyboard_new		();
+GType			gltk_keyboard_get_type		() G_GNUC_CONST;
+GltkWidget*		gltk_keyboard_new			(const gchar* text);
 
-/* Public functions here */
+const gchar*	gltk_keyboard_get_text		(GltkKeyboard* keyboard);
 
 GQuark			gltk_keyboard_error_quark	();
 

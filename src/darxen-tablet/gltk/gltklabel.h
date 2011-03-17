@@ -41,6 +41,8 @@ typedef struct _GltkLabelClass		GltkLabelClass;
 struct _GltkLabel
 {
 	GltkWidget parent;
+	
+	gchar* text;
 };
 
 struct _GltkLabelClass

@@ -386,7 +386,7 @@ gltk_window_push_screen(GltkWindow* window, GltkScreen* screen)
 
 	USING_PRIVATE(window);
 
-	g_object_ref(G_OBJECT(screen));
+	g_object_ref(screen);
 
 	g_queue_push_tail(priv->screens, screen);
 
@@ -413,7 +413,7 @@ gltk_window_pop_screen(GltkWindow* window, GltkScreen* screen)
 
 	if (!screen)
 	{
-		g_queue_pop_tail(priv->screens);
+		screen = g_queue_pop_tail(priv->screens);
 	}
 	else
 	{
@@ -424,10 +424,11 @@ gltk_window_pop_screen(GltkWindow* window, GltkScreen* screen)
 		}
 
 		g_queue_remove(priv->screens, screen);
-		gltk_screen_set_window(screen, NULL);
-		gltk_widget_set_screen(GLTK_WIDGET(screen), NULL);
-		g_object_unref(G_OBJECT(screen));
 	}
+
+	gltk_screen_set_window(screen, NULL);
+	gltk_widget_set_screen(GLTK_WIDGET(screen), NULL);
+	g_object_unref(screen);
 
 	g_signal_emit(G_OBJECT(window), signals[REQUEST_RENDER], 0);
 }

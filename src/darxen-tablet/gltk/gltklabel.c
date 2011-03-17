@@ -36,8 +36,6 @@ enum
 typedef struct _GltkLabelPrivate		GltkLabelPrivate;
 struct _GltkLabelPrivate
 {
-	gchar* text;
-
 	gboolean drawBorder;
 	int fontSize;
 };
@@ -70,7 +68,7 @@ gltk_label_init(GltkLabel* self)
 {
 	USING_PRIVATE(self);
 
-	priv->text = NULL;
+	self->text = NULL;
 	priv->drawBorder = FALSE;
 	priv->fontSize = 16;
 }
@@ -87,8 +85,8 @@ gltk_label_finalize(GObject* gobject)
 	GltkLabel* self = GLTK_LABEL(gobject);
 	USING_PRIVATE(self);
 
-	if (priv->text)
-		g_free(priv->text);
+	if (self->text)
+		g_free(self->text);
 
 	G_OBJECT_CLASS(gltk_label_parent_class)->finalize(gobject);
 }
@@ -102,7 +100,7 @@ gltk_label_new(const gchar* text)
 	USING_PRIVATE(self);
 
 	if (text)
-		priv->text = g_strdup(text);
+		self->text = g_strdup(text);
 
 	return (GltkWidget*)gobject;
 }
@@ -112,9 +110,9 @@ gltk_label_set_text	(GltkLabel* label, const gchar* text)
 {
 	g_return_if_fail(GLTK_IS_LABEL(label));
 	USING_PRIVATE(label);
-	if (priv->text)
-		g_free(priv->text);
-	priv->text = g_strdup(text);
+	if (label->text)
+		g_free(label->text);
+	label->text = g_strdup(text);
 	gltk_widget_invalidate(GLTK_WIDGET(label));
 }
 
@@ -156,7 +154,7 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 	size->height = 20;
 	size->width = 0;
 
-	gchar** lines = g_strsplit(priv->text, "\n", -1);
+	gchar** lines = g_strsplit(GLTK_LABEL(widget)->text, "\n", -1);
 	gchar** pLines = lines;
 	while (*pLines)
 	{
@@ -215,7 +213,7 @@ gltk_label_render(GltkWidget* label)
 		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
-		gchar** lines = g_strsplit(priv->text, "\n", -1);
+		gchar** lines = g_strsplit(GLTK_LABEL(label)->text, "\n", -1);
 		gchar** pLines = lines;
 		while (*pLines)
 		{

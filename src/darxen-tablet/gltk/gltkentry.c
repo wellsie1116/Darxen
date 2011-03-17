@@ -23,6 +23,9 @@
 #include "gltkmarshal.h"
 #include "gltkdialog.h"
 #include "gltkkeyboard.h"
+#include "gltkfonts.h"
+
+#include <GL/gl.h>
 
 G_DEFINE_TYPE(GltkEntry, gltk_entry, GLTK_TYPE_BUTTON)
 
@@ -39,7 +42,8 @@ enum
 typedef struct _GltkEntryPrivate		GltkEntryPrivate;
 struct _GltkEntryPrivate
 {
-	int dummy;
+	GltkDialog* dialog;
+	GltkWidget* keyboard;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -79,18 +83,24 @@ gltk_entry_class_init(GltkEntryClass* klass)
 static void
 gltk_entry_init(GltkEntry* self)
 {
-	//USING_PRIVATE(self);
+	USING_PRIVATE(self);
 
-	/* initialize fields generically here */
+	priv->dialog = NULL;
+	priv->keyboard = NULL;
 }
 
 static void
 gltk_entry_dispose(GObject* gobject)
 {
-	//GltkEntry* self = GLTK_ENTRY(gobject);
-	//USING_PRIVATE(self);
+	GltkEntry* self = GLTK_ENTRY(gobject);
+	USING_PRIVATE(self);
 
 	//free and release references
+	if (priv->keyboard)
+	{
+		g_object_unref(priv->keyboard);
+		priv->keyboard = NULL;
+	}
 
 	G_OBJECT_CLASS(gltk_entry_parent_class)->dispose(gobject);
 }
@@ -129,34 +139,100 @@ gltk_entry_error_quark()
  * Private Functions *
  *********************/
 
+static float colorBright[] = {0.87f, 0.87f, 0.87f};
+static float colorDark[] = {0.78f, 0.78f, 0.78f};
+
+static float colorHighlightBright[] = {1.0f, 0.6f, 0.03f};
+static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
+
 static void
 gltk_entry_render(GltkWidget* widget)
 {
-	GLTK_WIDGET_CLASS(gltk_entry_parent_class)->render(widget);
+	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(widget));
+
+	glBegin(GL_LINE_LOOP);
+	{
+		float* bright = colorBright;
+		float* dark = colorDark;
+
+		if (GLTK_BUTTON(widget)->isDown)
+		{
+			bright = colorHighlightBright;
+			dark = colorHighlightDark;
+		}
+		glColor3fv(bright);
+		glVertex2i(allocation.width, 0);
+		glVertex2i(0, 0);
+		glColor3fv(dark);
+		glVertex2i(0, allocation.height);
+		glVertex2i(allocation.width, allocation.height);
+	}
+	glEnd();
+
+	if (GLTK_BUTTON(widget)->text)
+	{
+		glPushMatrix();
+		{
+			GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
+			glColor3f(1.0f, 1.0f, 1.0f);
+
+			float bbox[6];
+			ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
+			float height = bbox[4] - bbox[1];
+			float width = bbox[3] - bbox[0];
+
+			float x;
+			float y;
+			x = (allocation.width - width) / 2.0;
+			y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
+
+			glTranslatef(x, y, 0.1f);
+			glScalef(1.0f, -1.0f, 1.0f);
+
+			ftglRenderFont(font->font, GLTK_BUTTON(widget)->text, FTGL_RENDER_ALL);
+		}
+		glPopMatrix();
+	}
 }
 
 static void
 dialog_result(GltkDialog* dialog, gboolean success, GltkWidget* entry)
 {
+	USING_PRIVATE(entry);
+
 	gltk_screen_pop_screen(GLTK_WIDGET(dialog)->screen, GLTK_SCREEN(dialog));
 
-	if (!success)
-		return;
+	if (success)
+	{
+		const gchar* newText = gltk_keyboard_get_text(GLTK_KEYBOARD(priv->keyboard));
+		if (g_strcmp0(GLTK_BUTTON(entry)->text, newText))
+		{
+			g_free(GLTK_BUTTON(entry)->text);
+			GLTK_BUTTON(entry)->text = g_strdup(newText);
+			gltk_widget_layout(entry);
 
-	//TODO: compare strings and set our text if necessary
+			g_object_ref(entry);
+			g_signal_emit(entry, signals[TEXT_CHANGED], 0);
+			g_object_unref(entry);
+		}
+	}
 
-	g_object_ref(entry);
-	g_signal_emit(entry, signals[TEXT_CHANGED], 0);
-	g_object_unref(entry);
+	g_object_unref(priv->dialog);
+	g_object_unref(priv->keyboard);
+	priv->dialog = NULL;
+	priv->keyboard = NULL;
 }
 
 static gboolean
 gltk_entry_click_event(GltkWidget* widget, GltkEventClick* event)
 {
-	GltkWidget* keyboard = gltk_keyboard_new();
-	GltkDialog* dialog = gltk_dialog_new(keyboard);
-	g_signal_connect(dialog, "dialog-result", (GCallback)dialog_result, widget);
-	gltk_screen_push_screen(widget->screen, GLTK_SCREEN(dialog));
+	USING_PRIVATE(widget);
+	priv->keyboard = gltk_keyboard_new(GLTK_BUTTON(widget)->text);
+	priv->dialog = gltk_dialog_new(priv->keyboard);
+	g_object_ref(priv->dialog);
+	g_object_ref(priv->keyboard);
+	g_signal_connect(priv->dialog, "dialog-result", (GCallback)dialog_result, widget);
+	gltk_screen_push_screen(widget->screen, GLTK_SCREEN(priv->dialog));
 	return TRUE;
 }
 
