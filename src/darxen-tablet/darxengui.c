@@ -336,7 +336,7 @@ create_screen()
 	panelManager = (DarxenPanelManager*)darxen_panel_manager_new();
 
 	GList* pSites;
-	for (pSites = darxen_config_get_sites(); pSites; pSites = pSites->next)
+	for (pSites = darxen_config_get_sites(darxen_config_get_instance()); pSites; pSites = pSites->next)
 	{
 		DarxenSiteInfo* site = (DarxenSiteInfo*)pSites->data;
 

@@ -63,6 +63,7 @@ GType			gltk_button_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_button_new			(const gchar* text);
 
 const gchar*	gltk_button_get_text	(GltkButton* button);
+void			gltk_button_set_text	(GltkButton* button, const gchar* text);
 
 GQuark			gltk_button_error_quark	();
 

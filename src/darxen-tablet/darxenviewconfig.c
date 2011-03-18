@@ -28,8 +28,6 @@ G_DEFINE_TYPE(DarxenViewConfig, darxen_view_config, GLTK_TYPE_VBOX)
 
 enum
 {
-	SITE_CHANGED,
-
 	LAST_SIGNAL
 };
 
@@ -40,7 +38,7 @@ struct _DarxenViewConfigPrivate
 	DarxenViewInfo* viewInfo;
 };
 
-static guint signals[LAST_SIGNAL] = {0,};
+//static guint signals[LAST_SIGNAL] = {0,};
 
 static void darxen_view_config_dispose(GObject* gobject);
 static void darxen_view_config_finalize(GObject* gobject);
@@ -52,15 +50,6 @@ darxen_view_config_class_init(DarxenViewConfigClass* klass)
 
 	g_type_class_add_private(klass, sizeof(DarxenViewConfigPrivate));
 
-	signals[SITE_CHANGED] = 
-		g_signal_new(	"site-changed",
-						G_TYPE_FROM_CLASS(klass),
-						G_SIGNAL_RUN_LAST,
-						G_STRUCT_OFFSET(DarxenViewConfigClass, site_changed),
-						NULL, NULL,
-						g_cclosure_user_marshal_VOID__VOID,
-						G_TYPE_NONE, 0);
-	
 	gobject_class->dispose = darxen_view_config_dispose;
 	gobject_class->finalize = darxen_view_config_finalize;
 
@@ -98,12 +87,16 @@ txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
 {
 	USING_PRIVATE(viewConfig);
 
-	g_free(priv->viewInfo->name);
-	priv->viewInfo->name = g_strdup(gltk_entry_get_text(txtName));
+	DarxenConfig* config = darxen_config_get_instance();
+	
+	gboolean res = darxen_config_rename_view(config, priv->site, priv->viewInfo, gltk_entry_get_text(txtName));
 
-	g_object_ref(viewConfig);
-	g_signal_emit(viewConfig, signals[SITE_CHANGED], 0);
-	g_object_unref(viewConfig);
+	if (!res)
+	{
+		//Change failed
+		//TODO inform user
+		gltk_button_set_text(GLTK_BUTTON(txtName), priv->viewInfo->name);
+	}
 }
 
 GltkWidget*

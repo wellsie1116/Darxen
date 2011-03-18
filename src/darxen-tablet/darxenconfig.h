@@ -23,19 +23,33 @@
 
 #include <libdarxenRestfulClient.h>
 
+#include <glib-object.h>
 #include <glib.h>
+
+G_BEGIN_DECLS
+
+#define DARXEN_CONFIG_ERROR darxen_config_error_quark()
+
+#define DARXEN_TYPE_CONFIG				(darxen_config_get_type())
+#define DARXEN_CONFIG(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), DARXEN_TYPE_CONFIG, DarxenConfig))
+#define DARXEN_CONFIG_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), DARXEN_TYPE_CONFIG, DarxenConfigClass))
+#define DARXEN_IS_CONFIG(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), DARXEN_TYPE_CONFIG))
+#define DARXEN_IS_CONFIG_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), DARXEN_TYPE_CONFIG))
+#define DARXEN_CONFIG_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), DARXEN_TYPE_CONFIG, DarxenConfigClass))
 
 typedef struct	_DarxenSiteInfo				DarxenSiteInfo;
 typedef struct	_DarxenViewSourceArchive	DarxenViewSourceArchive;
 typedef enum	_DarxenViewSourceType		DarxenViewSourceType;
 typedef union	_DarxenViewSource			DarxenViewSource;
 typedef struct	_DarxenViewInfo				DarxenViewInfo;
+typedef struct	_DarxenConfig				DarxenConfig;
+typedef struct	_DarxenConfigClass			DarxenConfigClass;
 
 struct _DarxenSiteInfo
 {
 	gchar* name;
-	GList* views;
-	GHashTable* viewMap;
+	GList* views; //DarxenViewInfo
+	//GHashTable* viewMap;
 };
 
 struct _DarxenViewSourceArchive
@@ -67,10 +81,60 @@ struct _DarxenViewInfo
 	gboolean smoothing;
 };
 
+struct _DarxenConfig
+{
+	GObject parent;
 
-GList* darxen_config_get_sites();
+	DarxenRestfulClient* client;
+	GList* sites;
+};
 
-void					darxen_config_set_client(DarxenRestfulClient* newClient);
-DarxenRestfulClient*	darxen_config_get_client();
+struct _DarxenConfigClass
+{
+	GObjectClass parent_class;
+	
+	/* signals */
+	void (*view_name_changed)	(	DarxenConfig* config,
+									gchar* site,
+									DarxenViewInfo* viewInfo,
+									gchar* oldName);
+
+	void (*view_updated)		(	DarxenConfig* config,
+									gchar* site,
+									DarxenViewInfo* viewInfo);
+
+	/* virtual funcs */
+};
+
+typedef enum
+{
+	DARXEN_CONFIG_ERROR_FAILED
+} DarxenConfigError;
+
+GType					darxen_config_get_type			(	) G_GNUC_CONST;
+DarxenConfig*			darxen_config_get_instance		(	);
+
+GList*					darxen_config_get_sites			(	DarxenConfig* config);
+
+void					darxen_config_set_client		(	DarxenConfig* config, 
+															DarxenRestfulClient* newClient);
+
+DarxenRestfulClient*	darxen_config_get_client		(	DarxenConfig* config);
+
+
+gboolean				darxen_config_rename_view		(	DarxenConfig* config,
+															const gchar* site,
+															DarxenViewInfo* viewInfo,
+															const gchar* newName);
+
+void					darxen_config_view_updated		(	DarxenConfig* config,
+															const gchar* site,
+															DarxenViewInfo* viewInfo);
+															
+
+
+GQuark					darxen_config_error_quark		();
+
+G_END_DECLS
 
 #endif

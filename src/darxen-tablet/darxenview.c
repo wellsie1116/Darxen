@@ -38,6 +38,7 @@ struct _DarxenViewPrivate
 {
 	gchar* site;
 	DarxenViewInfo* viewInfo;
+	GltkWidget* label;
 
 	DarxenRadarViewer* radarViewer;
 };
@@ -46,6 +47,17 @@ struct _DarxenViewPrivate
 
 static void darxen_view_dispose(GObject* gobject);
 static void darxen_view_finalize(GObject* gobject);
+
+static void		config_viewNameChanged		(	DarxenConfig* config,
+												const gchar* site,
+												DarxenViewInfo* viewInfo,
+												const gchar* oldName,
+												DarxenView* view);
+
+static void		config_viewUpdated			(	DarxenConfig* config,
+												const gchar* site,
+												DarxenViewInfo* viewInfo,
+												DarxenView* view);
 
 static void
 darxen_view_class_init(DarxenViewClass* klass)
@@ -65,6 +77,7 @@ darxen_view_init(DarxenView* self)
 
 	priv->site = NULL;
 	priv->viewInfo = NULL;
+	priv->label = NULL;
 	priv->radarViewer = NULL;
 }
 
@@ -74,7 +87,7 @@ darxen_view_dispose(GObject* gobject)
 	DarxenView* self = DARXEN_VIEW(gobject);
 	USING_PRIVATE(self);
 
-	//free and release references
+	//TODO free and release references
 
 	G_OBJECT_CLASS(darxen_view_parent_class)->dispose(gobject);
 }
@@ -95,6 +108,7 @@ darxen_view_new(const gchar* site, DarxenViewInfo* viewInfo)
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW, NULL);
 	DarxenView* self = DARXEN_VIEW(gobject);
+	DarxenConfig* config = darxen_config_get_instance();
 
 	USING_PRIVATE(self);
 
@@ -102,12 +116,17 @@ darxen_view_new(const gchar* site, DarxenViewInfo* viewInfo)
 	priv->viewInfo = viewInfo;
 
 	gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
-	gltk_box_append_widget(GLTK_BOX(self), gltk_label_new(desc), FALSE, FALSE);
+	priv->label = gltk_label_new(desc);
+	g_object_ref(priv->label);
+	gltk_box_append_widget(GLTK_BOX(self), priv->label, FALSE, FALSE);
 	g_free(desc);
 
 	priv->radarViewer = darxen_radar_viewer_new(site, viewInfo);
 	g_object_ref(G_OBJECT(priv->radarViewer));
 	gltk_box_append_widget(GLTK_BOX(self), GLTK_WIDGET(priv->radarViewer), TRUE, TRUE);
+	
+	g_signal_connect(config, "view-name-changed", (GCallback)config_viewNameChanged, self);
+	g_signal_connect(config, "view-updated", (GCallback)config_viewUpdated, self);
 
 	return (GltkWidget*)gobject;
 }
@@ -122,5 +141,29 @@ darxen_view_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+config_viewNameChanged(	DarxenConfig* config,
+						const gchar* site,
+						DarxenViewInfo* viewInfo,
+						const gchar* oldName,
+						DarxenView* view)
+{
+	USING_PRIVATE(view);
+
+	gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
+	gltk_label_set_text(GLTK_LABEL(priv->label), desc);
+	g_free(desc);
+}
+
+static void		
+config_viewUpdated(	DarxenConfig* config,
+					const gchar* site,
+					DarxenViewInfo* viewInfo,
+					DarxenView* view)
+{
+}
+
+
 
 

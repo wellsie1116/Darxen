@@ -110,9 +110,18 @@ gltk_button_new(const gchar* text)
 const gchar*
 gltk_button_get_text(GltkButton* button)
 {
-	USING_PRIVATE(button);
-	
 	return button->text;
+}
+
+void
+gltk_button_set_text(GltkButton* button, const gchar* text)
+{
+	if (button->text)
+		g_free(button->text);
+
+	button->text = g_strdup(text);
+
+	gltk_widget_layout(GLTK_WIDGET(button));
 }
 
 GQuark

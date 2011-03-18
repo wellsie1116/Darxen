@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 			g_error("Failed to connect to darxend process");
 		}
 	}
-	darxen_config_set_client(client);
+	darxen_config_set_client(darxen_config_get_instance(), client);
 
 	int res;
 	res = initialize_gui(&argc, &argv);

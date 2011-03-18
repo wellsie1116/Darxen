@@ -134,7 +134,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode, priv->viewInfo->shapefiles);
 	priv->renderer->scale = 0.02;
 
-	DarxenRestfulClient* client = darxen_config_get_client();
+	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
 	switch (viewInfo->sourceType)
 	{
 		case DARXEN_VIEW_SOURCE_ARCHIVE:

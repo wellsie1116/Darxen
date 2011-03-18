@@ -40,7 +40,7 @@ typedef struct _ViewPair						ViewPair;
 
 struct _DarxenPanelManagerPrivate
 {
-	GHashTable* viewMap;
+	GHashTable* viewMap; //SiteViewPair > ViewPair
 	GltkWidget* mainView;
 };
 
@@ -62,12 +62,22 @@ static void darxen_panel_manager_dispose(GObject* gobject);
 static void darxen_panel_manager_finalize(GObject* gobject);
 
 static SiteViewPair*	site_view_pair_new		(const gchar* site, const gchar* view);
+static void				site_view_pair_init		(SiteViewPair* pair, const gchar* site, const gchar* view);
 static void				site_view_pair_free		(SiteViewPair* pair);
 static guint			site_view_pair_hash		(SiteViewPair* pair);
 static gboolean			site_view_pair_equal	(const SiteViewPair* o1, const SiteViewPair* o2);
 static void				view_pair_free			(ViewPair* view);
 
-static void viewConfig_siteChanged(DarxenViewConfig* viewConfig, DarxenPanelManager* manager);
+static void				config_viewNameChanged		(	DarxenConfig* config,
+														const gchar* site,
+														DarxenViewInfo* viewInfo,
+														const gchar* newName,
+														DarxenPanelManager* manager);
+
+static void				config_viewUpdated			(	DarxenConfig* config,
+														const gchar* site,
+														DarxenViewInfo* viewInfo,
+														DarxenPanelManager* manager);
 
 static void
 darxen_panel_manager_class_init(DarxenPanelManagerClass* klass)
@@ -115,12 +125,16 @@ darxen_panel_manager_new()
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_PANEL_MANAGER, NULL);
 	DarxenPanelManager* self = DARXEN_PANEL_MANAGER(gobject);
+	DarxenConfig* config = darxen_config_get_instance();
 
 	USING_PRIVATE(self);
 
 	priv->viewMap = g_hash_table_new_full((GHashFunc)site_view_pair_hash, (GEqualFunc)site_view_pair_equal, (GDestroyNotify)site_view_pair_free, (GDestroyNotify)view_pair_free);
 
 	darxen_panel_manager_view_main(self);
+
+	g_signal_connect(config, "view-name-changed", (GCallback)config_viewNameChanged, self);
+	g_signal_connect(config, "view-updated", (GCallback)config_viewUpdated, self);
 
 	return (GltkWidget*)gobject;
 }
@@ -137,7 +151,7 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 
 	pair->view = (DarxenView*)darxen_view_new(site, viewInfo);
 	pair->config = (DarxenViewConfig*)darxen_view_config_new(site, viewInfo);
-	g_signal_connect(pair->config, "site-changed", (GCallback)viewConfig_siteChanged, manager);
+	//g_signal_connect(pair->config, "site-changed", (GCallback)viewConfig_siteChanged, manager);
 	g_object_ref_sink(G_OBJECT(pair->view));
 	g_object_ref_sink(G_OBJECT(pair->config));
 
@@ -160,8 +174,10 @@ darxen_panel_manager_view_view(DarxenPanelManager* manager, gchar* site, gchar* 
 	g_return_if_fail(site);
 	g_return_if_fail(view);
 	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
 
-	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, site_view_pair_new(site, view));
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
 	g_return_if_fail(pair);
 	g_return_if_fail(GLTK_IS_WIDGET(pair->view));
 
@@ -175,8 +191,10 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	g_return_if_fail(site);
 	g_return_if_fail(view);
 	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
 
-	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, site_view_pair_new(site, view));
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
 	g_return_if_fail(pair);
 	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
 
@@ -197,9 +215,15 @@ static SiteViewPair*
 site_view_pair_new(const gchar* site, const gchar* view)
 {
 	SiteViewPair* pair = g_new(SiteViewPair, 1);
-	pair->site = g_strdup(site);
-	pair->view = g_strdup(view);
+	site_view_pair_init(pair, g_strdup(site), g_strdup(view));
 	return pair;
+}
+
+static void
+site_view_pair_init(SiteViewPair* pair, const gchar* site, const gchar* view)
+{
+	pair->site = (gchar*)site;
+	pair->view = (gchar*)view;
 }
 
 static void
@@ -229,11 +253,42 @@ view_pair_free(ViewPair* pair)
 	g_object_unref(G_OBJECT(pair->config));
 }
 
-static void
-viewConfig_siteChanged(DarxenViewConfig* viewConfig, DarxenPanelManager* manager)
+//static void
+//viewConfig_siteChanged(DarxenViewConfig* viewConfig, DarxenPanelManager* manager)
+//{
+//	USING_PRIVATE(manager);
+//
+//	g_critical("TODO: update all references to this view name");
+//}
+
+static void				
+config_viewNameChanged(	DarxenConfig* config,
+						const gchar* site,
+						DarxenViewInfo* viewInfo,
+						const gchar* oldName,
+						DarxenPanelManager* manager)
 {
 	USING_PRIVATE(manager);
 
-	g_critical("TODO: update all references to this view name");
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, oldName);
+	SiteViewPair* key;
+	ViewPair* value;
+
+	g_return_if_fail(g_hash_table_lookup_extended(priv->viewMap, &siteViewPair, (gpointer*)&key, (gpointer*)&value));
+	g_return_if_fail(g_hash_table_steal(priv->viewMap, key));
+
+	g_free(key->view);
+	key->view = g_strdup(viewInfo->name);
+	g_hash_table_insert(priv->viewMap, key, value);
+}
+
+static void				
+config_viewUpdated(	DarxenConfig* config,
+					const gchar* site,
+					DarxenViewInfo* viewInfo,
+					DarxenPanelManager* manager)
+{
+	g_critical("TODO: Update view in general (not here?)");
 }
 

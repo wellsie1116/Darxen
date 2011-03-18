@@ -19,6 +19,7 @@
  */
 
 #include "darxensitelist.h"
+#include "darxenconfig.h"
 
 #include <glib.h>
 
@@ -43,7 +44,7 @@ typedef struct _View						View;
 
 struct _DarxenSiteListPrivate
 {
-	GHashTable* sites;
+	GHashTable* siteMap; //gchar* -> GltkListItem (data = Site)
 };
 
 struct _Site
@@ -52,6 +53,7 @@ struct _Site
 	gchar* name;
 	GltkWidget* siteBox;
 	GltkWidget* views;
+	GHashTable* viewMap; //gchar* -> GltkListItem (data = View)
 };
 
 struct _View
@@ -65,6 +67,12 @@ static guint signals[LAST_SIGNAL] = {0,};
 
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
+
+static void		config_viewNameChanged		(	DarxenConfig* config,
+												const gchar* site,
+												DarxenViewInfo* viewInfo,
+												const gchar* newName,
+												DarxenSiteList* list);
 
 static void
 darxen_site_list_class_init(DarxenSiteListClass* klass)
@@ -109,11 +117,21 @@ delete_site_list_item(GltkListItem* listItem)
 }
 
 static void
+delete_view_list_item(GltkListItem* listItem)
+{
+	gltk_list_remove_item(listItem->list, listItem);
+	
+	View* view = (View*)listItem->data;
+	g_free(view->name);
+	g_object_unref(view->button);
+}
+
+static void
 darxen_site_list_init(DarxenSiteList* self)
 {
 	USING_PRIVATE(self);
 
-	priv->sites = NULL;
+	priv->siteMap = NULL;
 }
 
 static void
@@ -122,7 +140,7 @@ darxen_site_list_dispose(GObject* gobject)
 	DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
 	USING_PRIVATE(self);
 
-	g_hash_table_destroy(priv->sites);
+	g_hash_table_destroy(priv->siteMap);
 
 	G_OBJECT_CLASS(darxen_site_list_parent_class)->dispose(gobject);
 }
@@ -146,7 +164,9 @@ darxen_site_list_new()
 
 	USING_PRIVATE(self);
 
-	priv->sites = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_site_list_item);
+	priv->siteMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_site_list_item);
+
+	g_signal_connect(darxen_config_get_instance(), "view-name-changed", (GCallback)config_viewNameChanged, self);
 
 	return (GltkWidget*)gobject;
 }
@@ -170,6 +190,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	siteInfo->name = g_strdup(site);
 	siteInfo->siteBox = gltk_vbox_new();
 	siteInfo->views = gltk_list_new();
+	siteInfo->viewMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_view_list_item);
 	g_object_ref(G_OBJECT(siteInfo->siteBox));
 	g_object_ref(G_OBJECT(siteInfo->views));
 
@@ -186,7 +207,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 
 	GltkListItem* listItem = gltk_list_add_item(GLTK_LIST(list), siteInfo->siteBox, siteInfo);
 
-	g_hash_table_insert(priv->sites, g_strdup(site), listItem);
+	g_hash_table_insert(priv->siteMap, g_strdup(site), listItem);
 }
 
 static gboolean
@@ -209,7 +230,7 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
 	USING_PRIVATE(list);
 
-	GltkListItem* listItem = (GltkListItem*)g_hash_table_lookup(priv->sites, site);
+	GltkListItem* listItem = (GltkListItem*)g_hash_table_lookup(priv->siteMap, site);
 	g_return_if_fail(listItem);
 
 	Site* siteInfo = (Site*)listItem->data;
@@ -222,7 +243,9 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
 	g_signal_connect(viewInfo->button, "slide-event", (GCallback)view_slide, viewInfo);
 	
-	gltk_list_add_item(GLTK_LIST(siteInfo->views), viewInfo->button, viewInfo);
+	GltkListItem* viewListItem = gltk_list_add_item(GLTK_LIST(siteInfo->views), viewInfo->button, viewInfo);
+
+	g_hash_table_insert(siteInfo->viewMap, g_strdup(view), viewListItem);
 }
 
 
@@ -235,4 +258,33 @@ darxen_site_list_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void				
+config_viewNameChanged(	DarxenConfig* config,
+						const gchar* site,
+						DarxenViewInfo* viewInfo,
+						const gchar* oldName,
+						DarxenSiteList* list)
+{
+	USING_PRIVATE(list);
+
+	GltkListItem* itemSite = (GltkListItem*)g_hash_table_lookup(priv->siteMap, site);
+	g_return_if_fail(itemSite);
+	Site* siteInfo = (Site*)itemSite->data;
+
+	gchar* key;
+	GltkListItem* itemView;
+	g_return_if_fail(g_hash_table_lookup_extended(siteInfo->viewMap, oldName, (gpointer*)&key, (gpointer*)&itemView));
+	View* view = (View*)itemView->data;
+
+	g_return_if_fail(g_hash_table_steal(siteInfo->viewMap, oldName));
+	g_free(view->name);
+	g_free(key);
+	view->name = g_strdup(viewInfo->name);
+	gltk_button_set_text(GLTK_BUTTON(view->button), viewInfo->name);
+	g_hash_table_insert(siteInfo->viewMap, g_strdup(viewInfo->name), itemView);
+}
+
+
+
 

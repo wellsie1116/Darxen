@@ -186,6 +186,23 @@ keyBackspace_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* ke
 }
 
 static gboolean
+keyBackspace_longTouched(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
+{
+	USING_PRIVATE(keyboard);
+
+	GltkLabel* label = GLTK_LABEL(priv->label);
+	int len = strlen(label->text);
+	if (!len)
+		return TRUE;
+
+	g_free(label->text);
+	label->text = g_strdup("");
+
+	gltk_widget_invalidate(GLTK_WIDGET(priv->label));
+	return TRUE;
+}
+
+static gboolean
 keyCaps_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
 {
 	USING_PRIVATE(keyboard);
@@ -249,13 +266,6 @@ add_key(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey)
 	add_key_sized(keyboard, box, key, shiftKey, 1.0f);
 }
 
-static void
-add_special_key(GltkKeyboard* keyboard, GltkBox* box, GltkWidget* button, GCallback callback, float width)
-{
-	gltk_box_append_widget(box, button, FALSE, FALSE);
-	g_signal_connect(button, "click-event", callback, keyboard);
-}
-
 GltkWidget*
 gltk_keyboard_new(const gchar* text)
 {
@@ -287,7 +297,10 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxNumbers), '0', ')');
 		add_key(self, GLTK_BOX(hboxNumbers), '-', '_');
 		add_key(self, GLTK_BOX(hboxNumbers), '=', '+');
-		add_special_key(self, GLTK_BOX(hboxNumbers), gltk_button_new("<-"), (GCallback)keyBackspace_clicked, 2.0f);
+		GltkWidget* backspace = gltk_button_new("<-");
+		gltk_box_append_widget(GLTK_BOX(hboxNumbers), backspace, FALSE, FALSE);
+		g_signal_connect(backspace, "click-event", (GCallback)keyBackspace_clicked, self);
+		g_signal_connect(backspace, "long-touch-event", (GCallback)keyBackspace_longTouched, self);
 	}
 
 	GltkWidget* hboxRow1 = gltk_hbox_new();
