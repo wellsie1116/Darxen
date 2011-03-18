@@ -60,7 +60,7 @@ typedef enum
 GType			gltk_entry_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_entry_new		(const char* text);
 
-/* Public functions here */
+const gchar*	gltk_entry_get_text	(GltkEntry* entry);
 
 GQuark			gltk_entry_error_quark	();
 

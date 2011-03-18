@@ -67,6 +67,8 @@ static guint			site_view_pair_hash		(SiteViewPair* pair);
 static gboolean			site_view_pair_equal	(const SiteViewPair* o1, const SiteViewPair* o2);
 static void				view_pair_free			(ViewPair* view);
 
+static void viewConfig_siteChanged(DarxenViewConfig* viewConfig, DarxenPanelManager* manager);
+
 static void
 darxen_panel_manager_class_init(DarxenPanelManagerClass* klass)
 {
@@ -135,6 +137,7 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 
 	pair->view = (DarxenView*)darxen_view_new(site, viewInfo);
 	pair->config = (DarxenViewConfig*)darxen_view_config_new(site, viewInfo);
+	g_signal_connect(pair->config, "site-changed", (GCallback)viewConfig_siteChanged, manager);
 	g_object_ref_sink(G_OBJECT(pair->view));
 	g_object_ref_sink(G_OBJECT(pair->config));
 
@@ -224,5 +227,13 @@ view_pair_free(ViewPair* pair)
 {
 	g_object_unref(G_OBJECT(pair->view));
 	g_object_unref(G_OBJECT(pair->config));
+}
+
+static void
+viewConfig_siteChanged(DarxenViewConfig* viewConfig, DarxenPanelManager* manager)
+{
+	USING_PRIVATE(manager);
+
+	g_critical("TODO: update all references to this view name");
 }
 

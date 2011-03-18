@@ -49,6 +49,8 @@ struct _DarxenViewConfigClass
 	GltkVBoxClass parent_class;
 	
 	/* signals */
+	void	(*site_changed)	(	);
+
 	/* virtual funcs */
 };
 

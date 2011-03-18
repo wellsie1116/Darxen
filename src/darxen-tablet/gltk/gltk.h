@@ -38,8 +38,9 @@
 #include <gltk/gltklabel.h>
 #include <gltk/gltkkeyboard.h>
 #include <gltk/gltkbutton.h>
-#include <gltk/gltkentry.h>
+#include <gltk/gltktogglebutton.h>
 #include <gltk/gltkslidebutton.h>
+#include <gltk/gltkentry.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>

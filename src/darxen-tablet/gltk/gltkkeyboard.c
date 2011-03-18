@@ -22,7 +22,10 @@
 
 #include "gltkhbox.h"
 #include "gltkbutton.h"
+#include "gltktogglebutton.h"
 #include "gltklabel.h"
+
+#include <string.h>
 
 G_DEFINE_TYPE(GltkKeyboard, gltk_keyboard, GLTK_TYPE_VBOX)
 
@@ -35,9 +38,24 @@ enum
 };
 
 typedef struct _GltkKeyboardPrivate		GltkKeyboardPrivate;
+typedef struct _KeyboardKey				KeyboardKey;
+
+struct _KeyboardKey
+{
+	char key;
+	char shiftKey;
+	float width;
+	GltkWidget* button;
+};
+
 struct _GltkKeyboardPrivate
 {
 	GltkWidget* label;
+
+	GltkWidget* shift;
+	GltkWidget* caps;
+
+	GSList* keys; //KeyboardKey
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -68,7 +86,35 @@ gltk_keyboard_dispose(GObject* gobject)
 	GltkKeyboard* self = GLTK_KEYBOARD(gobject);
 	USING_PRIVATE(self);
 
-	//free and release references
+	if (priv->label)
+	{
+		g_object_unref(priv->label);
+		priv->label = NULL;
+	}
+
+	if (priv->shift)
+	{
+		g_object_unref(priv->shift);
+		priv->shift = NULL;
+	}
+
+	if (priv->caps)
+	{
+		g_object_unref(priv->caps);
+		priv->caps = NULL;
+	}
+
+	if (priv->keys)
+	{
+		GSList* pKeys = priv->keys;
+		while (pKeys)
+		{
+			g_free(pKeys->data);
+			pKeys = pKeys->next;
+		}
+		g_slist_free(priv->keys);
+		priv->keys = NULL;
+	}
 
 	G_OBJECT_CLASS(gltk_keyboard_parent_class)->dispose(gobject);
 }
@@ -84,6 +130,24 @@ gltk_keyboard_finalize(GObject* gobject)
 	G_OBJECT_CLASS(gltk_keyboard_parent_class)->finalize(gobject);
 }
 
+static void
+set_shift(GltkKeyboard* keyboard, gboolean value)
+{
+	USING_PRIVATE(keyboard);
+
+	GSList* pKeys = priv->keys;
+	char txt[2] = {0,};
+	while (pKeys)
+	{
+		KeyboardKey* key = (KeyboardKey*)pKeys->data;
+	
+		txt[0] = value ? key->shiftKey : key->key;
+		GLTK_BUTTON(key->button)->text = g_strdup(txt);
+	
+		pKeys = pKeys->next;
+	}
+}
+
 static gboolean
 key_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
 {
@@ -94,6 +158,12 @@ key_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
 	gchar* newText = g_strdup_printf("%s%c", label->text, GLTK_BUTTON(button)->text[0]);
 	g_free(label->text);
 	label->text = newText;
+	
+	if (gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift)))
+	{
+		gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(priv->shift), FALSE);
+		set_shift(keyboard, gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift)));
+	}
 
 	gltk_widget_invalidate(GLTK_WIDGET(priv->label));
 	return TRUE;
@@ -115,13 +185,62 @@ keyBackspace_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* ke
 	return TRUE;
 }
 
+static gboolean
+keyCaps_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
+{
+	USING_PRIVATE(keyboard);
+
+	gboolean isShift = gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift));
+	gboolean isCaps = gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->caps));
+
+	if (isCaps && isShift)
+	{
+		gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(priv->shift), FALSE);
+	}
+
+	set_shift(keyboard, isCaps);
+
+	gltk_widget_invalidate(GLTK_WIDGET(keyboard));
+	return FALSE;
+}
+
+static gboolean
+keyShift_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
+{
+	USING_PRIVATE(keyboard);
+
+	gboolean isShift = gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift));
+	gboolean isCaps = gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->caps));
+
+	if (isShift)
+	{
+		set_shift(keyboard, !isCaps);
+	}
+	else
+	{
+		set_shift(keyboard, isCaps);
+	}
+
+	gltk_widget_invalidate(GLTK_WIDGET(keyboard));
+	return FALSE;
+}
+
 static void
 add_key_sized(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey, float width)
 {
+	USING_PRIVATE(keyboard);
+
+	KeyboardKey* keyboardKey = g_new(KeyboardKey, 1);
+	keyboardKey->key = key;
+	keyboardKey->shiftKey = shiftKey;
+	keyboardKey->width = width;
+
 	char txt[2] = {key, '\0'};
-	GltkWidget* button = gltk_button_new(txt);
-	gltk_box_append_widget(box, button, FALSE, FALSE);
-	g_signal_connect(button, "click-event", (GCallback)key_clicked, keyboard);
+	keyboardKey->button = gltk_button_new(txt);
+	gltk_box_append_widget(box, keyboardKey->button, FALSE, FALSE);
+	g_signal_connect(keyboardKey->button, "click-event", (GCallback)key_clicked, keyboard);
+
+	priv->keys = g_slist_prepend(priv->keys, keyboardKey);
 }
 
 static void
@@ -131,9 +250,8 @@ add_key(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey)
 }
 
 static void
-add_special_key(GltkKeyboard* keyboard, GltkBox* box, const char* txt, GCallback callback, float width)
+add_special_key(GltkKeyboard* keyboard, GltkBox* box, GltkWidget* button, GCallback callback, float width)
 {
-	GltkWidget* button = gltk_button_new(txt);
 	gltk_box_append_widget(box, button, FALSE, FALSE);
 	g_signal_connect(button, "click-event", callback, keyboard);
 }
@@ -156,7 +274,8 @@ gltk_keyboard_new(const gchar* text)
 	
 	GltkWidget* hboxNumbers = gltk_hbox_new();
 	{
-		add_key_sized(self, GLTK_BOX(hboxNumbers), '1', '!', 0.5f);
+		add_key_sized(self, GLTK_BOX(hboxNumbers), '`', '~', 0.5f);
+		add_key(self, GLTK_BOX(hboxNumbers), '1', '!');
 		add_key(self, GLTK_BOX(hboxNumbers), '2', '@');
 		add_key(self, GLTK_BOX(hboxNumbers), '3', '#');
 		add_key(self, GLTK_BOX(hboxNumbers), '4', '$');
@@ -168,13 +287,12 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxNumbers), '0', ')');
 		add_key(self, GLTK_BOX(hboxNumbers), '-', '_');
 		add_key(self, GLTK_BOX(hboxNumbers), '=', '+');
-		add_special_key(self, GLTK_BOX(hboxNumbers), "<-", (GCallback)keyBackspace_clicked, 2.0f);
-		//backspace
+		add_special_key(self, GLTK_BOX(hboxNumbers), gltk_button_new("<-"), (GCallback)keyBackspace_clicked, 2.0f);
 	}
 
 	GltkWidget* hboxRow1 = gltk_hbox_new();
 	{
-		//tab
+		gltk_box_append_widget(GLTK_BOX(hboxRow1), gltk_label_new(" "), FALSE, FALSE);
 		add_key(self, GLTK_BOX(hboxRow1), 'q', 'Q');
 		add_key(self, GLTK_BOX(hboxRow1), 'w', 'W');
 		add_key(self, GLTK_BOX(hboxRow1), 'e', 'E');
@@ -192,7 +310,10 @@ gltk_keyboard_new(const gchar* text)
 	
 	GltkWidget* hboxRow2 = gltk_hbox_new();
 	{
-		//caps lock
+		priv->caps = gltk_toggle_button_new("Caps");
+		g_object_ref(priv->caps);
+		g_signal_connect_after(priv->caps, "click-event", (GCallback)keyCaps_clicked, self);
+		gltk_box_append_widget(GLTK_BOX(hboxRow2), priv->caps, FALSE, FALSE);
 		add_key(self, GLTK_BOX(hboxRow2), 'a', 'A');
 		add_key(self, GLTK_BOX(hboxRow2), 's', 'S');
 		add_key(self, GLTK_BOX(hboxRow2), 'd', 'D');
@@ -208,7 +329,10 @@ gltk_keyboard_new(const gchar* text)
 	
 	GltkWidget* hboxRow3 = gltk_hbox_new();
 	{
-		//shift
+		priv->shift = gltk_toggle_button_new("Shift");
+		g_object_ref(priv->shift);
+		g_signal_connect_after(priv->shift, "click-event", (GCallback)keyShift_clicked, self);
+		gltk_box_append_widget(GLTK_BOX(hboxRow3), priv->shift, FALSE, FALSE);
 		add_key(self, GLTK_BOX(hboxRow3), 'z', 'Z');
 		add_key(self, GLTK_BOX(hboxRow3), 'x', 'X');
 		add_key(self, GLTK_BOX(hboxRow3), 'c', 'C');
@@ -221,11 +345,21 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow3), '/', '?');
 	}
 
+	GltkWidget* hboxRow4 = gltk_hbox_new();
+	{
+		gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
+		GltkWidget* space = gltk_button_new("                ");
+		gltk_box_append_widget(GLTK_BOX(hboxRow4), space, FALSE, FALSE);
+		g_signal_connect(space, "click-event", (GCallback)key_clicked, self);
+		gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
+	}
+
 	gltk_box_append_widget(GLTK_BOX(self), hboxTop, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(self), hboxNumbers, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(self), hboxRow1, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(self), hboxRow2, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(self), hboxRow3, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(self), hboxRow4, FALSE, FALSE);
 
 	return (GltkWidget*)gobject;
 }

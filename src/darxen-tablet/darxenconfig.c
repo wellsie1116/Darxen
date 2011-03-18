@@ -42,7 +42,7 @@ darxen_config_get_sites()
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = "Archived Reflectivity (0.5)";
+		view->name = g_strdup("Archived Reflectivity (0.5)");
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201102101939");
@@ -55,7 +55,7 @@ darxen_config_get_sites()
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = "Archived Reflectivity (1.0)";
+		view->name = g_strdup("Archived Reflectivity (1.0)");
 		view->productCode = g_strdup("N1R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201101121416");
@@ -74,7 +74,7 @@ darxen_config_get_sites()
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = "Archived Reflectivity (0.5)";
+		view->name = g_strdup("Archived Reflectivity (0.5)");
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201102091939");
@@ -89,7 +89,7 @@ darxen_config_get_sites()
 		site->views = g_list_append(site->views, view);
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = "Archived Reflectivity (1.0)";
+		view->name = g_strdup("Archived Reflectivity (1.0)");
 		view->productCode = g_strdup("N1R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201101121417");

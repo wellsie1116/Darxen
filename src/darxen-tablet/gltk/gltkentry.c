@@ -129,6 +129,12 @@ gltk_entry_new(const char* text)
 	return (GltkWidget*)gobject;
 }
 
+const gchar*
+gltk_entry_get_text(GltkEntry* entry)
+{
+	return GLTK_BUTTON(entry)->text;
+}
+
 GQuark
 gltk_entry_error_quark()
 {
