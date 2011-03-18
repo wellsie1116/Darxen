@@ -228,7 +228,7 @@ darxen_config_rename_view(	DarxenConfig* config,
 		siteInfo = (DarxenSiteInfo*)pSites->data;
 				
 		if (g_strcmp0(siteInfo->name, site))
-			site = NULL;
+			siteInfo = NULL;
 	
 		pSites = pSites->next;
 	}

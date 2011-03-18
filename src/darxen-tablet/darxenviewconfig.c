@@ -77,7 +77,7 @@ darxen_view_config_finalize(GObject* gobject)
 	DarxenViewConfig* self = DARXEN_VIEW_CONFIG(gobject);
 	USING_PRIVATE(self);
 
-	free(priv->site);
+	g_free(priv->site);
 
 	G_OBJECT_CLASS(darxen_view_config_parent_class)->finalize(gobject);
 }
