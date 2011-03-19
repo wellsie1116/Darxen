@@ -22,4 +22,6 @@ echo "- autoheader."
 autoheader
 echo "- automake."
 automake -a
+echo "- configuring."
+./configure --enable-silent-rules
 exit
