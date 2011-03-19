@@ -19,13 +19,17 @@
  */
 
 #include "libdarxenRestfulClient.h"
+#include "DarxenConversions.h"
 
 #include <glib.h>
 #include <json-glib/json-glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <curl/curl.h>
+
+void darxen_poller_notify_data(DarxenPoller* poller, RadarData* data);
 
 G_DEFINE_TYPE(DarxenRestfulClient, darxen_restful_client, G_TYPE_OBJECT)
 
@@ -33,6 +37,7 @@ G_DEFINE_TYPE(DarxenRestfulClient, darxen_restful_client, G_TYPE_OBJECT)
 #define DARXEN_RESTFUL_CLIENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DARXEN_TYPE_RESTFUL_CLIENT, DarxenRestfulClientPrivate))
 
 typedef struct _DarxenRestfulClientPrivate		DarxenRestfulClientPrivate;
+typedef struct _ThreadNotifyData				ThreadNotifyData;
 struct _DarxenRestfulClientPrivate
 {
 	int ID;
@@ -41,6 +46,15 @@ struct _DarxenRestfulClientPrivate
 	gchar* auth_token;
 
 	GHashTable* pollers;
+
+	gboolean pollerThreadUp;
+	pthread_t pollerThread;
+};
+
+struct _ThreadNotifyData
+{
+	DarxenRestfulClient* client;
+	RadarData* data;
 };
 
 typedef struct {
@@ -48,7 +62,9 @@ typedef struct {
 	size_t len;
 } ResponseBody;
 
-static void darxen_restful_client_finalize(GObject* gobject);
+static void			darxen_restful_client_finalize(GObject* gobject);
+
+static void*		polling_thread_run(DarxenRestfulClient* client);
 
 static CURL*		create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body);
 static inline int	validate_response(CURL* curl, GError** error);
@@ -56,6 +72,7 @@ static inline int	go_curl(CURL* curl, GError** error);
 static size_t		mem_read(void *ptr, size_t size, size_t nmemb, void *stream);
 
 static RadarPoller*	radar_poller_new(const gchar* site, const gchar* product);
+static void			radar_poller_init(RadarPoller* pair, const gchar* site, const gchar* product);
 static void			radar_poller_free(RadarPoller* pair);
 static guint		radar_poller_hash(RadarPoller* pair);
 static gboolean		radar_poller_equal(const RadarPoller* o1, const RadarPoller* o2);
@@ -78,6 +95,8 @@ darxen_restful_client_init(DarxenRestfulClient* self)
 	priv->password = NULL;
 	priv->auth_token = NULL;
 	priv->pollers = NULL;
+
+	priv->pollerThreadUp = FALSE;
 }
 
 static void
@@ -141,6 +160,20 @@ darxen_restful_client_connect(DarxenRestfulClient* self, GError** error)
 	free(body.data);
 	g_object_unref(G_OBJECT(parser));
 
+	//setup polling loop
+	if (priv->pollerThreadUp)
+	{
+		g_debug("Killing stale polling thread");
+		pthread_cancel(priv->pollerThread);
+	}
+	if (pthread_create(&priv->pollerThread, NULL, (void*(*)(void*))polling_thread_run, self))
+	{
+		g_set_error(error, DARXEN_RESTFUL_CLIENT_ERROR, DARXEN_RESTFUL_CLIENT_ERROR_FAILED, "Unable to start data poller thread");
+		return 0;
+	}
+	priv->pollerThreadUp = TRUE;
+
+
 	return priv->ID;
 }
 
@@ -174,7 +207,7 @@ static ClassData* class_data_new(gpointer object, gpointer data)
 	return dat;
 }
 
-static darxen_poller_removed(ClassData* data, DarxenPoller* deadObject)
+static void darxen_poller_removed(ClassData* data, DarxenPoller* deadObject)
 {
 	DarxenRestfulClient* client = DARXEN_RESTFUL_CLIENT(data->object);
 	RadarPoller* poller = (RadarPoller*)data->data;
@@ -188,11 +221,14 @@ static darxen_poller_removed(ClassData* data, DarxenPoller* deadObject)
 }
 
 DarxenPoller*
-darxen_restful_client_add_poller(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error)
+darxen_restful_client_add_poller(DarxenRestfulClient* self, const gchar* site, const gchar* product, GError** error)
 {
 	USING_PRIVATE(self);
+
+	RadarPoller pair;
+	radar_poller_init(&pair, site, product);
 	
-	DarxenPoller* poller = g_hash_table_lookup(priv->pollers, radar_poller_new(site, product));
+	DarxenPoller* poller = g_hash_table_lookup(priv->pollers, &pair);
 	if (poller)
 	{
 		g_object_ref(G_OBJECT(poller));
@@ -219,11 +255,14 @@ darxen_restful_client_add_poller(DarxenRestfulClient* self, gchar* site, gchar* 
 }
 
 int
-darxen_restful_client_remove_poller(DarxenRestfulClient* self, gchar* site, gchar* product, GError** error)
+darxen_restful_client_remove_poller(DarxenRestfulClient* self, const gchar* site, const gchar* product, GError** error)
 {
 	USING_PRIVATE(self);
+	
+	RadarPoller pair;
+	radar_poller_init(&pair, site, product);
 
-	DarxenPoller* poller = g_hash_table_lookup(priv->pollers, radar_poller_new(site, product));
+	DarxenPoller* poller = g_hash_table_lookup(priv->pollers, &pair);
 	if (!poller)
 	{
 		g_set_error(error,	DARXEN_RESTFUL_CLIENT_ERROR,
@@ -233,8 +272,10 @@ darxen_restful_client_remove_poller(DarxenRestfulClient* self, gchar* site, gcha
 	}
 
 	g_object_unref(G_OBJECT(poller));
-	poller = g_hash_table_lookup(priv->pollers, radar_poller_new(site, product));
 
+	//Check if the object has removed itself from the table (been disposed)
+	//Free the poller if it has
+	poller = g_hash_table_lookup(priv->pollers, &pair);
 	if (!poller)
 	{
 		gchar* url = g_strdup_printf("/pollers/%s/%s", site, product);
@@ -323,7 +364,6 @@ darxen_restful_client_search_data(	DarxenRestfulClient* self,
 									int* count,
 									GError** error)
 {
-	//TODO: test
 	USING_PRIVATE(self);
 
 	int dummy;
@@ -337,7 +377,7 @@ darxen_restful_client_search_data(	DarxenRestfulClient* self,
 
 	int nums[2] = {0, 0};
 
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headers_search_data);
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, (curl_write_callback)headers_search_data);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA, nums);
 
 	if (go_curl(curl, error))
@@ -364,7 +404,6 @@ darxen_restful_client_read_search(	DarxenRestfulClient* self,
 									int count, 
 									GError** error)
 {
-	//TODO: test
 	USING_PRIVATE(self);
 	ResponseBody body = {0,};
 
@@ -406,7 +445,6 @@ darxen_restful_client_free_search(	DarxenRestfulClient* self,
 									int searchId, 
 									GError** error)
 {
-	//TODO: test
 	USING_PRIVATE(self);
 
 	gchar* url = g_strdup_printf("/cache/%d", searchId);
@@ -428,7 +466,6 @@ darxen_restful_client_read_data(	DarxenRestfulClient* self,
 									size_t* len,
 									GError** error)
 {
-	//TODO: test
 	USING_PRIVATE(self);
 	ResponseBody body = {0,};
 
@@ -459,6 +496,158 @@ darxen_restful_client_error_quark()
  * Private Functions *
  *********************/
 
+static size_t
+headers_head_data(char* ptr, size_t size, size_t nmemb, int* queueLength)
+{
+	gchar* header = g_strndup(ptr, nmemb);
+	gchar* value = g_strstr_len(header, nmemb, ": ") + 2;
+
+	if (!strncmp(header, "Queue-Length", strlen("Queue-Length")))
+	{
+		*queueLength = atoi(value);
+	}
+	g_free(header);
+
+	return nmemb * size;
+}
+
+static gboolean
+polling_thread_notify_data_ready(ThreadNotifyData* notifyData)
+{
+	USING_PRIVATE(notifyData->client);
+
+	GHashTableIter iter;
+	g_hash_table_iter_init(&iter, priv->pollers);
+
+	RadarPoller* pair;
+	DarxenPoller* poller;
+	while (g_hash_table_iter_next(&iter, (gpointer*)&pair, (gpointer*)&poller))
+	{
+		if (!g_strcmp0(pair->site, poller->site)
+				&& !g_strcmp0(pair->product, poller->product))
+		{
+			darxen_poller_notify_data(poller, notifyData->data);
+		}
+	}
+
+	return FALSE;
+}
+
+static void
+free_notify_data(ThreadNotifyData* notifyData)
+{
+	g_free(notifyData->data->site);
+	g_free(notifyData->data->product);
+	g_free(notifyData->data->ID);
+	free  (notifyData->data->data);
+	g_free(notifyData->data);
+
+	g_free(notifyData);
+}
+
+static void*
+polling_thread_run(DarxenRestfulClient* client)
+{
+	USING_PRIVATE(client);
+
+	while (1)
+	{
+		GError* error = NULL;
+		int queueLength;
+
+		{
+			const char* url = "/data/long";
+			CURL* curl = create_curl_client("HEAD", url, priv->auth_token, NULL);
+			g_assert(curl);
+			
+			curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, (curl_write_callback)headers_head_data);
+			curl_easy_setopt(curl, CURLOPT_HEADERDATA, &queueLength);
+
+			if (go_curl(curl, &error))
+			{
+				g_critical("Failed to poll for data, giving connection some time...");
+				struct timespec delay = {5, 0};
+				nanosleep(&delay, NULL);
+				continue;
+			}
+		}
+
+		pthread_testcancel();
+		if (queueLength)
+		{
+			ResponseBody body = {0,};
+
+			//read information about the data in our queue
+			gchar* url = g_strdup_printf("/data/%i", queueLength);
+			CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
+			g_free(url);
+			g_assert(curl);
+
+			if (go_curl(curl, &error))
+			{
+				g_critical("Failed to read data queue, items may have been lost");
+				continue;
+			}
+
+			//parse json
+			JsonParser* parser = json_parser_new();
+			if (!json_parser_load_from_data(parser, body.data, body.len, &error))
+			{
+				free(body.data);
+				g_object_unref(G_OBJECT(parser));
+				g_critical("Failed to parse data queue, items have probably been lost");
+
+				gchar* dump = darxen_hexdump(body.data, body.len);
+				g_debug("Data retrieved from server:\n%s", dump);
+				g_free(dump);
+				continue;
+			}
+
+			JsonNode* root = json_parser_get_root(parser);
+			JsonArray* array = json_node_get_array(root);
+			int len = json_array_get_length(array);
+			g_assert(len == queueLength);
+
+			//download the actual data from the queue
+			int i;
+			for (i = 0; i < len; i++)
+			{
+				JsonObject* object = json_array_get_object_element(array, i);
+				
+				RadarData* radarData = g_new(RadarData, 1);
+
+				radarData->site    = g_strdup(json_object_get_string_member(object, "Site"));
+				radarData->product = g_strdup(json_object_get_string_member(object, "Product"));
+				radarData->ID      = g_strdup(json_object_get_string_member(object, "ID"));
+
+				radarData->data = darxen_restful_client_read_data(	client, radarData->site, 
+																	radarData->product, radarData->ID,
+					   												&radarData->len, &error);
+				if (!radarData->data)
+				{
+					g_critical("Failed to download %s/%s/%s because \"%s\", skipping...", 
+								radarData->site, radarData->product, radarData->ID, error->message);
+					g_free(radarData);
+					continue;
+				}
+
+				ThreadNotifyData* notifyData = g_new(ThreadNotifyData, 1);
+
+				notifyData->client = client;
+				notifyData->data = radarData;
+
+				g_idle_add_full(	G_PRIORITY_DEFAULT, 
+									(GSourceFunc)polling_thread_notify_data_ready, 
+									notifyData, 
+									(GDestroyNotify)free_notify_data);
+			}
+
+			free(body.data);
+			g_object_unref(G_OBJECT(parser));
+		}
+	}
+}
+
 static CURL*
 create_curl_client(const char* method, const char* url, const char* auth_token, ResponseBody* body)
 {
@@ -471,7 +660,7 @@ create_curl_client(const char* method, const char* url, const char* auth_token, 
 		curl_easy_setopt(curl, CURLOPT_USERPWD, auth_token);
 		curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 	}
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 	g_free(full_url);
 	if (body)
 	{
@@ -549,9 +738,15 @@ static RadarPoller*
 radar_poller_new(const gchar* site, const gchar* product)
 {
 	RadarPoller* pair = g_new(RadarPoller, 1);
-	pair->site = g_strdup(site);
-	pair->product = g_strdup(product);
+	radar_poller_init(pair, g_strdup(site), g_strdup(product));
 	return pair;
+}
+
+static void
+radar_poller_init(RadarPoller* pair, const gchar* site, const gchar* product)
+{
+	pair->site = (gchar*)site;
+	pair->product = (gchar*)product;
 }
 
 static void

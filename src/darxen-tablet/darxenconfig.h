@@ -60,7 +60,8 @@ struct _DarxenViewSourceArchive
 
 enum _DarxenViewSourceType
 {
-	DARXEN_VIEW_SOURCE_ARCHIVE
+	DARXEN_VIEW_SOURCE_ARCHIVE,
+	DARXEN_VIEW_SOURCE_LIVE
 };
 
 union _DarxenViewSource

@@ -35,8 +35,6 @@ typedef struct _DarxenPollerPrivate		DarxenPollerPrivate;
 struct _DarxenPollerPrivate
 {
 	DarxenRestfulClient* client;
-	gchar* site;
-	gchar* product;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -66,17 +64,18 @@ darxen_poller_init(DarxenPoller* self)
 {
 	USING_PRIVATE(self);
 
-	/* initialize fields generically here */
+	priv->client = NULL;
+	self->site = NULL;
+	self->product = NULL;
 }
 
 static void
 darxen_poller_finalize(GObject* gobject)
 {
 	DarxenPoller* self = DARXEN_POLLER(gobject);
-	USING_PRIVATE(self);
 
-	g_free(priv->site);
-	g_free(priv->product);
+	g_free(self->site);
+	g_free(self->product);
 	
 	G_OBJECT_CLASS(darxen_poller_parent_class)->finalize(gobject);
 }
@@ -90,10 +89,18 @@ darxen_poller_new(DarxenRestfulClient* client, const gchar* site, const gchar* p
 	USING_PRIVATE(self);
 
 	priv->client = client;
-	priv->site = g_strdup(site);
-	priv->product = g_strdup(product);
+	self->site = g_strdup(site);
+	self->product = g_strdup(product);
 
 	return (DarxenPoller*)gobject;
+}
+
+void
+darxen_poller_notify_data(DarxenPoller* poller, RadarData* data)
+{
+	g_return_if_fail(DARXEN_IS_POLLER(poller));
+
+	g_signal_emit(poller, signals[DATA_RECEIVED], 0, data);
 }
 
 

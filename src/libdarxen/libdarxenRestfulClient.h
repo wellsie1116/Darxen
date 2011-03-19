@@ -75,7 +75,8 @@ typedef struct {
 	gchar* site;
 	gchar* product;
 	gchar* ID;
-	gchar* data;
+	size_t len;
+	char* data;
 } RadarData;
 
 GType					darxen_restful_client_get_type	() G_GNUC_CONST;
@@ -87,13 +88,12 @@ int						darxen_restful_client_disconnect	(DarxenRestfulClient* self, GError** e
 
 
 DarxenPoller*			darxen_restful_client_add_poller	(	DarxenRestfulClient* self, 
-																gchar* site, 
-																gchar* product, 
+																const gchar* site, 
+																const gchar* product, 
 																GError** error);
-
 int						darxen_restful_client_remove_poller	(	DarxenRestfulClient* self, 
-																gchar* site, 
-																gchar* product, 
+																const gchar* site, 
+																const gchar* product, 
 																GError** error);
 
 RadarPoller*			darxen_restful_client_list_pollers	(	DarxenRestfulClient* self, 
@@ -137,6 +137,9 @@ GQuark			darxen_restful_client_error_quark	();
 struct _DarxenPoller
 {
 	GObject parent;
+	
+	gchar* site;
+	gchar* product;
 };
 
 struct _DarxenPollerClass

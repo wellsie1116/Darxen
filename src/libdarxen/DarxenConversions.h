@@ -39,6 +39,8 @@ G_EXPORT int darxen_conversions_time_get_seconds(int seconds);
 
 G_EXPORT const char *darxen_conversions_format_date_time(GDate *date, int seconds);
 
+G_EXPORT gchar* darxen_hexdump(const gchar* data, size_t length);
+
 G_END_DECLS
 
 #endif

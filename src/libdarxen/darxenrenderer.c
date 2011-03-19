@@ -334,7 +334,7 @@ matrix_mult(const float* m1, float* res)
 			res[y*4+x] = sum;
 		}
 	}
-	matrix_print("Res", res);
+	// matrix_print("Res", res);
 }
 
 void
@@ -389,7 +389,7 @@ darxen_renderer_render(DarxenRenderer *renderer)
 	priv->dirty = FALSE;
 
 	g_timer_stop(timer);
-	g_debug("Render Time: %f", g_timer_elapsed(timer, NULL));
+	//g_debug("Render Time: %f", g_timer_elapsed(timer, NULL));
 	g_timer_destroy(timer);
 }
 
@@ -455,7 +455,6 @@ darxen_renderer_render_internal(DarxenRenderer *renderer)
 
 		glMultMatrixf(trans);
 	}
-
 
 	darxen_renderer_render_underlay(renderer);
 
@@ -1314,6 +1313,7 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 						//the place of a higher intensity range bin because it
 						//will be overwritten by the higher intensity bin later
 						//and reduces the number of quads we need to render
+						//FIXME causes alpha blending issues
 						if ((startRange && color < i) || 
 								(startRange && (range == objData->intNumRangeBins-1) && range++))
 						{

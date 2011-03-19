@@ -97,11 +97,11 @@ gesture_callback(	GtkWidget* widget,
 		switch (event->type)
 		{
 			case GRIP_GESTURE_DRAG:
-				g_message("Gesture move: Drag");
+				//g_message("Gesture move: Drag");
 			break;
 			case GRIP_GESTURE_PINCH:
 			{
-				g_message("Gesture move: Pinch");
+				//g_message("Gesture move: Pinch");
 				GltkEvent* newEvent = gltk_event_new(GLTK_PINCH);
 				GripEventGesturePinch* e = (GripEventGesturePinch*)event;
 
@@ -129,10 +129,10 @@ gesture_callback(	GtkWidget* widget,
 				gltk_event_free(newEvent);
 			} break;
 			case GRIP_GESTURE_ROTATE:
-				g_message("Gesture move: Rotate");
+				//g_message("Gesture move: Rotate");
 			break;
 			case GRIP_GESTURE_TAP:
-				g_message("Gesture move: Tap");
+				//g_message("Gesture move: Tap");
 			break;
 		}
 	}
@@ -202,7 +202,7 @@ motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 static gboolean
 expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 {
-	g_message("Expose");
+	//g_message("Expose");
 
 	GdkGLContext *glcontext = gtk_widget_get_gl_context(darea);
 	GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(darea);
@@ -229,7 +229,7 @@ expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 static gboolean
 configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 {
-	g_message("Configure");
+	//g_message("Configure");
 	gltk_window_set_size(glWindow, event->width, event->height);
 
 	GdkGLContext *glcontext = gtk_widget_get_gl_context(darea);

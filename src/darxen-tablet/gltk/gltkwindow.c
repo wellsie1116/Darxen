@@ -242,7 +242,7 @@ gltk_window_render(GltkWindow* window)
 		int i;
 		for (i = 0; i < priv->touchCount; i++)
 		{
-			g_message("Touch position (%i): %i %i", i, priv->touchPositions[i].x, priv->touchPositions[i].y);
+			//g_message("Touch position (%i): %i %i", i, priv->touchPositions[i].x, priv->touchPositions[i].y);
 			glPushMatrix();
 			{
 				glTranslatef(priv->touchPositions[i].x, priv->touchPositions[i].y, 0.0f);

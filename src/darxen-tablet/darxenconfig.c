@@ -164,11 +164,11 @@ darxen_config_get_sites(DarxenConfig* config)
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Archived Reflectivity (0.5)");
+		view->name = g_strdup("Live Reflectivity (0.5)");
 		view->productCode = g_strdup("N0R");
-		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("201102091939");
-		view->source.archive.endId = g_strdup("201102092204");
+		view->sourceType = DARXEN_VIEW_SOURCE_LIVE;
+		// view->source.archive.startId = g_strdup("201102091939");
+		// view->source.archive.endId = g_strdup("201102092204");
 		view->shapefiles = NULL;
 		ADD_SHAPEFILE("Counties");
 		ADD_SHAPEFILE("States");

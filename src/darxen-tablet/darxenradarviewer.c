@@ -40,6 +40,8 @@ struct _DarxenRadarViewerPrivate
 	gchar* site;
 	DarxenViewInfo* viewInfo;
 
+	DarxenPoller* poller;
+
 	DarxenRenderer* renderer;
 	GLubyte* buffer;
 	GList* data; //RenderData
@@ -55,6 +57,8 @@ struct _RenderData
 
 static void darxen_radar_viewer_dispose(GObject* gobject);
 static void darxen_radar_viewer_finalize(GObject* gobject);
+
+static void	darxen_radar_viewer_data_received	(DarxenPoller* poller, RadarData* data, DarxenRadarViewer* radarViewer);
 
 static void		darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch);
@@ -85,7 +89,10 @@ darxen_radar_viewer_init(DarxenRadarViewer* self)
 {
 	USING_PRIVATE(self);
 
+	priv->site = NULL;
 	priv->viewInfo = NULL;
+
+	priv->poller = NULL;
 
 	priv->renderer = NULL;
 	priv->buffer = NULL;
@@ -104,6 +111,12 @@ darxen_radar_viewer_dispose(GObject* gobject)
 	{
 		g_object_unref(G_OBJECT(priv->renderer));
 		priv->renderer = NULL;
+	}
+
+	if (priv->poller)
+	{
+		g_object_unref(G_OBJECT(priv->poller));
+		priv->poller = NULL;
 	}
 
 	G_OBJECT_CLASS(darxen_radar_viewer_parent_class)->dispose(gobject);
@@ -203,6 +216,19 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 			darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->data->data)->data);
 
 		} break;
+
+		case DARXEN_VIEW_SOURCE_LIVE:
+		{
+			GError* error = NULL;
+
+			//setup the poller
+			priv->poller = darxen_restful_client_add_poller(client, site, viewInfo->productCode, &error);
+			if (!priv->poller)
+			{
+				g_error("Failed to register poller for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
+			}
+			g_signal_connect(priv->poller, "data-received", (GCallback)darxen_radar_viewer_data_received, self);
+		} break;
 	}
 
 	return (DarxenRadarViewer*)gobject;
@@ -218,6 +244,35 @@ darxen_radar_viewer_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+darxen_radar_viewer_data_received(DarxenPoller* poller, RadarData* data, DarxenRadarViewer* radarViewer)
+{
+	USING_PRIVATE(radarViewer);
+
+	FILE* f = tmpfile();
+	fwrite(data->data, 1, data->len, f);
+	fseek(f, 0, SEEK_SET);
+	ProductsLevel3Data* parsed;
+	if (!(parsed = parser_lvl3_parse_file(f)))
+	{
+		fclose(f);
+		g_critical("Failed to parse level 3 data, skipping");
+		return;
+	}
+	fclose(f);
+	printf("Header: %s\n", parsed->chrWmoHeader);
+
+	RenderData* renderData = g_new(RenderData, 1);
+	renderData->id = g_strdup(data->ID);
+	renderData->data = parsed;
+
+	priv->data = g_list_append(priv->data, renderData);
+
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->data->data)->data);
+	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
+}
+
 
 static void
 darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation)

@@ -20,9 +20,10 @@
 
 #include "DarxenConversions.h"
 
-#include <glib/gmem.h>
+#include <glib.h>
 
 #include <string.h>
+#include <ctype.h>
 
 gchar *chrDateTime;
 
@@ -92,3 +93,47 @@ darxen_conversions_format_date_time(GDate *date, int seconds)
 
 	return chrDateTime;
 }
+
+gchar* 
+darxen_hexdump(const gchar* data, size_t length)
+{
+	GString* res = g_string_new("");
+
+	int i;
+	size_t stoplength = (length % 16 == 0) ? length : (length/16+1)*16;
+	for (i = 0; i < stoplength; i++)
+	{
+		if (i < length)
+			g_string_append_printf(res, "%02X ", (unsigned char)data[i]);
+		else
+			g_string_append(res, "   ");
+
+		if ((i+1) % 16 == 0)
+		{
+			g_string_append(res, "  ");
+			int x;
+			for (x = 0; x < ((i < length) ? 16 : (length % 16)); x++)
+			{
+				char c = data[i-16+x];
+				if (isprint(c))
+					g_string_append_c(res, c);
+				else
+					g_string_append_c(res, '.');
+			}
+			g_string_append(res, "\n");
+		}
+		//printf("I: %i\n", i);
+	}
+
+	return g_string_free(res, FALSE);
+}
+
+
+
+
+
+
+
+
+
+
