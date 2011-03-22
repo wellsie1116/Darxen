@@ -95,6 +95,9 @@ struct _GltkWidgetClass
 	gboolean (*drag_event)			(	GltkWidget* widget,
 										GltkEventDrag* event);
 
+	gboolean (*multi_drag_event)	(	GltkWidget* widget,
+										GltkEventMultiDrag* event);
+
 	gboolean (*pinch_event)			(	GltkWidget* widget,
 										GltkEventPinch* event);
 

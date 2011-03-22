@@ -289,6 +289,17 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 		}
 		gltk_window_invalidate(window);
 	}
+	else if (event->type == GLTK_MULTI_DRAG)
+	{
+		if (priv->touchPositions)
+			g_free(priv->touchPositions);
+		priv->touchPositions = g_new(GltkTouchPosition, event->multidrag.fingers);
+		int i;
+		for (i = 0; i < event->multidrag.fingers; i++)
+			priv->touchPositions[i] = event->multidrag.positions[i];
+		priv->touchCount = event->multidrag.fingers;
+		gltk_window_invalidate(window);
+	}
 	else if (event->type == GLTK_PINCH)
 	{
 		if (priv->touchPositions)
@@ -298,6 +309,17 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 		for (i = 0; i < event->pinch.fingers; i++)
 			priv->touchPositions[i] = event->pinch.positions[i];
 		priv->touchCount = event->pinch.fingers;
+		gltk_window_invalidate(window);
+	}
+	else if (event->type == GLTK_ROTATE)
+	{
+		if (priv->touchPositions)
+			g_free(priv->touchPositions);
+		priv->touchPositions = g_new(GltkTouchPosition, event->rotate.fingers);
+		int i;
+		for (i = 0; i < event->rotate.fingers; i++)
+			priv->touchPositions[i] = event->rotate.positions[i];
+		priv->touchCount = event->rotate.fingers;
 		gltk_window_invalidate(window);
 	}
 

@@ -37,6 +37,7 @@ enum
 	LONG_TOUCH_EVENT,
 	TOUCH_EVENT,
 	DRAG_EVENT,
+	MULTI_DRAG_EVENT,
 	PINCH_EVENT,
 	ROTATE_EVENT,
 	CLICK_EVENT,
@@ -130,6 +131,16 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[MULTI_DRAG_EVENT] = 
+		g_signal_new(	"multi-drag-event",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, multi_drag_event),
+						gltk_accum_event, NULL,
+						g_cclosure_user_marshal_BOOLEAN__POINTER,
+						G_TYPE_BOOLEAN, 1,
+						G_TYPE_POINTER);
+
 	signals[PINCH_EVENT] = 
 		g_signal_new(	"pinch-event",
 						G_TYPE_FROM_CLASS(klass),
@@ -169,6 +180,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->long_touch_event = NULL;
 	klass->touch_event = NULL;
 	klass->drag_event = NULL;
+	klass->multi_drag_event = NULL;
 	klass->pinch_event = NULL;
 	klass->rotate_event = NULL;
 	klass->click_event = NULL;
@@ -401,6 +413,9 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 				break;
 			case GLTK_DRAG:
 				g_signal_emit(G_OBJECT(pWidget), signals[DRAG_EVENT], 0, event, &eventReturnValue);
+				break;
+			case GLTK_MULTI_DRAG:
+				g_signal_emit(G_OBJECT(pWidget), signals[MULTI_DRAG_EVENT], 0, event, &eventReturnValue);
 				break;
 			case GLTK_PINCH:
 				g_signal_emit(G_OBJECT(pWidget), signals[PINCH_EVENT], 0, event, &eventReturnValue);

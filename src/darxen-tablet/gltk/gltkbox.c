@@ -220,6 +220,7 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
+		case GLTK_MULTI_DRAG:
 		case GLTK_PINCH:
 		case GLTK_ROTATE:
 		{
@@ -235,6 +236,12 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 					childEvent->touch.positions->y -= allocation.y;
 					x = childEvent->touch.positions->x;
 					y = childEvent->touch.positions->y;
+					break;
+				case GLTK_MULTI_DRAG:
+					childEvent->multidrag.center.x -= allocation.x;
+					childEvent->multidrag.center.y -= allocation.y;
+					x = childEvent->multidrag.center.x;
+					y = childEvent->multidrag.center.y;
 					break;
 				case GLTK_PINCH:
 					childEvent->pinch.center.x -= allocation.x;

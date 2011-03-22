@@ -47,6 +47,12 @@ gltk_event_clone(GltkEvent* event)
 		case GLTK_DRAG:
 			newEvent->drag = event->drag;
 			break;
+		case GLTK_MULTI_DRAG:
+			newEvent->multidrag = event->multidrag;
+			newEvent->multidrag.positions = g_new(GltkTouchPosition, event->multidrag.fingers);
+			for (i = 0; i < event->touch.fingers; i++)
+				newEvent->multidrag.positions[i] = event->multidrag.positions[i];
+			break;
 		case GLTK_PINCH:
 			newEvent->pinch = event->pinch;
 			newEvent->pinch.positions = g_new(GltkTouchPosition, event->pinch.fingers);
@@ -80,6 +86,9 @@ gltk_event_free(GltkEvent* event)
 		case GLTK_LONG_TOUCH:
 			break;
 		case GLTK_DRAG:
+			break;
+		case GLTK_MULTI_DRAG:
+			g_free(event->pinch.positions);
 			break;
 		case GLTK_PINCH:
 			g_free(event->pinch.positions);

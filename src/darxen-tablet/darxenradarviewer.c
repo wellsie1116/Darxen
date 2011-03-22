@@ -65,6 +65,7 @@ static void	darxen_radar_viewer_data_received	(DarxenPoller* poller, RadarData* 
 static void		darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 static gboolean	darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event);
+static gboolean darxen_radar_viewer_multi_drag_event(GltkWidget* widget, GltkEventMultiDrag* event);
 static gboolean darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPinch* event);
 static gboolean darxen_radar_viewer_rotate_event(GltkWidget* widget, GltkEventRotate* event);
 static void		darxen_radar_viewer_render(GltkWidget* widget);
@@ -84,6 +85,7 @@ darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 	gltkwidget_class->touch_event = darxen_radar_viewer_touch_event;
 	gltkwidget_class->drag_event = darxen_radar_viewer_drag_event;
 	gltkwidget_class->pinch_event = darxen_radar_viewer_pinch_event;
+	gltkwidget_class->multi_drag_event = darxen_radar_viewer_multi_drag_event;
 	gltkwidget_class->rotate_event = darxen_radar_viewer_rotate_event;
 	gltkwidget_class->render = darxen_radar_viewer_render;
 }
@@ -319,11 +321,28 @@ darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event)
 		return FALSE;
 
 	//1. Convert screen coordinates to renderer coordinates (determined by current aspect ratio)
-
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	float scaleFactor = MIN(allocation.width, allocation.height) / 2.0f;
 
 	darxen_renderer_translate(priv->renderer, event->dx / scaleFactor, -event->dy / scaleFactor);
+
+	gltk_widget_invalidate(widget);
+	
+	return TRUE;
+}
+
+static gboolean
+darxen_radar_viewer_multi_drag_event(GltkWidget* widget, GltkEventMultiDrag* event)
+{
+	USING_PRIVATE(widget);
+
+	//TODO: this method works, but it assumes the center of the event is unchanging, which is not always true
+
+	//1. Convert screen coordinates to renderer coordinates (determined by current aspect ratio)
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	float scaleFactor = MIN(allocation.width, allocation.height) / 2.0f;
+
+	darxen_renderer_translate(priv->renderer, event->offset.x / scaleFactor, -event->offset.y / scaleFactor);
 
 	gltk_widget_invalidate(widget);
 	

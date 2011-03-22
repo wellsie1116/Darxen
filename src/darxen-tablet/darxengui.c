@@ -97,7 +97,34 @@ gesture_callback(	GtkWidget* widget,
 		switch (event->type)
 		{
 			case GRIP_GESTURE_DRAG:
+			{
 				//g_message("Gesture move: Drag");
+				GltkEvent* newEvent = gltk_event_new(GLTK_MULTI_DRAG);
+				GripEventGestureDrag* e = (GripEventGestureDrag*)event;
+
+				//Point information from multitouch events are in global coordinates.  Find
+				//our window's global offset so we can convert.
+				int offsetX;
+				int offsetY;
+				gdk_window_get_origin(darea->window, &offsetX, &offsetY);
+
+				newEvent->multidrag.offset.x = e->delta_x;
+				newEvent->multidrag.offset.y = e->delta_y;
+				newEvent->multidrag.center.x = e->focus_x - offsetX;
+				newEvent->multidrag.center.y = e->focus_y - offsetY;
+
+				newEvent->multidrag.fingers = e->fingers;
+				newEvent->multidrag.positions = g_new(GltkTouchPosition, e->fingers);
+				int i;
+				for (i = 0; i < event->drag.fingers; i++)
+				{
+					newEvent->multidrag.positions[i].x = e->finger_x[i] - offsetX;
+					newEvent->multidrag.positions[i].y = e->finger_y[i] - offsetY;
+				}
+
+				gltk_window_send_event(glWindow, newEvent);
+				gltk_event_free(newEvent);
+			} break;
 			break;
 			case GRIP_GESTURE_PINCH:
 			{
