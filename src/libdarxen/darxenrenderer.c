@@ -370,7 +370,18 @@ darxen_renderer_scale(DarxenRenderer* renderer, float scale)
 void
 darxen_renderer_rotate(DarxenRenderer* renderer, float angle, float x, float y, float z)
 {
-	g_warning("Rotate not implemented");
+	USING_PRIVATE(renderer);
+
+	float c = cos(DEG_TO_RAD(angle));
+	float s = sin(DEG_TO_RAD(angle));
+
+	float mat[16] = {	x*x*(1-c)+c,	x*y*(1-c)-z*s,  x*z*(1-c)+y*s,	0.0f,
+						y*x*(1-c)+z*s,	y*y*(1-c)+c,	y*z*(1-c)-x*s,	0.0f,
+						x*z*(1-c)-y*s,  y*z*(1-c)+x*s,  z*z*(1-c)+c,	0.0f,
+						0.0f,  			0.0f,			0.0f,	1.0f};
+
+	matrix_mult(mat, renderer->transform);
+	priv->dirty = TRUE;
 }
 
 void

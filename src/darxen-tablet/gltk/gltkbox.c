@@ -221,6 +221,7 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	{
 		case GLTK_TOUCH:
 		case GLTK_PINCH:
+		case GLTK_ROTATE:
 		{
 			GltkEvent* childEvent = gltk_event_clone(event);
 
@@ -240,6 +241,12 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 					childEvent->pinch.center.y -= allocation.y;
 					x = childEvent->pinch.center.x;
 					y = childEvent->pinch.center.y;
+					break;
+				case GLTK_ROTATE:
+					childEvent->rotate.center.x -= allocation.x;
+					childEvent->rotate.center.y -= allocation.y;
+					x = childEvent->rotate.center.x;
+					y = childEvent->rotate.center.y;
 					break;
 				default:
 					g_assert_not_reached();

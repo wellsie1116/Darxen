@@ -28,6 +28,8 @@ G_DEFINE_TYPE(DarxenRadarViewer, darxen_radar_viewer, GLTK_TYPE_WIDGET)
 #define USING_PRIVATE(obj) DarxenRadarViewerPrivate* priv = DARXEN_RADAR_VIEWER_GET_PRIVATE(obj)
 #define DARXEN_RADAR_VIEWER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DARXEN_TYPE_RADAR_VIEWER, DarxenRadarViewerPrivate))
 
+#define RAD_TO_DEG(v) ((v)/G_PI*180.0)
+
 enum
 {
 	LAST_SIGNAL
@@ -64,6 +66,7 @@ static void		darxen_radar_viewer_size_allocate(GltkWidget* widget, GltkAllocatio
 static gboolean darxen_radar_viewer_touch_event(GltkWidget* widget, GltkEventTouch* touch);
 static gboolean	darxen_radar_viewer_drag_event(GltkWidget* widget, GltkEventDrag* event);
 static gboolean darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPinch* event);
+static gboolean darxen_radar_viewer_rotate_event(GltkWidget* widget, GltkEventRotate* event);
 static void		darxen_radar_viewer_render(GltkWidget* widget);
 
 static void
@@ -81,6 +84,7 @@ darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 	gltkwidget_class->touch_event = darxen_radar_viewer_touch_event;
 	gltkwidget_class->drag_event = darxen_radar_viewer_drag_event;
 	gltkwidget_class->pinch_event = darxen_radar_viewer_pinch_event;
+	gltkwidget_class->rotate_event = darxen_radar_viewer_rotate_event;
 	gltkwidget_class->render = darxen_radar_viewer_render;
 }
 
@@ -269,7 +273,7 @@ darxen_radar_viewer_data_received(DarxenPoller* poller, RadarData* data, DarxenR
 
 	priv->data = g_list_append(priv->data, renderData);
 
-	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->data->data)->data);
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)g_list_last(priv->data)->data)->data);
 	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
 }
 
@@ -350,6 +354,37 @@ darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPinch* event)
 	float oldRadius = event->radius - event->dradius;
 	float factor = event->radius / oldRadius;
 	darxen_renderer_scale(priv->renderer, factor);
+
+	//3. Translate back to old center
+	darxen_renderer_translate(priv->renderer, dCenterX / scaleFactor, -dCenterY / scaleFactor);
+
+	gltk_widget_invalidate(widget);
+	
+	return TRUE;
+}
+
+static gboolean
+darxen_radar_viewer_rotate_event(GltkWidget* widget, GltkEventRotate* event)
+{
+	USING_PRIVATE(widget);
+
+	//TODO: this method works, but it assumes the center of the event is unchanging, which is not always true
+
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
+	//g_message("Pinch (%i %i) %f - %f", (int)event->center.x, (int)event->center.y, event->radius, event->dradius);
+	
+	float scaleFactor = MIN(allocation.width, allocation.height) / 2.0f;
+
+	int centerX = allocation.width / 2;
+	int centerY = allocation.height / 2;
+	
+	//1. Translate to center of zoom
+	int dCenterX = event->center.x - centerX;
+	int dCenterY = event->center.y - centerY;
+	darxen_renderer_translate(priv->renderer, -dCenterX / scaleFactor, dCenterY / scaleFactor);
+	
+	//2. Rotate
+	darxen_renderer_rotate(priv->renderer, RAD_TO_DEG(event->dtheta), 0.0f, 0.0f, -1.0f);
 
 	//3. Translate back to old center
 	darxen_renderer_translate(priv->renderer, dCenterX / scaleFactor, -dCenterY / scaleFactor);

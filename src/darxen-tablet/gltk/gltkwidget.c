@@ -38,6 +38,7 @@ enum
 	TOUCH_EVENT,
 	DRAG_EVENT,
 	PINCH_EVENT,
+	ROTATE_EVENT,
 	CLICK_EVENT,
    	LAST_SIGNAL
 };
@@ -139,6 +140,16 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[ROTATE_EVENT] = 
+		g_signal_new(	"rotate-event",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, rotate_event),
+						gltk_accum_event, NULL,
+						g_cclosure_user_marshal_BOOLEAN__POINTER,
+						G_TYPE_BOOLEAN, 1,
+						G_TYPE_POINTER);
+
 	signals[CLICK_EVENT] = 
 		g_signal_new(	"click-event",
 						G_TYPE_FROM_CLASS(klass),
@@ -159,6 +170,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->touch_event = NULL;
 	klass->drag_event = NULL;
 	klass->pinch_event = NULL;
+	klass->rotate_event = NULL;
 	klass->click_event = NULL;
 
 	klass->set_screen = gltk_widget_set_screen_default;
@@ -392,6 +404,9 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 				break;
 			case GLTK_PINCH:
 				g_signal_emit(G_OBJECT(pWidget), signals[PINCH_EVENT], 0, event, &eventReturnValue);
+				break;
+			case GLTK_ROTATE:
+				g_signal_emit(G_OBJECT(pWidget), signals[ROTATE_EVENT], 0, event, &eventReturnValue);
 				break;
 			case GLTK_CLICK:
 				g_signal_emit(G_OBJECT(pWidget), signals[CLICK_EVENT], 0, event, &eventReturnValue);

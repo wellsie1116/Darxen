@@ -44,7 +44,7 @@ conv_get_HMS(float coord, int *intHours, int *intMinutes, int *intSeconds)
 GDate*
 darxen_conversions_get_date_from_mod_julian(int julian_day)
 {
-	return g_date_new_julian(julian_day + 719161);
+	return g_date_new_julian(julian_day + 719161 + 1);
 }
 
 int

@@ -98,6 +98,9 @@ struct _GltkWidgetClass
 	gboolean (*pinch_event)			(	GltkWidget* widget,
 										GltkEventPinch* event);
 
+	gboolean (*rotate_event)		(	GltkWidget* widget,
+										GltkEventRotate* event);
+
 	gboolean (*click_event)			(	GltkWidget* widget,
 										GltkEventClick* event);
 

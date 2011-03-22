@@ -129,7 +129,34 @@ gesture_callback(	GtkWidget* widget,
 				gltk_event_free(newEvent);
 			} break;
 			case GRIP_GESTURE_ROTATE:
+			{
 				//g_message("Gesture move: Rotate");
+				GltkEvent* newEvent = gltk_event_new(GLTK_ROTATE);
+				GripEventGestureRotate* e = (GripEventGestureRotate*)event;
+
+				//Point information from multitouch events are in global coordinates.  Find
+				//our window's global offset so we can convert.
+				int offsetX;
+				int offsetY;
+				gdk_window_get_origin(darea->window, &offsetX, &offsetY);
+
+				newEvent->rotate.dtheta = e->angle_delta;
+				//newEvent->rotate.radius = e->radius;
+				newEvent->rotate.center.x = e->focus_x - offsetX;
+				newEvent->rotate.center.y = e->focus_y - offsetY;
+
+				newEvent->rotate.fingers = e->fingers;
+				newEvent->rotate.positions = g_new(GltkTouchPosition, e->fingers);
+				int i;
+				for (i = 0; i < event->rotate.fingers; i++)
+				{
+					newEvent->rotate.positions[i].x = e->finger_x[i] - offsetX;
+					newEvent->rotate.positions[i].y = e->finger_y[i] - offsetY;
+				}
+
+				gltk_window_send_event(glWindow, newEvent);
+				gltk_event_free(newEvent);
+			} break;
 			break;
 			case GRIP_GESTURE_TAP:
 				//g_message("Gesture move: Tap");

@@ -368,6 +368,10 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			returnValue = gltk_widget_send_event(GLTK_WIDGET(screen), event) || screen->maximized;
 
 			pScreens = pScreens->prev;
+
+			//TODO: some amount of collision detection should be used to determine if an event was
+			//ignored instead of not hitting the window
+			break;
 		}
 	}
 

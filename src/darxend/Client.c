@@ -149,8 +149,8 @@ timet_to_datetime(time_t rawtime)
 	struct tm* utc = gmtime(&rawtime);
 	DateTime dtm;
 	dtm.date.year = utc->tm_year + 1900;
-	dtm.date.month = utc->tm_mon;
-	dtm.date.day = utc->tm_wday;
+	dtm.date.month = utc->tm_mon + 1;
+	dtm.date.day = utc->tm_mday;
 	dtm.time.hour = utc->tm_hour;
 	dtm.time.minute = utc->tm_min;
 
@@ -175,7 +175,7 @@ darxend_client_add_poller(DarxendClient* self, char* site, char* product)
 	time_t now = time(NULL);
 
 	DateTime end = timet_to_datetime(now);
-	DateTime start = timet_to_datetime(now - 60*60);
+	DateTime start = timet_to_datetime(now - 10*60*60);
 
 	int searchID = darxend_client_search(self, site, product, &start, &end);
 
@@ -295,7 +295,8 @@ darxend_client_add_to_queue(DarxendClient* self, char* site, char* product, int 
 	pthread_cond_broadcast(&priv->condQueue);
 	pthread_mutex_unlock(&priv->lockQueue);
 
-	g_debug("Added product to queue: %s/%s %d/%d/%d %d:%d", site, product, month, day, year, hour, minute);
+	g_debug("Added product to queue (%i): %s/%s %d/%d/%d %d:%d", self->ID, 
+			site, product, month, day, year, hour, minute);
 }
 
 int

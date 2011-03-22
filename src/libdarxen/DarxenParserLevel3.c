@@ -94,9 +94,10 @@ parser_lvl3_parse_file(FILE *objFile)
 }
 
 ProductsLevel3Data*
-darxen_parser_lvl3_parse(char* data)
+darxen_parser_lvl3_parse(const char* data)
 {
-
+	g_critical("Not implemented");
+	return NULL;
 }
 
 void
