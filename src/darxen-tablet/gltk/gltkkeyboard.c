@@ -20,6 +20,7 @@
 
 #include "gltkkeyboard.h"
 
+#include "gltkspacer.h"
 #include "gltkhbox.h"
 #include "gltkbutton.h"
 #include "gltktogglebutton.h"
@@ -77,7 +78,6 @@ gltk_keyboard_class_init(GltkKeyboardClass* klass)
 static void
 gltk_keyboard_init(GltkKeyboard* self)
 {
-	USING_PRIVATE(self);
 }
 
 static void
@@ -122,11 +122,6 @@ gltk_keyboard_dispose(GObject* gobject)
 static void
 gltk_keyboard_finalize(GObject* gobject)
 {
-	GltkKeyboard* self = GLTK_KEYBOARD(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(gltk_keyboard_parent_class)->finalize(gobject);
 }
 
@@ -162,7 +157,7 @@ key_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboard)
 	if (gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift)))
 	{
 		gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(priv->shift), FALSE);
-		set_shift(keyboard, gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->shift)));
+		set_shift(keyboard, gltk_toggle_button_is_toggled(GLTK_TOGGLE_BUTTON(priv->caps)));
 	}
 
 	gltk_widget_invalidate(GLTK_WIDGET(priv->label));
@@ -242,6 +237,8 @@ keyShift_clicked(GltkWidget* button, GltkEventClick* event, GltkKeyboard* keyboa
 	return FALSE;
 }
 
+#define WIDTH_UNIT 50
+#define HEIGHT_UNIT 50
 static void
 add_key_sized(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey, float width)
 {
@@ -258,6 +255,9 @@ add_key_sized(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey, flo
 	g_signal_connect(keyboardKey->button, "click-event", (GCallback)key_clicked, keyboard);
 	GLTK_BUTTON(keyboardKey->button)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 
+	GltkSize size = {width * WIDTH_UNIT, HEIGHT_UNIT};
+	gltk_widget_set_size_request(keyboardKey->button, size);
+
 	priv->keys = g_slist_prepend(priv->keys, keyboardKey);
 }
 
@@ -266,6 +266,20 @@ add_key(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey)
 {
 	add_key_sized(keyboard, box, key, shiftKey, 1.0f);
 }
+	
+static void
+add_spacer(GltkBox* box, float width)
+{
+	gltk_box_append_widget(box, gltk_spacer_new(width*WIDTH_UNIT, 50), FALSE, FALSE);
+}
+
+static void
+set_width(GltkWidget* widget, float width)
+{
+	GltkSize size = {width*WIDTH_UNIT, HEIGHT_UNIT};
+	gltk_widget_set_size_request(widget, size);
+}
+
 
 GltkWidget*
 gltk_keyboard_new(const gchar* text)
@@ -275,17 +289,23 @@ gltk_keyboard_new(const gchar* text)
 
 	USING_PRIVATE(self);
 
-	GltkWidget* hboxTop = gltk_hbox_new(0);
+	static int keyspacing = 3;
+
+	GLTK_BOX(self)->spacing = keyspacing;
+
+	GltkWidget* hboxTop = gltk_hbox_new(keyspacing);
 	{
 		priv->label = gltk_label_new(text);
 		g_object_ref(priv->label);
+		GltkSize size = {-1, 60};
+		gltk_widget_set_size_request(priv->label, size);
 		gltk_label_set_draw_border(GLTK_LABEL(priv->label), TRUE);
 		gltk_box_append_widget(GLTK_BOX(self), priv->label, TRUE, TRUE);
 	}
 	
-	GltkWidget* hboxNumbers = gltk_hbox_new(0);
+	GltkWidget* hboxNumbers = gltk_hbox_new(keyspacing);
 	{
-		add_key_sized(self, GLTK_BOX(hboxNumbers), '`', '~', 0.5f);
+		add_key_sized(self, GLTK_BOX(hboxNumbers), '`', '~', 2.0f/3.0f);
 		add_key(self, GLTK_BOX(hboxNumbers), '1', '!');
 		add_key(self, GLTK_BOX(hboxNumbers), '2', '@');
 		add_key(self, GLTK_BOX(hboxNumbers), '3', '#');
@@ -299,15 +319,16 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxNumbers), '-', '_');
 		add_key(self, GLTK_BOX(hboxNumbers), '=', '+');
 		GltkWidget* backspace = gltk_button_new("<-");
+		set_width(backspace, 4.0f/3.0f);
 		GLTK_BUTTON(backspace)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		gltk_box_append_widget(GLTK_BOX(hboxNumbers), backspace, FALSE, FALSE);
 		g_signal_connect(backspace, "click-event", (GCallback)keyBackspace_clicked, self);
 		g_signal_connect(backspace, "long-touch-event", (GCallback)keyBackspace_longTouched, self);
 	}
 
-	GltkWidget* hboxRow1 = gltk_hbox_new(0);
+	GltkWidget* hboxRow1 = gltk_hbox_new(keyspacing);
 	{
-		gltk_box_append_widget(GLTK_BOX(hboxRow1), gltk_label_new(" "), FALSE, FALSE);
+		add_spacer(GLTK_BOX(hboxRow1), 1.0f);
 		add_key(self, GLTK_BOX(hboxRow1), 'q', 'Q');
 		add_key(self, GLTK_BOX(hboxRow1), 'w', 'W');
 		add_key(self, GLTK_BOX(hboxRow1), 'e', 'E');
@@ -323,9 +344,10 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow1), '\\', '|');
 	}
 	
-	GltkWidget* hboxRow2 = gltk_hbox_new(0);
+	GltkWidget* hboxRow2 = gltk_hbox_new(keyspacing);
 	{
 		priv->caps = gltk_toggle_button_new("Caps");
+		set_width(priv->caps, 4.0f/3.0f);
 		GLTK_BUTTON(priv->caps)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		g_object_ref(priv->caps);
 		g_signal_connect_after(priv->caps, "click-event", (GCallback)keyCaps_clicked, self);
@@ -343,9 +365,10 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow2), '\'', '"');
 	}
 	
-	GltkWidget* hboxRow3 = gltk_hbox_new(0);
+	GltkWidget* hboxRow3 = gltk_hbox_new(keyspacing);
 	{
 		priv->shift = gltk_toggle_button_new("Shift");
+		set_width(priv->shift, 2.0f);
 		GLTK_BUTTON(priv->shift)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		g_object_ref(priv->shift);
 		g_signal_connect_after(priv->shift, "click-event", (GCallback)keyShift_clicked, self);
@@ -362,14 +385,12 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow3), '/', '?');
 	}
 
-	GltkWidget* hboxRow4 = gltk_hbox_new(0);
+	GltkWidget* hboxRow4 = gltk_hbox_new(keyspacing);
 	{
-		//gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
-		GltkWidget* space = gltk_button_new("                ");
+		GltkWidget* space = gltk_button_new("   Space   ");
 		GLTK_BUTTON(space)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		gltk_box_append_widget(GLTK_BOX(hboxRow4), space, TRUE, TRUE);
 		g_signal_connect(space, "click-event", (GCallback)key_clicked, self);
-		//gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
 	}
 
 	gltk_box_append_widget(GLTK_BOX(self), hboxTop, FALSE, FALSE);

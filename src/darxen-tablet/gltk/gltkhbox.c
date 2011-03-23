@@ -119,8 +119,7 @@ gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 	}
 
 	size->height += box->spacing * 2;
-	if (box->childrenCount)
-		size->width += (box->childrenCount-1) * box->spacing;
+	size->width += (box->childrenCount+1) * box->spacing;
 
 	GLTK_WIDGET_CLASS(gltk_hbox_parent_class)->size_request(widget, size);
 }
@@ -130,21 +129,21 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	GltkBox* box = GLTK_BOX(widget);
 
-	int x = 0;
+	int x = box->spacing;
 
 	GltkSize requisition;
    	gltk_widget_size_request(widget, &requisition);
 
-	int extraWidth = allocation->width - requisition.width;
+	int extraWidth = allocation->width - requisition.width - (box->childrenCount+1)*box->spacing;
 
-	//allocate space for the children, diving the extra space appropriately
+	//allocate space for the children, dividing the extra space appropriately
 	GList* pChildren = box->children;
 	while (pChildren)
 	{
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 		GltkSize childSize;
 		gltk_widget_size_request(child->widget, &childSize);
-		GltkAllocation childAllocation = {0, 0, childSize.width, allocation->height};
+		GltkAllocation childAllocation = {0, box->spacing, childSize.width, allocation->height};
 	
 		if (child->expand)
 		{
@@ -156,20 +155,20 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 
 				childAllocation.width += addWidth;
 
-				x += childAllocation.width;
+				x += childAllocation.width + box->spacing;
 			}
 			else
 			{
 				childAllocation.x = x + addWidth / 2;
 
-				x += childAllocation.width + addWidth;
+				x += childAllocation.width + addWidth + box->spacing;
 			}
 		}
 		else
 		{
 			childAllocation.x = x;
 
-			x += childAllocation.width;
+			x += childAllocation.width + box->spacing;
 		}
 
 		gltk_widget_size_allocate(child->widget, childAllocation);

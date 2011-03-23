@@ -227,6 +227,8 @@ gltk_window_render(GltkWindow* window)
 	{
 		GltkScreen* screen = (GltkScreen*)pScreens->data;
 
+		glLineWidth(1.0f);
+
 		//TODO check if windows are obscured before rendering them
 		//How should transparency be handled?
 		gltk_widget_render(GLTK_WIDGET(screen));

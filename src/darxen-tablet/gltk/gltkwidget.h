@@ -69,6 +69,7 @@ struct _GltkWidget
 
 	GltkWidget* parentWidget;
 
+	GltkSize sizeRequest;
 	GltkSize requisition;
 };
 
@@ -130,6 +131,7 @@ void			gltk_widget_set_screen				(GltkWidget* widget, GltkScreen* screen);
 
 void			gltk_widget_set_visible				(GltkWidget* widget, gboolean visible);
 gboolean		gltk_widget_get_visible				(GltkWidget* widget);
+void			gltk_widget_set_size_request		(GltkWidget* widget, GltkSize size);
 void			gltk_widget_size_request			(GltkWidget* widget, GltkSize* size);
 void			gltk_widget_size_allocate			(GltkWidget* widget, GltkAllocation allocation);
 GltkAllocation	gltk_widget_get_allocation			(GltkWidget* widget);

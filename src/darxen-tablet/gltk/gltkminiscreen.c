@@ -139,7 +139,7 @@ static void
 gltk_mini_screen_render(GltkWidget* widget)
 {
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
-	glColor4f(0.1f, 0.1f, 0.1f, 0.8f);
+	glColor4f(0.1f, 0.1f, 0.1f, 0.9f);
 	glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
 
 	int offsetX = BORDER_WIDTH + allocation.x;

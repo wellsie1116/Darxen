@@ -18,6 +18,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkdialog.c gltkdialog.h \
 			 gltkfonts.c gltkfonts.h \
 		     gltkwidget.c gltkwidget.h \
+		     gltkspacer.c gltkspacer.h \
 			 gltkscrollable.c gltkscrollable.h \
 			 gltkbox.c gltkbox.h \
 			 gltkhbox.c gltkhbox.h \

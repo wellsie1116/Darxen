@@ -24,6 +24,7 @@
 #include "gltkscreen.h"
 
 #include <string.h>
+#include <math.h>
 
 #include <GL/gl.h>
 
@@ -31,6 +32,10 @@ G_DEFINE_TYPE(GltkButton, gltk_button, GLTK_TYPE_WIDGET)
 
 #define USING_PRIVATE(obj) GltkButtonPrivate* priv = GLTK_BUTTON_GET_PRIVATE(obj)
 #define GLTK_BUTTON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_BUTTON, GltkButtonPrivate))
+
+#define CORNER_SIZE 8
+
+static GLuint texBorder;
 
 enum
 {
@@ -66,13 +71,12 @@ gltk_button_class_init(GltkButtonClass* klass)
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
 	gltkwidget_class->touch_event = gltk_button_touch_event;
+
 }
 
 static void
 gltk_button_init(GltkButton* self)
 {
-	USING_PRIVATE(self);
-
 	self->text = NULL;
 	self->isDown = FALSE;
 
@@ -89,7 +93,6 @@ static void
 gltk_button_finalize(GObject* gobject)
 {
 	GltkButton* self = GLTK_BUTTON(gobject);
-	USING_PRIVATE(self);
 
 	g_free(self->text);
 
@@ -101,8 +104,6 @@ gltk_button_new(const gchar* text)
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_BUTTON, NULL);
 	GltkButton* self = GLTK_BUTTON(gobject);
-
-	USING_PRIVATE(self);
 
 	self->text = g_strdup(text);
 
@@ -139,7 +140,6 @@ gltk_button_error_quark()
 static void
 gltk_button_size_request(GltkWidget* widget, GltkSize* size)
 {
-	USING_PRIVATE(widget);
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, FALSE);
 
 	float bbox[6];
@@ -156,11 +156,28 @@ static float colorDark[] = {0.78f, 0.78f, 0.78f};
 static float colorHighlightBright[] = {1.0f, 0.6f, 0.03f};
 static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
 
+#define OFFSET 18
 
 static void
 gltk_button_render(GltkWidget* widget)
 {
-	USING_PRIVATE(widget);
+	if (!texBorder)
+	{
+		//glEnable(GL_TEXTURE_2D);
+		float* border = g_new0(float, CORNER_SIZE*CORNER_SIZE);
+		int x;
+		int y;
+		for (y = 0; y < CORNER_SIZE; y++)
+			for (x = 0; x < CORNER_SIZE; x++)
+				border[y*CORNER_SIZE+x] = (float)(sqrt(x*x+y*y) <= CORNER_SIZE);
+
+		glGenTextures(1, &texBorder);
+		glBindTexture(GL_TEXTURE_2D, texBorder);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, CORNER_SIZE, CORNER_SIZE, 0, GL_ALPHA, GL_FLOAT, border);
+		g_free(border);
+	}
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(widget));
 
@@ -169,9 +186,71 @@ gltk_button_render(GltkWidget* widget)
 	switch (button->renderStyle)
 	{
 		case GLTK_BUTTON_RENDER_DEFAULT:
+		{
+			float* bright = colorBright;
+			float* dark = colorDark;
+
+			if (GLTK_BUTTON(widget)->isDown)
+			{
+				bright = colorHighlightBright;
+				dark = colorHighlightDark;
+			}
+
+			glBegin(GL_QUADS);
+			{
+				glColor3fv(bright);
+				glVertex2i(allocation.width - CORNER_SIZE, 0);
+				glVertex2i(CORNER_SIZE, 0);
+				glVertex2i(CORNER_SIZE, CORNER_SIZE);
+				glVertex2i(allocation.width - CORNER_SIZE, CORNER_SIZE);
+				
+				glColor3fv(dark);
+				glVertex2i(allocation.width - CORNER_SIZE, allocation.height);
+				glVertex2i(CORNER_SIZE, allocation.height);
+				glVertex2i(CORNER_SIZE, allocation.height - CORNER_SIZE);
+				glVertex2i(allocation.width - CORNER_SIZE, allocation.height - CORNER_SIZE);
+
+				glColor3fv(bright);
+				glVertex2i(allocation.width, CORNER_SIZE);
+				glVertex2i(0, CORNER_SIZE);
+				glColor3fv(dark);
+				glVertex2i(0, allocation.height - CORNER_SIZE);
+				glVertex2i(allocation.width, allocation.height - CORNER_SIZE);
+			}
+			glEnd();
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, texBorder);
+			glBegin(GL_QUADS);
+			{
+				glColor3fv(bright);
+				glTexCoord2i(0, 0); glVertex2i(CORNER_SIZE, CORNER_SIZE);
+				glTexCoord2i(0, 1); glVertex2i(CORNER_SIZE, 0);
+				glTexCoord2i(1, 1); glVertex2i(0, 0);
+				glTexCoord2i(1, 0); glVertex2i(0, CORNER_SIZE);
+
+				glTexCoord2i(0, 0); glVertex2i(allocation.width - CORNER_SIZE, CORNER_SIZE);
+				glTexCoord2i(0, 1); glVertex2i(allocation.width - CORNER_SIZE, 0);
+				glTexCoord2i(1, 1); glVertex2i(allocation.width, 0);
+				glTexCoord2i(1, 0); glVertex2i(allocation.width, CORNER_SIZE);
+				
+				glColor3fv(dark);
+				glTexCoord2i(0, 0); glVertex2i(allocation.width - CORNER_SIZE, allocation.height - CORNER_SIZE);
+				glTexCoord2i(0, 1); glVertex2i(allocation.width - CORNER_SIZE, allocation.height);
+				glTexCoord2i(1, 1); glVertex2i(allocation.width, allocation.height);
+				glTexCoord2i(1, 0); glVertex2i(allocation.width, allocation.height - CORNER_SIZE);
+				
+				glTexCoord2i(0, 0); glVertex2i(CORNER_SIZE, allocation.height - CORNER_SIZE);
+				glTexCoord2i(0, 1); glVertex2i(CORNER_SIZE, allocation.height);
+				glTexCoord2i(1, 1); glVertex2i(0, allocation.height);
+				glTexCoord2i(1, 0); glVertex2i(0, allocation.height - CORNER_SIZE);
+			}
+			glEnd();
+			glDisable(GL_TEXTURE_2D);
+		} break;
 		case GLTK_BUTTON_RENDER_OUTLINE:
 		{
-			glBegin(button->renderStyle == GLTK_BUTTON_RENDER_DEFAULT ? GL_QUADS : GL_LINE_LOOP);
+			glBegin(GL_LINE_LOOP);
 			{
 				float* bright = colorBright;
 				float* dark = colorDark;
@@ -183,10 +262,12 @@ gltk_button_render(GltkWidget* widget)
 				}
 				glColor3fv(bright);
 				glVertex2i(allocation.width, 0);
-				glVertex2i(0, 0);
+				glVertex2i(OFFSET, 0);
+				glVertex2i(0, OFFSET);
 				glColor3fv(dark);
 				glVertex2i(0, allocation.height);
-				glVertex2i(allocation.width, allocation.height);
+				glVertex2i(allocation.width - OFFSET, allocation.height);
+				glVertex2i(allocation.width, allocation.height - OFFSET);
 			}
 			glEnd();
 		} break;
@@ -228,8 +309,6 @@ gltk_button_render(GltkWidget* widget)
 static gboolean
 gltk_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 {
-	USING_PRIVATE(widget);
-
 	if (touch->touchType == TOUCH_BEGIN)
 	{
 		GLTK_BUTTON(widget)->isDown = TRUE;

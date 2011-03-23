@@ -114,7 +114,7 @@ gltk_dialog_new(GltkWidget* content)
 
 	GltkWidget* vboxDialog = gltk_vbox_new(0);
 	{
-		GltkWidget* hboxButtons = gltk_hbox_new(0);
+		GltkWidget* hboxButtons = gltk_hbox_new(5);
 		{
 			GltkWidget* btnOK = gltk_button_new("OK");
 			GltkWidget* btnCancel = gltk_button_new("Cancel");

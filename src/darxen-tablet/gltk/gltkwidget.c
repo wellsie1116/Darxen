@@ -199,6 +199,8 @@ gltk_widget_init(GltkWidget* self)
 
 	self->screen = NULL;
 	self->parentWidget = NULL;
+	self->sizeRequest.width = -1;
+	self->sizeRequest.height = -1;
 
 	priv->allocation = initialAllocation;
 	priv->isVisible = TRUE;
@@ -291,11 +293,21 @@ gltk_widget_get_visible(GltkWidget* widget)
 	return priv->isVisible;
 }
 
+void
+gltk_widget_set_size_request(GltkWidget* widget, GltkSize size)
+{
+	widget->sizeRequest = size;
+}
 
 void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+	
+	if (widget->sizeRequest.width > -1)
+		size->width = widget->sizeRequest.width;
+	if (widget->sizeRequest.height > -1)
+		size->height = widget->sizeRequest.height;
 }
 
 void
