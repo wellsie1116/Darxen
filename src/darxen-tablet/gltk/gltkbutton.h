@@ -34,8 +34,15 @@ G_BEGIN_DECLS
 #define GLTK_IS_BUTTON_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), GLTK_TYPE_BUTTON))
 #define GLTK_BUTTON_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), GLTK_TYPE_BUTTON, GltkButtonClass))
 
-typedef struct _GltkButton			GltkButton;
-typedef struct _GltkButtonClass		GltkButtonClass;
+typedef enum _GltkButtonRenderStyle		GltkButtonRenderStyle;
+typedef struct _GltkButton				GltkButton;
+typedef struct _GltkButtonClass			GltkButtonClass;
+
+enum _GltkButtonRenderStyle
+{
+	GLTK_BUTTON_RENDER_DEFAULT,
+	GLTK_BUTTON_RENDER_OUTLINE
+};
 
 struct _GltkButton
 {
@@ -43,6 +50,8 @@ struct _GltkButton
 	
 	gchar* text;
 	gboolean isDown;
+
+	GltkButtonRenderStyle renderStyle;
 };
 
 struct _GltkButtonClass

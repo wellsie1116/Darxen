@@ -71,6 +71,7 @@ gltk_box_init(GltkBox* self)
 	self->children = NULL;
 	self->expandCount = 0;
 	self->childrenCount = 0;
+	self->spacing = 0;
 }
 
 static void

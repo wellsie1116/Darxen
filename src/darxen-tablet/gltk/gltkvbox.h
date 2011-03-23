@@ -58,7 +58,7 @@ typedef enum
 } GltkVBoxError;
 
 GType			gltk_vbox_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_vbox_new		();
+GltkWidget*		gltk_vbox_new		(int spacing);
 
 /* Public functions here */
 

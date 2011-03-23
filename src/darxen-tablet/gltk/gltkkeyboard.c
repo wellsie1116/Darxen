@@ -256,6 +256,7 @@ add_key_sized(GltkKeyboard* keyboard, GltkBox* box, char key, char shiftKey, flo
 	keyboardKey->button = gltk_button_new(txt);
 	gltk_box_append_widget(box, keyboardKey->button, FALSE, FALSE);
 	g_signal_connect(keyboardKey->button, "click-event", (GCallback)key_clicked, keyboard);
+	GLTK_BUTTON(keyboardKey->button)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 
 	priv->keys = g_slist_prepend(priv->keys, keyboardKey);
 }
@@ -298,6 +299,7 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxNumbers), '-', '_');
 		add_key(self, GLTK_BOX(hboxNumbers), '=', '+');
 		GltkWidget* backspace = gltk_button_new("<-");
+		GLTK_BUTTON(backspace)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		gltk_box_append_widget(GLTK_BOX(hboxNumbers), backspace, FALSE, FALSE);
 		g_signal_connect(backspace, "click-event", (GCallback)keyBackspace_clicked, self);
 		g_signal_connect(backspace, "long-touch-event", (GCallback)keyBackspace_longTouched, self);
@@ -324,6 +326,7 @@ gltk_keyboard_new(const gchar* text)
 	GltkWidget* hboxRow2 = gltk_hbox_new();
 	{
 		priv->caps = gltk_toggle_button_new("Caps");
+		GLTK_BUTTON(priv->caps)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		g_object_ref(priv->caps);
 		g_signal_connect_after(priv->caps, "click-event", (GCallback)keyCaps_clicked, self);
 		gltk_box_append_widget(GLTK_BOX(hboxRow2), priv->caps, FALSE, FALSE);
@@ -343,6 +346,7 @@ gltk_keyboard_new(const gchar* text)
 	GltkWidget* hboxRow3 = gltk_hbox_new();
 	{
 		priv->shift = gltk_toggle_button_new("Shift");
+		GLTK_BUTTON(priv->shift)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 		g_object_ref(priv->shift);
 		g_signal_connect_after(priv->shift, "click-event", (GCallback)keyShift_clicked, self);
 		gltk_box_append_widget(GLTK_BOX(hboxRow3), priv->shift, FALSE, FALSE);
@@ -360,11 +364,12 @@ gltk_keyboard_new(const gchar* text)
 
 	GltkWidget* hboxRow4 = gltk_hbox_new();
 	{
-		gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
+		//gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
 		GltkWidget* space = gltk_button_new("                ");
-		gltk_box_append_widget(GLTK_BOX(hboxRow4), space, FALSE, FALSE);
+		GLTK_BUTTON(space)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
+		gltk_box_append_widget(GLTK_BOX(hboxRow4), space, TRUE, TRUE);
 		g_signal_connect(space, "click-event", (GCallback)key_clicked, self);
-		gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
+		//gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
 	}
 
 	gltk_box_append_widget(GLTK_BOX(self), hboxTop, FALSE, FALSE);

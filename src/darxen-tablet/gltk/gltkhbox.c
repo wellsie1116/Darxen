@@ -77,9 +77,11 @@ gltk_hbox_finalize(GObject* gobject)
 }
 
 GltkWidget*
-gltk_hbox_new()
+gltk_hbox_new(int spacing)
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_HBOX, NULL);
+
+	GLTK_BOX(gobject)->spacing = spacing;
 
 	return (GltkWidget*)gobject;
 }
@@ -115,6 +117,11 @@ gltk_hbox_size_request(GltkWidget* widget, GltkSize* size)
 	
 		pChildren = pChildren->next;
 	}
+
+	size->height += box->spacing * 2;
+	if (box->childrenCount)
+		size->width += (box->childrenCount-1) * box->spacing;
+
 	GLTK_WIDGET_CLASS(gltk_hbox_parent_class)->size_request(widget, size);
 }
 

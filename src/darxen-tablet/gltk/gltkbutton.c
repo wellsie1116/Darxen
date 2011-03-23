@@ -75,6 +75,8 @@ gltk_button_init(GltkButton* self)
 
 	self->text = NULL;
 	self->isDown = FALSE;
+
+	self->renderStyle = GLTK_BUTTON_RENDER_DEFAULT;
 }
 
 static void
@@ -162,31 +164,47 @@ gltk_button_render(GltkWidget* widget)
 
 	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(widget));
 
-	glBegin(GL_QUADS);
-	{
-		float* bright = colorBright;
-		float* dark = colorDark;
+	GltkButton* button = GLTK_BUTTON(widget);
 
-		if (GLTK_BUTTON(widget)->isDown)
+	switch (button->renderStyle)
+	{
+		case GLTK_BUTTON_RENDER_DEFAULT:
+		case GLTK_BUTTON_RENDER_OUTLINE:
 		{
-			bright = colorHighlightBright;
-			dark = colorHighlightDark;
-		}
-		glColor3fv(bright);
-		glVertex2i(allocation.width, 0);
-		glVertex2i(0, 0);
-		glColor3fv(dark);
-		glVertex2i(0, allocation.height);
-		glVertex2i(allocation.width, allocation.height);
+			glBegin(button->renderStyle == GLTK_BUTTON_RENDER_DEFAULT ? GL_QUADS : GL_LINE_LOOP);
+			{
+				float* bright = colorBright;
+				float* dark = colorDark;
+
+				if (GLTK_BUTTON(widget)->isDown)
+				{
+					bright = colorHighlightBright;
+					dark = colorHighlightDark;
+				}
+				glColor3fv(bright);
+				glVertex2i(allocation.width, 0);
+				glVertex2i(0, 0);
+				glColor3fv(dark);
+				glVertex2i(0, allocation.height);
+				glVertex2i(allocation.width, allocation.height);
+			}
+			glEnd();
+		} break;
+		default:
+			g_critical("Invalid render style: %d", button->renderStyle);
+			break;
 	}
-	glEnd();
+
 
 	if (GLTK_BUTTON(widget)->text)
 	{
 		glPushMatrix();
 		{
 			GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
-			glColor3f(0.0f, 0.0f, 0.0f);
+			if (button->renderStyle == GLTK_BUTTON_RENDER_DEFAULT)
+				glColor3f(0.0f, 0.0f, 0.0f);
+			else
+				glColor3f(1.0f, 1.0f, 1.0f);
 
 			float bbox[6];
 			ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);

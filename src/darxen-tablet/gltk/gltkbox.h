@@ -47,6 +47,8 @@ struct _GltkBox
 
 	int expandCount;
 	int childrenCount;
+
+	int spacing;
 };
 
 struct _GltkBoxClass

@@ -46,18 +46,6 @@ gesture_callback(	GtkWidget* widget,
 {
 	if (time_type == GRIP_TIME_START)
 	{
-	//GltkEvent* e = gltk_event_new(GLTK_TOUCH);
-
-	//e->touch.id = -1;
-	//e->touch.touchType = TOUCH_BEGIN;
-	//e->touch.fingers = 1;
-	//e->touch.positions = g_new(GltkTouchPosition, 1);
-	//e->touch.positions->x = (int)event->x;
-	//e->touch.positions->y = (int)event->y;
-
-	//gltk_window_send_event(glWindow, e);
-
-	//gltk_event_free(e);
 		switch (event->type)
 		{
 			case GRIP_GESTURE_DRAG:
@@ -186,8 +174,11 @@ gesture_callback(	GtkWidget* widget,
 			} break;
 			break;
 			case GRIP_GESTURE_TAP:
+			{
 				//g_message("Gesture move: Tap");
-			break;
+				GripEventGestureTap* e = (GripEventGestureTap*)event;
+				g_message("Tap:(%f %f) (%f %f)", e->focus_x, e->focus_y, e->position_x, e->position_y);
+			} break;
 		}
 	}
 }
