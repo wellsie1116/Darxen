@@ -23,7 +23,7 @@
 GltkWidget* 
 create_hbox()
 {
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	GltkWidget* label1 = gltk_label_new("No Expand");
 	GltkWidget* label2 = gltk_label_new("Allow Expand, but\ndo not fill.");
@@ -46,7 +46,7 @@ create_window()
 	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), create_hbox(), TRUE, FALSE);

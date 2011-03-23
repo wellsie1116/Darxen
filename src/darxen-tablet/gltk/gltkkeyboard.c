@@ -275,7 +275,7 @@ gltk_keyboard_new(const gchar* text)
 
 	USING_PRIVATE(self);
 
-	GltkWidget* hboxTop = gltk_hbox_new();
+	GltkWidget* hboxTop = gltk_hbox_new(0);
 	{
 		priv->label = gltk_label_new(text);
 		g_object_ref(priv->label);
@@ -283,7 +283,7 @@ gltk_keyboard_new(const gchar* text)
 		gltk_box_append_widget(GLTK_BOX(self), priv->label, TRUE, TRUE);
 	}
 	
-	GltkWidget* hboxNumbers = gltk_hbox_new();
+	GltkWidget* hboxNumbers = gltk_hbox_new(0);
 	{
 		add_key_sized(self, GLTK_BOX(hboxNumbers), '`', '~', 0.5f);
 		add_key(self, GLTK_BOX(hboxNumbers), '1', '!');
@@ -305,7 +305,7 @@ gltk_keyboard_new(const gchar* text)
 		g_signal_connect(backspace, "long-touch-event", (GCallback)keyBackspace_longTouched, self);
 	}
 
-	GltkWidget* hboxRow1 = gltk_hbox_new();
+	GltkWidget* hboxRow1 = gltk_hbox_new(0);
 	{
 		gltk_box_append_widget(GLTK_BOX(hboxRow1), gltk_label_new(" "), FALSE, FALSE);
 		add_key(self, GLTK_BOX(hboxRow1), 'q', 'Q');
@@ -323,7 +323,7 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow1), '\\', '|');
 	}
 	
-	GltkWidget* hboxRow2 = gltk_hbox_new();
+	GltkWidget* hboxRow2 = gltk_hbox_new(0);
 	{
 		priv->caps = gltk_toggle_button_new("Caps");
 		GLTK_BUTTON(priv->caps)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
@@ -343,7 +343,7 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow2), '\'', '"');
 	}
 	
-	GltkWidget* hboxRow3 = gltk_hbox_new();
+	GltkWidget* hboxRow3 = gltk_hbox_new(0);
 	{
 		priv->shift = gltk_toggle_button_new("Shift");
 		GLTK_BUTTON(priv->shift)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
@@ -362,7 +362,7 @@ gltk_keyboard_new(const gchar* text)
 		add_key(self, GLTK_BOX(hboxRow3), '/', '?');
 	}
 
-	GltkWidget* hboxRow4 = gltk_hbox_new();
+	GltkWidget* hboxRow4 = gltk_hbox_new(0);
 	{
 		//gltk_box_append_widget(GLTK_BOX(hboxRow4), gltk_label_new(" "), TRUE, TRUE);
 		GltkWidget* space = gltk_button_new("                ");

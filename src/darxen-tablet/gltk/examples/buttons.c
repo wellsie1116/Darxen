@@ -40,7 +40,7 @@ btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 GltkWidget* 
 create_vbox()
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	GltkWidget* label = gltk_label_new("Last Button Clicked: None");
 
@@ -69,7 +69,7 @@ create_window()
 	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_vbox(), FALSE, FALSE);
 

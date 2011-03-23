@@ -112,9 +112,9 @@ gltk_dialog_new(GltkWidget* content)
 	priv->content = gltk_bin_new(content);
 	g_object_ref(priv->content);
 
-	GltkWidget* vboxDialog = gltk_vbox_new();
+	GltkWidget* vboxDialog = gltk_vbox_new(0);
 	{
-		GltkWidget* hboxButtons = gltk_hbox_new();
+		GltkWidget* hboxButtons = gltk_hbox_new(0);
 		{
 			GltkWidget* btnOK = gltk_button_new("OK");
 			GltkWidget* btnCancel = gltk_button_new("Cancel");

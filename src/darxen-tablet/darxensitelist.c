@@ -188,7 +188,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	Site* siteInfo = g_new(Site, 1);
 	siteInfo->list = list;
 	siteInfo->name = g_strdup(site);
-	siteInfo->siteBox = gltk_vbox_new();
+	siteInfo->siteBox = gltk_vbox_new(0);
 	siteInfo->views = gltk_list_new();
 	siteInfo->viewMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_view_list_item);
 	g_object_ref(G_OBJECT(siteInfo->siteBox));
@@ -197,7 +197,7 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	GltkWidget* siteButton = gltk_button_new(site);
 	g_signal_connect(siteButton, "click-event", (GCallback)site_clicked, siteInfo);
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), gltk_label_new("  "), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), siteInfo->views, TRUE, TRUE);

@@ -35,11 +35,11 @@ create_second_screen()
 {
 	GltkScreen* screen = gltk_screen_new();
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	GltkWidget* label = gltk_label_new("This is a second screen that fills the entire window");
 
-	GltkWidget* vboxEntry = gltk_vbox_new();
+	GltkWidget* vboxEntry = gltk_vbox_new(0);
 	{
 		GltkWidget* entry = gltk_entry_new("Change Me");
 		
@@ -65,7 +65,7 @@ create_mini_screen()
 {
 	GltkScreen* screen = gltk_mini_screen_new();
 
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	GltkWidget* label = gltk_label_new("This is more of\na dialog than a\nscreen");
 	GltkWidget* btnCloseMiniScreen = gltk_button_new("Close");
@@ -110,7 +110,7 @@ btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 GltkWidget* 
 create_main_vbox()
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	GltkWidget* label = gltk_label_new("Main Screen, click a button below to show a new screen");
 
@@ -135,7 +135,7 @@ create_main_screen()
 {
 	GltkScreen* screen = gltk_screen_new();
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_main_vbox(), FALSE, FALSE);
 	

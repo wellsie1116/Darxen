@@ -115,7 +115,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	//Change Source Type - Radio buttons
 	//Select Date Range - Text Box (with numeric filter) OR Number spinners
 	
-	GltkWidget* hboxName = gltk_hbox_new();
+	GltkWidget* hboxName = gltk_hbox_new(0);
 	{
 		GltkWidget* lblName = gltk_label_new("Name: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblName), 28);
@@ -127,7 +127,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_box_append_widget(GLTK_BOX(hboxName), txtName, FALSE, FALSE);
 	}
 
-	GltkWidget* hboxProduct = gltk_hbox_new();
+	GltkWidget* hboxProduct = gltk_hbox_new(0);
 	{
 		GltkWidget* lblProduct = gltk_label_new("Product: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
@@ -135,7 +135,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_box_append_widget(GLTK_BOX(hboxProduct), lblProduct, FALSE, FALSE);
 	}
 
-	GltkWidget* hboxShapefiles = gltk_hbox_new();
+	GltkWidget* hboxShapefiles = gltk_hbox_new(0);
 	{
 		GltkWidget* lblShapefiles = gltk_label_new("Shapefiles: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblShapefiles), 28);
@@ -143,7 +143,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), lblShapefiles, FALSE, FALSE);
 	}
 
-	GltkWidget* hboxSource = gltk_hbox_new();
+	GltkWidget* hboxSource = gltk_hbox_new(0);
 	{
 		GltkWidget* lblSource = gltk_label_new("Source: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);

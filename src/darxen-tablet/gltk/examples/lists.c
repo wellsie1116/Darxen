@@ -29,7 +29,7 @@
 
 GltkWidget* label_widget(GltkWidget* child, const char* message)
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(vbox), gltk_label_new(message), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), child, TRUE, TRUE);
@@ -72,7 +72,7 @@ create_button_list()
 GltkWidget*
 create_composite_list_item(const char* caption, const char* btn)
 {
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), gltk_label_new(caption), TRUE, TRUE);
 	gltk_box_append_widget(GLTK_BOX(hbox), gltk_button_new(btn), TRUE, TRUE);
@@ -98,7 +98,7 @@ create_window()
 	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_label_list(), TRUE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), create_button_list(), TRUE, FALSE);

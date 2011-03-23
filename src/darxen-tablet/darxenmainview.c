@@ -27,7 +27,7 @@ darxen_main_view_get_root()
 {
 	if (!root)
 	{
-		root = gltk_vbox_new();
+		root = gltk_vbox_new(0);
 		g_object_ref(G_OBJECT(root));
 
 		gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), TRUE, TRUE);

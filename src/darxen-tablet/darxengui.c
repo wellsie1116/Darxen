@@ -348,14 +348,14 @@ view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManag
 static GltkWidget*
 create_sidebar(GltkWidget* siteList)
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	//wrap the siteList in a scrollable
 	GltkWidget* scrollable = gltk_scrollable_new();
 	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), siteList);
 
 	//create some buttons on the bottom 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 	{
 		GltkWidget* btnMain = gltk_button_new("Main");
 		GltkWidget* btnQuit = gltk_button_new("Quit");
@@ -375,7 +375,7 @@ static GltkScreen*
 create_screen()
 {
 	GltkScreen* screen = gltk_screen_new();
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	GltkWidget* siteList = darxen_site_list_new();
 	panelManager = (DarxenPanelManager*)darxen_panel_manager_new();

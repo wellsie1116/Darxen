@@ -31,7 +31,7 @@ GltkWidget* make_scrollable(GltkWidget* child)
 
 GltkWidget* label_widget(GltkWidget* child, const char* message)
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(vbox), gltk_label_new(message), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(vbox), child, TRUE, TRUE);
@@ -41,7 +41,7 @@ GltkWidget* label_widget(GltkWidget* child, const char* message)
 
 GltkWidget* create_large_vbox()
 {
-	GltkWidget* vbox = gltk_vbox_new();
+	GltkWidget* vbox = gltk_vbox_new(0);
 
 	int i;
 	for (i = 0; i < 100; i++)
@@ -62,7 +62,7 @@ create_window()
 	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
-	GltkWidget* hbox = gltk_hbox_new();
+	GltkWidget* hbox = gltk_hbox_new(0);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_large_vbox(), FALSE, FALSE);
 
