@@ -93,22 +93,12 @@ gltk_slide_button_init(GltkSlideButton* self)
 static void
 gltk_slide_button_dispose(GObject* gobject)
 {
-	GltkSlideButton* self = GLTK_SLIDE_BUTTON(gobject);
-	USING_PRIVATE(self);
-
-	//free and release references
-
 	G_OBJECT_CLASS(gltk_slide_button_parent_class)->dispose(gobject);
 }
 
 static void
 gltk_slide_button_finalize(GObject* gobject)
 {
-	GltkSlideButton* self = GLTK_SLIDE_BUTTON(gobject);
-	USING_PRIVATE(self);
-
-	//free memory
-
 	G_OBJECT_CLASS(gltk_slide_button_parent_class)->finalize(gobject);
 }
 
@@ -116,10 +106,7 @@ GltkWidget*
 gltk_slide_button_new(const char* text)
 {
 	GObject *gobject = g_object_new(GLTK_TYPE_SLIDE_BUTTON, NULL);
-	GltkSlideButton* self = GLTK_SLIDE_BUTTON(gobject);
 	GltkButton* button = GLTK_BUTTON(gobject);
-
-	USING_PRIVATE(self);
 
 	button->text = g_strdup(text);
 
@@ -148,7 +135,7 @@ static float colorBright[] = {0.87f, 0.87f, 0.87f};
 static float colorDark[] = {0.78f, 0.78f, 0.78f};
 
 static float colorHighlightBright[] = {1.0f, 0.6f, 0.03f};
-static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
+//static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
 
 static void
 gltk_slide_button_render(GltkWidget* widget)

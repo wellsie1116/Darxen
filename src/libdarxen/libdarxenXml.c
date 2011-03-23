@@ -202,7 +202,7 @@ darxen_xml_get_strs(xmlXPathContext* xpath, const char* expr, int* count)
 		xmlChar* content = xmlNodeGetContent(node);
 		if (!content)
 			g_error("invalid xpath result");
-		res[i] = strdup(content);
+		res[i] = strdup((char*)content);
 		xmlFree(content);
 	}
 
@@ -231,21 +231,21 @@ darxen_xml_get_color(xmlXPathContext* xpath, DarxenColor color, const char* expr
 
 	while (node)
 	{
-		if (!strcmp(node->name, "R"))
+		if (!strcmp((char*)node->name, "R"))
 		{
-			r = atoi(node->children->content);
+			r = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "G"))
+		else if (!strcmp((char*)node->name, "G"))
 		{
-			g = atoi(node->children->content);
+			g = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "B"))
+		else if (!strcmp((char*)node->name, "B"))
 		{
-			b = atoi(node->children->content);
+			b = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "A"))
+		else if (!strcmp((char*)node->name, "A"))
 		{
-			a = atoi(node->children->content);
+			a = atoi((char*)node->children->content);
 		}
 
 		node = node->next;
@@ -277,17 +277,17 @@ darxen_xml_get_date(xmlXPathContext* xpath, const char* expr)
 
 	while (node)
 	{
-		if (!strcmp(node->name, "Day"))
+		if (!strcmp((char*)node->name, "Day"))
 		{
-			day = atoi(node->children->content);
+			day = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "Month"))
+		else if (!strcmp((char*)node->name, "Month"))
 		{
-			month = atoi(node->children->content);
+			month = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "Year"))
+		else if (!strcmp((char*)node->name, "Year"))
 		{
-			year = atoi(node->children->content);
+			year = atoi((char*)node->children->content);
 		}
 		node = node->next;
 	}
@@ -315,13 +315,13 @@ darxen_xml_get_time(xmlXPathContext* xpath, const char* expr)
 
 	while (node)
 	{
-		if (!strcmp(node->name, "H"))
+		if (!strcmp((char*)node->name, "H"))
 		{
-			hour = atoi(node->children->content);
+			hour = atoi((char*)node->children->content);
 		}
-		else if (!strcmp(node->name, "M"))
+		else if (!strcmp((char*)node->name, "M"))
 		{
-			minute = atoi(node->children->content);
+			minute = atoi((char*)node->children->content);
 		}
 		node = node->next;
 	}
@@ -353,7 +353,7 @@ static xmlXPathObject*
 evalXPath(xmlXPathContext* xpath, const char* expr)
 {
 	xmlXPathObject* res;
-	res = xmlXPathEvalExpression(expr, xpath);
+	res = xmlXPathEvalExpression((xmlChar*)expr, xpath);
 
 	if (!res)
 	{
@@ -371,7 +371,7 @@ get_xpath_str(xmlXPathObject* xres)
 	if (xres->type == XPATH_STRING)
 	{
 		xmlChar* content = xmlXPathCastToString(xres);
-		res = strdup(content);
+		res = strdup((char*)content);
 		xmlFree(content);
 	}
 	else if (xres->type == XPATH_NODESET && xres->nodesetval && xres->nodesetval->nodeNr == 1)
@@ -381,7 +381,7 @@ get_xpath_str(xmlXPathObject* xres)
 		xmlChar* content = xmlNodeGetContent(node);
 		if (!content)
 			g_error("invalid xpath result");
-		res = strdup(content);
+		res = strdup((char*)content);
 		xmlFree(content);
 	}
 	else
@@ -415,7 +415,7 @@ get_xpath_num(xmlXPathObject* xres)
 		xmlChar* content = xmlNodeGetContent(node);
 		if (!content)
 			g_error("Invalid xpath expression in get_number");
-		res = strtod(content, NULL);
+		res = strtod((char*)content, NULL);
 		xmlFree(content);
 	}
 	else
@@ -443,12 +443,12 @@ get_xpath_bool(xmlXPathObject* xres)
 		xmlChar* content = xmlNodeGetContent(node);
 		if (!content)
 			g_error("Invalid xpath expression in get_boolean");
-		if (!xmlStrcasecmp(content, "true"))
+		if (!xmlStrcasecmp(content, (xmlChar*)"true"))
 			res = TRUE;
-		else if (!xmlStrcasecmp(content, "false"))
+		else if (!xmlStrcasecmp(content, (xmlChar*)"false"))
 			res = FALSE;
 		else
-			res = atoi(content);
+			res = atoi((char*)content);
 		xmlFree(content);
 	}
 	else

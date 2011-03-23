@@ -87,7 +87,17 @@ darxen_view_dispose(GObject* gobject)
 	DarxenView* self = DARXEN_VIEW(gobject);
 	USING_PRIVATE(self);
 
-	//TODO free and release references
+	if (priv->label)
+	{
+		g_object_unref(priv->label);
+		priv->label = NULL;
+	}
+	
+	if (priv->radarViewer)
+	{
+		g_object_unref(priv->radarViewer);
+		priv->radarViewer = NULL;
+	}
 
 	G_OBJECT_CLASS(darxen_view_parent_class)->dispose(gobject);
 }

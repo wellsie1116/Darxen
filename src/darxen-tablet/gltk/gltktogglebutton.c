@@ -87,8 +87,6 @@ gltk_toggle_button_new(const char* text)
 	GObject *gobject = g_object_new(GLTK_TYPE_TOGGLE_BUTTON, NULL);
 	GltkToggleButton* self = GLTK_TOGGLE_BUTTON(gobject);
 
-	USING_PRIVATE(self);
-
 	GLTK_BUTTON(self)->text = g_strdup(text);
 
 	return (GltkWidget*)gobject;

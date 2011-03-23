@@ -56,7 +56,7 @@ darxen_shapefiles_load_config(const xmlNode* node, DarxenShapefile* base)
 	xmlNode* newNode;
 	xmlXPathContext* xpath;
 
-	doc = xmlNewDoc("1.0");
+	doc = xmlNewDoc((xmlChar*)"1.0");
 	g_assert(doc);
 	newNode = xmlDocCopyNode((xmlNode*)node, doc, 1);
 	g_assert(newNode);

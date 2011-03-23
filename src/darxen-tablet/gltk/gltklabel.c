@@ -83,7 +83,6 @@ static void
 gltk_label_finalize(GObject* gobject)
 {
 	GltkLabel* self = GLTK_LABEL(gobject);
-	USING_PRIVATE(self);
 
 	if (self->text)
 		g_free(self->text);
@@ -97,8 +96,6 @@ gltk_label_new(const gchar* text)
 	GObject *gobject = g_object_new(GLTK_TYPE_LABEL, NULL);
 	GltkLabel* self = GLTK_LABEL(gobject);
 
-	USING_PRIVATE(self);
-
 	if (text)
 		self->text = g_strdup(text);
 
@@ -109,7 +106,6 @@ void
 gltk_label_set_text	(GltkLabel* label, const gchar* text)
 {
 	g_return_if_fail(GLTK_IS_LABEL(label));
-	USING_PRIVATE(label);
 	if (label->text)
 		g_free(label->text);
 	label->text = g_strdup(text);

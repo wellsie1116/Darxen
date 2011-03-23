@@ -21,6 +21,11 @@
 #ifndef GLTK_H_C0Y0X5CZ
 #define GLTK_H_C0Y0X5CZ
 
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glu.h>
+
 #include <gltk/gltkmarshal.h>
 #include <gltk/gltkevents.h>
 #include <gltk/gltkfonts.h>
@@ -43,8 +48,6 @@
 #include <gltk/gltkslidebutton.h>
 #include <gltk/gltkentry.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 #endif
 

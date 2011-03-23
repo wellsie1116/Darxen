@@ -44,16 +44,16 @@ darxen_radar_sites_init()
 		info = (DarxenRadarSiteInfo*)malloc(sizeof(DarxenRadarSiteInfo));
 		while (site != NULL)
 		{
-			if (!xmlStrcmp(site->name, "ID"))
-				strcpy(info->chrID, xmlNodeListGetString(doc, site->children, 1));
-			else if (!xmlStrcmp(site->name, "Lat"))
-				info->fltLatitude = (float)strtod(xmlNodeListGetString(doc, site->children, 1), NULL);
-			else if (!xmlStrcmp(site->name, "Lon"))
-				info->fltLongitude = (float)strtod(xmlNodeListGetString(doc, site->children, 1), NULL);
-			else if (!xmlStrcmp(site->name, "State"))
-				strcpy(info->chrState, xmlNodeListGetString(doc, site->children, 1));
-			else if (!xmlStrcmp(site->name, "City"))
-				strcpy(info->chrCity, xmlNodeListGetString(doc, site->children, 1));
+			if (!xmlStrcmp(site->name, (xmlChar*)"ID"))
+				strcpy(info->chrID, (char*)xmlNodeListGetString(doc, site->children, 1));
+			else if (!xmlStrcmp(site->name, (xmlChar*)"Lat"))
+				info->fltLatitude = (float)strtod((char*)xmlNodeListGetString(doc, site->children, 1), NULL);
+			else if (!xmlStrcmp(site->name, (xmlChar*)"Lon"))
+				info->fltLongitude = (float)strtod((char*)xmlNodeListGetString(doc, site->children, 1), NULL);
+			else if (!xmlStrcmp(site->name, (xmlChar*)"State"))
+				strcpy(info->chrState, (char*)xmlNodeListGetString(doc, site->children, 1));
+			else if (!xmlStrcmp(site->name, (xmlChar*)"City"))
+				strcpy(info->chrCity, (char*)xmlNodeListGetString(doc, site->children, 1));
 			site = site->next;
 		}
 		for (i = 0; i < 4; i++)

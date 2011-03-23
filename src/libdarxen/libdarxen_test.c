@@ -27,6 +27,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "libdarxeninit.h"
+
 int
 main (int argc, char* argv[]) {
 	g_type_init();
