@@ -161,6 +161,9 @@ config_viewNameChanged(	DarxenConfig* config,
 {
 	USING_PRIVATE(view);
 
+	if (priv->viewInfo != viewInfo)
+		return;
+
 	gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
 	gltk_label_set_text(GLTK_LABEL(priv->label), desc);
 	g_free(desc);
