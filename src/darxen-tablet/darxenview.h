@@ -60,8 +60,6 @@ typedef enum
 GType			darxen_view_get_type	() G_GNUC_CONST;
 GltkWidget*		darxen_view_new			(const gchar* site, DarxenViewInfo* viewInfo);
 
-/* Public functions here */
-
 GQuark			darxen_view_error_quark	();
 
 G_END_DECLS

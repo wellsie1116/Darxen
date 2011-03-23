@@ -60,7 +60,12 @@ typedef enum
 GType				darxen_radar_viewer_get_type	() G_GNUC_CONST;
 DarxenRadarViewer*	darxen_radar_viewer_new			(const gchar* site, DarxenViewInfo* viewInfo);
 
-/* Public functions here */
+void				darxen_radar_viewer_frame_first		(DarxenRadarViewer* viewer);
+void				darxen_radar_viewer_frame_last		(DarxenRadarViewer* viewer);
+void				darxen_radar_viewer_frame_next		(DarxenRadarViewer* viewer);
+void				darxen_radar_viewer_frame_prev		(DarxenRadarViewer* viewer);
+gboolean			darxen_radar_viewer_has_frame_next	(DarxenRadarViewer* viewer);
+gboolean			darxen_radar_viewer_has_frame_prev	(DarxenRadarViewer* viewer);
 
 GQuark			darxen_radar_viewer_error_quark	();
 

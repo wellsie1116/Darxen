@@ -46,7 +46,8 @@ struct _DarxenRadarViewerPrivate
 
 	DarxenRenderer* renderer;
 	GLubyte* buffer;
-	GList* data; //RenderData
+	GQueue* data; //RenderData
+	GList* pData; //RenderData
 };
 
 struct _RenderData
@@ -103,6 +104,7 @@ darxen_radar_viewer_init(DarxenRadarViewer* self)
 	priv->renderer = NULL;
 	priv->buffer = NULL;
 	priv->data = NULL;
+	priv->pData = NULL;
 }
 
 static void
@@ -124,6 +126,8 @@ darxen_radar_viewer_dispose(GObject* gobject)
 		g_object_unref(G_OBJECT(priv->poller));
 		priv->poller = NULL;
 	}
+
+	//FIXME: Free data queue
 
 	G_OBJECT_CLASS(darxen_radar_viewer_parent_class)->dispose(gobject);
 }
@@ -152,6 +156,8 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 
 	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode, priv->viewInfo->shapefiles);
 	priv->renderer->scale = 0.02;
+
+	priv->data = g_queue_new();
 
 	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
 	switch (viewInfo->sourceType)
@@ -207,7 +213,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 				renderData->id = g_strdup(ids[i]);
 				renderData->data = parsed;
 
-				priv->data = g_list_append(priv->data, renderData);
+				g_queue_push_tail(priv->data, renderData);
 				
 				free(data);
 			}
@@ -219,7 +225,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 				g_error("Failed to free search for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
 			}
 
-			darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->data->data)->data);
+			darxen_radar_viewer_frame_first(self);
 
 		} break;
 
@@ -240,6 +246,77 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 	return (DarxenRadarViewer*)gobject;
 }
 
+void
+darxen_radar_viewer_frame_first(DarxenRadarViewer* radarViewer)
+{
+	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
+	USING_PRIVATE(radarViewer);
+
+	priv->pData = priv->data->head;
+
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
+	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
+}
+
+void
+darxen_radar_viewer_frame_last(DarxenRadarViewer* radarViewer)
+{
+	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
+	USING_PRIVATE(radarViewer);
+
+	priv->pData = priv->data->tail;
+
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
+	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
+}
+
+void
+darxen_radar_viewer_frame_next(DarxenRadarViewer* radarViewer)
+{
+	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
+	USING_PRIVATE(radarViewer);
+
+	if (!priv->pData->next)
+		return;
+
+	priv->pData = priv->pData->next;
+
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
+	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
+}
+
+void
+darxen_radar_viewer_frame_prev(DarxenRadarViewer* radarViewer)
+{
+	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
+	USING_PRIVATE(radarViewer);
+
+	if (!priv->pData->prev)
+		return;
+
+	priv->pData = priv->pData->prev;
+
+	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
+	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
+}
+
+gboolean
+darxen_radar_viewer_has_frame_next(DarxenRadarViewer* radarViewer)
+{
+	g_return_val_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer), FALSE);
+	USING_PRIVATE(radarViewer);
+
+	return !!priv->pData->next;
+}
+
+gboolean
+darxen_radar_viewer_has_frame_prev(DarxenRadarViewer* radarViewer)
+{
+	g_return_val_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer), FALSE);
+	USING_PRIVATE(radarViewer);
+
+	return !!priv->pData->prev;
+}
 
 GQuark
 darxen_radar_viewer_error_quark()
@@ -273,9 +350,9 @@ darxen_radar_viewer_data_received(DarxenPoller* poller, RadarData* data, DarxenR
 	renderData->id = g_strdup(data->ID);
 	renderData->data = parsed;
 
-	priv->data = g_list_append(priv->data, renderData);
+	g_queue_push_tail(priv->data, renderData);
 
-	darxen_renderer_set_data(priv->renderer, ((RenderData*)g_list_last(priv->data)->data)->data);
+	darxen_radar_viewer_frame_last(radarViewer);
 	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
 }
 

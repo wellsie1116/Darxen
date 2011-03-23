@@ -147,6 +147,7 @@ gltk_box_remove_widget(GltkBox* box, GltkWidget* widget)
 				box->children = start;
 
 			gltk_widget_unparent(child->widget);
+			gltk_widget_set_screen(child->widget, NULL);
 			g_object_unref(G_OBJECT(child->widget));
 			g_free(child);
 			g_list_free(pChildren);
