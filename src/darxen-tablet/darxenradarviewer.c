@@ -71,6 +71,8 @@ static gboolean darxen_radar_viewer_pinch_event(GltkWidget* widget, GltkEventPin
 static gboolean darxen_radar_viewer_rotate_event(GltkWidget* widget, GltkEventRotate* event);
 static void		darxen_radar_viewer_render(GltkWidget* widget);
 
+static gint compare_radar_data(RenderData* rd1, RenderData* rd2, gpointer user_data);
+
 static void
 darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 {
@@ -213,7 +215,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 				renderData->id = g_strdup(ids[i]);
 				renderData->data = parsed;
 
-				g_queue_push_tail(priv->data, renderData);
+				g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
 				
 				free(data);
 			}
@@ -350,7 +352,7 @@ darxen_radar_viewer_data_received(DarxenPoller* poller, RadarData* data, DarxenR
 	renderData->id = g_strdup(data->ID);
 	renderData->data = parsed;
 
-	g_queue_push_tail(priv->data, renderData);
+	g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
 
 	darxen_radar_viewer_frame_last(radarViewer);
 	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
@@ -557,4 +559,18 @@ darxen_radar_viewer_render(GltkWidget* widget)
 	}
 }
 
+static gint
+compare_radar_data(RenderData* rd1, RenderData* rd2, gpointer user_data)
+{
+	ProductsLevel3Data* d1 = rd1->data;
+	ProductsLevel3Data* d2 = rd2->data;
+	int dateres = g_date_compare(d1->objHeader.objDate, d2->objHeader.objDate);
+
+	if (dateres)
+		return dateres;
+
+	if (d1->objHeader.intTime < d2->objHeader.intTime)
+		return -1;
+	return (d1->objHeader.intTime > d2->objHeader.intTime);
+}
 
