@@ -21,6 +21,8 @@
 #include "darxensitelist.h"
 #include "darxenconfig.h"
 
+#include <libdarxenRadarSites.h>
+
 #include <glib.h>
 
 G_DEFINE_TYPE(DarxenSiteList, darxen_site_list, GLTK_TYPE_LIST)
@@ -184,6 +186,8 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 {
 	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
 	USING_PRIVATE(list);
+
+	DarxenRadarSiteInfo* radarSiteInfo = darxen_radar_sites_get_site_info(site);
 	
 	Site* siteInfo = g_new(Site, 1);
 	siteInfo->list = list;
@@ -194,7 +198,9 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	g_object_ref(G_OBJECT(siteInfo->siteBox));
 	g_object_ref(G_OBJECT(siteInfo->views));
 
-	GltkWidget* siteButton = gltk_button_new(site);
+	gchar* displayName = g_strdup_printf("%s, %s", radarSiteInfo->chrCity, radarSiteInfo->chrState);
+	GltkWidget* siteButton = gltk_button_new(displayName);
+	g_free(displayName);
 	g_signal_connect(siteButton, "click-event", (GCallback)site_clicked, siteInfo);
 
 	GltkWidget* hbox = gltk_hbox_new(0);

@@ -115,6 +115,8 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	//Change Source Type - Radio buttons
 	//Select Date Range - Text Box (with numeric filter) OR Number spinners
 	
+	GLTK_BOX(self)->spacing = 5;
+	
 	GltkWidget* hboxName = gltk_hbox_new(0);
 	{
 		GltkWidget* lblName = gltk_label_new("Name: ");
