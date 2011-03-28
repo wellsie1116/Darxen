@@ -142,6 +142,8 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
 
 		GltkWidget* spinnerProduct = gltk_spinner_new();
+		GltkSize size = {200, -1};
+		gltk_widget_set_size_request(spinnerProduct, size);
 
 		static const char* products[] = {	"N0R", "N1R", "N2R", "N3R",
 											"N0S", "N1S", "N2S", "N3S",

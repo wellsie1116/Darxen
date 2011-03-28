@@ -20,10 +20,13 @@
 
 #include "gltkspinner.h"
 
-#include <glib.h>
-
+#include "gltkscreen.h"
 #include "gltkvbox.h"
 #include "gltklabel.h"
+
+#include <glib.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 G_DEFINE_TYPE(GltkSpinner, gltk_spinner, GLTK_TYPE_SCROLLABLE)
 
@@ -228,13 +231,6 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 	
 	int width = 50;
 
-//	if (priv->pItems)
-//	{
-//		SpinnerItem* item = (SpinnerItem*)priv->items->data;
-//		gltk_widget_size_request(item->label, size);
-//		height = size->height;
-//	}
-
 	GList* pItems = priv->items;
 	while (pItems)
 	{
@@ -256,9 +252,67 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 static void
 gltk_spinner_render(GltkWidget* widget)
 {
-	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->render(widget);
+	USING_PRIVATE(widget);
 
-	//TODO: render overlay
+	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
+	GltkSize size = gltk_screen_get_window_size(widget->screen);
+
+	//setup our rendering window how we like it
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	int offsetX = allocation.x;
+	int offsetY = size.height - allocation.height - allocation.y;
+	glViewport(offsetX, offsetY, allocation.width, allocation.height);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, allocation.width, allocation.height, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+
+	glPushMatrix();
+	{
+		glLoadIdentity();
+
+		glBegin(GL_QUADS);
+		{
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glVertex2i(allocation.width, 0);
+			glVertex2i(0, 0);
+			glColor3f(0.0f, 0.0f, 0.0f);
+			glVertex2i(0, priv->itemHeight);
+			glVertex2i(allocation.width, priv->itemHeight);
+			
+			glVertex2i(allocation.width, allocation.height - priv->itemHeight);
+			glVertex2i(0, allocation.height - priv->itemHeight);
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glVertex2i(0, allocation.height);
+			glVertex2i(allocation.width, allocation.height);
+		}
+		glEnd();
+
+		GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->render(widget);
+
+		glBegin(GL_QUADS);
+		{
+			glColor4f(0.0f, 0.0f, 1.0f, 0.3f);
+			glVertex2i(allocation.width, 2*priv->itemHeight);
+			glVertex2i(0, 2*priv->itemHeight);
+			glVertex2i(0, 3*priv->itemHeight);
+			glVertex2i(allocation.width, 3*priv->itemHeight);
+		}
+		glEnd();
+
+		
+	
+	}
+	glPopMatrix();
+
+	//undo our changes to the state
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
 }
 
 

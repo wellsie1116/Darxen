@@ -55,6 +55,7 @@ static void gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* al
 static gboolean gltk_scrollable_event(GltkWidget* widget, GltkEvent* event);
 static void gltk_scrollable_render(GltkWidget* widget);
 static void gltk_scrollable_set_screen(GltkWidget* widget, GltkScreen* screen);
+static gboolean gltk_scrollable_touch_event(GltkWidget* widget, GltkEventTouch* event);
 static gboolean gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event);
 
 static void
@@ -73,6 +74,7 @@ gltk_scrollable_class_init(GltkScrollableClass* klass)
 	gltkwidget_class->event = gltk_scrollable_event;
 	gltkwidget_class->render = gltk_scrollable_render;
 	gltkwidget_class->set_screen = gltk_scrollable_set_screen;
+	gltkwidget_class->touch_event = gltk_scrollable_touch_event;
 	gltkwidget_class->drag_event = gltk_scrollable_drag_event;
 }
 
@@ -240,6 +242,27 @@ gltk_scrollable_set_screen(GltkWidget* widget, GltkScreen* screen)
 	gltk_widget_set_screen(priv->widget, screen);
 
 	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->set_screen(widget, screen);
+}
+
+static gboolean
+gltk_scrollable_touch_event(GltkWidget* widget, GltkEventTouch* event)
+{
+	if (event->touchType == TOUCH_BEGIN)
+	{
+		gltk_screen_set_widget_pressed(widget->screen, widget);
+	}
+	else if (event->touchType == TOUCH_END)
+	{
+		gltk_screen_set_widget_unpressed(widget->screen, widget);
+	}
+	else
+	{
+		return FALSE;
+	}
+
+	gltk_widget_invalidate(widget);
+
+	return TRUE;
 }
 
 static gboolean
