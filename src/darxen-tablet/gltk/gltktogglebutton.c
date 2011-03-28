@@ -21,6 +21,8 @@
 #include "gltktogglebutton.h"
 #include "gltkevents.h"
 
+#include <GL/gl.h>
+
 G_DEFINE_TYPE(GltkToggleButton, gltk_toggle_button, GLTK_TYPE_BUTTON)
 
 #define USING_PRIVATE(obj) GltkToggleButtonPrivate* priv = GLTK_TOGGLE_BUTTON_GET_PRIVATE(obj)
@@ -135,7 +137,11 @@ gltk_toggle_button_clicked(GltkWidget* widget, GltkEventClick* event)
 static void
 gltk_toggle_button_render(GltkWidget* widget)
 {
-	//TODO: display toggled state
+	USING_PRIVATE(widget);
+	if (priv->toggled)
+		glLineWidth(3.0f);
 	GLTK_WIDGET_CLASS(gltk_toggle_button_parent_class)->render(widget);
+	if (priv->toggled)
+		glLineWidth(1.0f);
 }
 
