@@ -81,16 +81,17 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 				error = FT_Get_Glyph(font->face->glyph, &glyph);
 				g_assert(!error);
 
-				//FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox);
+				FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox);
 
-				//font->glyphs[i].width = bbox.xMax - bbox.xMin;
-				//font->glyphs[i].height = bbox.yMax - bbox.yMin;
+				font->glyphs[i].width = bbox.xMax - bbox.xMin + 1;
+				font->glyphs[i].height = bbox.yMax - bbox.yMin + 1;
 
-				FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
-				FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)glyph;
-				
-				font->glyphs[i].width = bitmap_glyph->bitmap.width;
-				font->glyphs[i].height = bitmap_glyph->bitmap.rows;
+				//FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
+				//FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)glyph;
+				//
+				//font->glyphs[i].width = bitmap_glyph->bitmap.width;
+				//font->glyphs[i].height = bitmap_glyph->bitmap.rows;
+				//TODO memory management with freetype objects
 			}
 		}
 
@@ -111,22 +112,6 @@ GltkGLFontBounds
 gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 {
 	GltkGLFontBounds res = {0,0};
-	// float width = ftglGetFontAdvance(font->font, txt);
-	// float height = ftglGetFontLineHeight(font->font);
-
-	// float bbox[6];
-	// ftglGetFontBBox(font->font, txt, -1, bbox);
-	// float width = bbox[3] - bbox[0];
-	// float height = bbox[4] - bbox[1];
-	// 
-	// if (width < 0.01 || height < 0.01)
-	// {
-	// 	width = strlen(txt) * 15;
-	// 	height = 30;
-	// }
-	// 
-	// res.width = width;
-	// res.height = height;
 	
 	int lineWidth = 0;
 	int lineHeight = 0;
@@ -151,27 +136,6 @@ gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 
 	return res;
 }
-
-
-//void
-//gltk_fonts_test_string			(const char* message)
-//{
-//	FTGLfont* font = ftglCreateTextureFont("UnBatang.ttf");
-//	g_assert(font);
-//
-//	ftglSetFontFaceSize(font, 24, 24);
-//	float height = ftglGetFontAscender(font);
-//
-//	glPushMatrix();
-//	{
-//		glTranslatef(0.0f, -height, 0.0f);
-//		ftglRenderFont(font, message, FTGL_RENDER_ALL);
-//	}
-//	glPopMatrix();
-//
-//
-//	ftglDestroyFont(font);
-//}
 
 void
 free_font(GltkGLFont* font)
