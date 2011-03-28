@@ -20,7 +20,7 @@ AC_CONFIG_SRCDIR(src/darxend/darxend.c)
 AC_CONFIG_MACRO_DIR(m4)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([1.11 -Wall dist-bzip2 silent-rules])
-AM_SILENT_RULES
+AM_SILENT_RULES([yes])
 
 
 ## Check arguments ##
