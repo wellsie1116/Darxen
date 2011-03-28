@@ -157,7 +157,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 	priv->viewInfo = viewInfo;
 
 	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode, priv->viewInfo->shapefiles);
-	priv->renderer->scale = 0.02;
+	//priv->renderer->scale = 0.02;
 
 	priv->data = g_queue_new();
 

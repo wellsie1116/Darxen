@@ -142,10 +142,9 @@ gltk_button_size_request(GltkWidget* widget, GltkSize* size)
 {
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, FALSE);
 
-	float bbox[6];
-	ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
-	size->height = bbox[4] - bbox[1] + 30;
-	size->width = bbox[3] - bbox[0] + 40;
+	GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
+	size->height = bounds.height + 30;
+	size->width = bounds.width + 40;
 
 	GLTK_WIDGET_CLASS(gltk_button_parent_class)->size_request(widget, size);
 }
@@ -287,10 +286,9 @@ gltk_button_render(GltkWidget* widget)
 			else
 				glColor3f(1.0f, 1.0f, 1.0f);
 
-			float bbox[6];
-			ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
-			float height = bbox[4] - bbox[1];
-			float width = bbox[3] - bbox[0];
+			GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
+			float height = bounds.height;
+			float width = bounds.width;
 
 			float x;
 			float y;

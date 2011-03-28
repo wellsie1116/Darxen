@@ -26,21 +26,22 @@
 #include <glib.h>
 #include <GL/gl.h>
 
-typedef struct _GltkGLFont			GltkGLFont;
 typedef struct _GltkGLFontBounds	GltkGLFontBounds;
-
-struct _GltkGLFont
-{
-	FTGLfont* font;
-	gboolean rendered;
-	float ascender;
-	float descender;
-};
+typedef struct _GltkGLFont			GltkGLFont;
 
 struct _GltkGLFontBounds
 {
 	float width;
 	float height;
+};
+
+struct _GltkGLFont
+{
+	FT_Face	face;
+	GltkGLFontBounds* glyphs;
+	FTGLfont* font;
+	float ascender;
+	float descender;
 };
 
 #define 			GLTK_FONTS_BASE					"UnBatang.ttf"

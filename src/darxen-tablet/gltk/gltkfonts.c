@@ -22,6 +22,8 @@
 
 static GHashTable* fonts = NULL;
 
+static FT_Library library;
+
 void	free_font(GltkGLFont* font);
 
 void
@@ -30,70 +32,123 @@ gltk_fonts_cache_free()
 	g_hash_table_destroy(fonts);
 }
 
+static FTGLfont*
+create_ftgl_font(const char* path, int size)
+{
+	FTGLfont* ftglFont = ftglCreateTextureFont(path);
+	g_assert(ftglFont);
+	ftglSetFontFaceSize(ftglFont, size, size);
+
+	return ftglFont;
+}
+
 GltkGLFont*
 gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 {
-	gchar* desc = g_strdup_printf("%s %i", path, size);
 	if (!fonts)
-		fonts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_font);
-
-	GltkGLFont* font = (GltkGLFont*)g_hash_table_lookup(fonts, desc);
-
-	FTGLfont* ftglFont;
-	if (!font || (!font->rendered && renderable))
 	{
-		ftglFont = ftglCreateTextureFont(path);
-		g_assert(ftglFont);
-		ftglSetFontFaceSize(ftglFont, size, size);
+		fonts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_font);
+		g_assert(!FT_Init_FreeType(&library));
 	}
+
+	gchar* desc = g_strdup_printf("%s %i", path, size);
+	GltkGLFont* font = (GltkGLFont*)g_hash_table_lookup(fonts, desc);
 
 	if (!font)
 	{
-		FTGLfont* ftglFont = ftglCreateTextureFont(path);
-		ftglFont = ftglCreateTextureFont(path);
-		g_assert(ftglFont);
+		font = g_slice_new(GltkGLFont);
 
-		font = g_new(GltkGLFont, 1);
+		font->font = renderable ? create_ftgl_font(path, size) : NULL;
+		font->ascender = renderable ? ftglGetFontAscender(font->font) : 0;
+		font->descender = renderable ? ftglGetFontDescender(font->font) : 0;
 
-		font->font = ftglFont;
-		font->ascender = ftglGetFontAscender(font->font);
-		font->descender = ftglGetFontDescender(font->font);
-		font->rendered = renderable;
+		int error = FT_New_Face(library, path, 0, &font->face);
+		g_assert(!error);
+		error = FT_Set_Char_Size(font->face, 0, size*64, 0, 0);
+		g_assert(!error);
 
-		g_hash_table_insert(fonts, desc, font);
+		{
+			font->glyphs = g_new(GltkGLFontBounds, 128);
+			int i;
+			for (i = 0; i < 128; i++)
+			{
+				FT_Glyph glyph;
+				FT_BBox bbox;
+
+				error = FT_Load_Glyph(font->face, FT_Get_Char_Index(font->face, i), FT_LOAD_DEFAULT);
+				g_assert(!error);
+
+				error = FT_Get_Glyph(font->face->glyph, &glyph);
+				g_assert(!error);
+
+				//FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox);
+
+				//font->glyphs[i].width = bbox.xMax - bbox.xMin;
+				//font->glyphs[i].height = bbox.yMax - bbox.yMin;
+
+				FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
+				FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)glyph;
+				
+				font->glyphs[i].width = bitmap_glyph->bitmap.width;
+				font->glyphs[i].height = bitmap_glyph->bitmap.rows;
+			}
+		}
+
+		g_hash_table_insert(fonts, g_strdup(desc), font);
 	}
-	else if (!font->rendered && renderable)
+	else if (!font->font && renderable)
 	{
-		ftglDestroyFont(font->font);
-		font->font = ftglFont;
+		font->font = create_ftgl_font(path, size);
 		font->ascender = ftglGetFontAscender(font->font);
 		font->descender = ftglGetFontDescender(font->font);
-		font->rendered = TRUE;
 	}
 
+	g_free(desc);
 	return font;
 }
 
 GltkGLFontBounds
 gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 {
-	GltkGLFontBounds res;
+	GltkGLFontBounds res = {0,0};
 	// float width = ftglGetFontAdvance(font->font, txt);
 	// float height = ftglGetFontLineHeight(font->font);
 
-	float bbox[6];
-	ftglGetFontBBox(font->font, txt, -1, bbox);
-	float width = bbox[3] - bbox[0];
-	float height = bbox[4] - bbox[1];
+	// float bbox[6];
+	// ftglGetFontBBox(font->font, txt, -1, bbox);
+	// float width = bbox[3] - bbox[0];
+	// float height = bbox[4] - bbox[1];
+	// 
+	// if (width < 0.01 || height < 0.01)
+	// {
+	// 	width = strlen(txt) * 15;
+	// 	height = 30;
+	// }
+	// 
+	// res.width = width;
+	// res.height = height;
 	
-	if (width < 0.01 || height < 0.01)
+	int lineWidth = 0;
+	int lineHeight = 0;
+	const char* pTxt;
+	for (pTxt = txt; *pTxt; pTxt++)
 	{
-		width = strlen(txt) * 15;
-		height = 30;
+		if (*pTxt == '\n')
+		{
+			res.width = MAX(res.width, lineWidth);
+			res.height = MAX(res.height, lineHeight);
+			lineWidth = 0;
+			lineHeight = 0;
+		}
+		else
+		{
+			lineWidth += font->glyphs[(int)*pTxt].width;
+			lineHeight = MAX(lineHeight, font->glyphs[(int)*pTxt].height);
+		}
 	}
+	res.width = MAX(res.width, lineWidth);
+	res.height = MAX(res.height, lineHeight);
 
-	res.width = width;
-	res.height = height;
 	return res;
 }
 
@@ -121,6 +176,10 @@ gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 void
 free_font(GltkGLFont* font)
 {
-	ftglDestroyFont(font->font);
+	FT_Done_Face(font->face);
+	if (font->font)
+		ftglDestroyFont(font->font);
+	g_free(font->glyphs);
+	g_slice_free(GltkGLFont, font);
 }
 

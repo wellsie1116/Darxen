@@ -177,7 +177,7 @@ darxen_config_get_sites(DarxenConfig* config)
 		site->views = g_list_append(site->views, view);
 		
 		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Archived Reflectivity (0.5)");
+		view->name = g_strdup("Thunderstorm (3-18)");
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
 		view->source.archive.startId = g_strdup("201103180000");

@@ -25,6 +25,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkvbox.c gltkvbox.h \
 			 gltkbin.c gltkbin.h \
 			 gltklist.c gltklist.h \
+			 gltkspinner.c gltkspinner.h \
 			 gltklabel.c gltklabel.h \
 			 gltkbutton.c gltkbutton.h \
 			 gltktogglebutton.c gltktogglebutton.h \

@@ -99,6 +99,13 @@ txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
 	}
 }
 
+static void
+spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewConfig)
+{
+	g_message("Spinner item selected: %s", gltk_spinner_get_selected_item(spinnerProduct));
+	//TODO something
+}
+
 GltkWidget*
 darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 {
@@ -133,8 +140,21 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	{
 		GltkWidget* lblProduct = gltk_label_new("Product: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
+
+		GltkWidget* spinnerProduct = gltk_spinner_new();
+
+		static const char* products[] = {	"N0R", "N1R", "N2R", "N3R",
+											"N0S", "N1S", "N2S", "N3S",
+	   										NULL};
+
+		const char** pProducts;
+		for (pProducts = products; *pProducts; pProducts++)
+			gltk_spinner_add_item(GLTK_SPINNER(spinnerProduct), *pProducts);
+
+		g_signal_connect(spinnerProduct, "item-selected", (GCallback)spinnerProduct_itemSelected, self);
 		
 		gltk_box_append_widget(GLTK_BOX(hboxProduct), lblProduct, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hboxProduct), spinnerProduct, FALSE, FALSE);
 	}
 
 	GltkWidget* hboxShapefiles = gltk_hbox_new(0);

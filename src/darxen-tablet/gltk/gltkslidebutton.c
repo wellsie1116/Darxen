@@ -243,10 +243,9 @@ gltk_slide_button_render(GltkWidget* widget)
 		else
 			glColor3fv(colorBright);
 
-		float bbox[6];
-		ftglGetFontBBox(font->font, button->text, -1, bbox);
-		float height = bbox[4] - bbox[1];
-		float width = bbox[3] - bbox[0];
+		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
+		float height = bounds.height;
+		float width = bounds.width;
 
 		float x;
 	   	float y;

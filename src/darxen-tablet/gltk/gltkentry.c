@@ -182,15 +182,12 @@ gltk_entry_render(GltkWidget* widget)
 			GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
 			glColor3f(1.0f, 1.0f, 1.0f);
 
-			float bbox[6];
-			ftglGetFontBBox(font->font, GLTK_BUTTON(widget)->text, -1, bbox);
-			float height = bbox[4] - bbox[1];
-			float width = bbox[3] - bbox[0];
+			GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
 
 			float x;
 			float y;
-			x = (allocation.width - width) / 2.0;
-			y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
+			x = (allocation.width - bounds.width) / 4.0; //FIXME why not 2?
+			y = (allocation.height - bounds.height) / 2.0 + font->ascender + font->descender;
 
 			glTranslatef(x, y, 0.1f);
 			glScalef(1.0f, -1.0f, 1.0f);

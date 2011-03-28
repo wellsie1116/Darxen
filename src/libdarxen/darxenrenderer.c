@@ -158,15 +158,16 @@ darxen_renderer_init(DarxenRenderer *renderer)
 	USING_PRIVATE(renderer);
 
 	int i;
+	static const float initialScale = 0.005f;
 	renderer->transform = g_new(float, 16);
 	for (i = 1; i < 16; i++)
 		renderer->transform[i] = 0.0f;
 	renderer->transform[0] = 
 		renderer->transform[5] = 
-		renderer->transform[10] = 0.02f;
+		renderer->transform[10] = initialScale;
 	renderer->transform[15] = 1.0f;
 
-	renderer->scale				= 0.2f;
+	renderer->scale				= initialScale;
 
 	priv->objData				= NULL;
 	priv->siteName				= NULL;
