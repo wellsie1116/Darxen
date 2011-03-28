@@ -23,5 +23,5 @@ autoheader
 echo "- automake."
 automake -a
 echo "- configuring."
-./configure --enable-silent-rules
+./configure "CFLAGS=-g -O0"
 exit
