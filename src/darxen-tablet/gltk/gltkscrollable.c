@@ -229,9 +229,35 @@ gltk_scrollable_render(GltkWidget* widget)
 	if (!priv->widget)
 		return;
 
-	glTranslatef(priv->offset.x, priv->offset.y, 0.0f);
-	gltk_widget_render(priv->widget);
-	glTranslatef(-priv->offset.x, -priv->offset.y, 0.0f);
+	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
+	GltkSize size = gltk_screen_get_window_size(widget->screen);
+
+	//setup our rendering window how we like it
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	int offsetX = allocation.x;
+	int offsetY = size.height - allocation.height - allocation.y;
+	glViewport(offsetX, offsetY, allocation.width, allocation.height);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, allocation.width, allocation.height, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+
+	glPushMatrix();
+	{
+		glLoadIdentity();
+		glTranslatef(priv->offset.x, priv->offset.y, 0.0f);
+		gltk_widget_render(priv->widget);
+
+	}
+	glPopMatrix();
+
+	//undo our changes to the state
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 static void

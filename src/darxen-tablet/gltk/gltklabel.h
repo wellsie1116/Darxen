@@ -43,6 +43,12 @@ struct _GltkLabel
 	GltkWidget parent;
 	
 	gchar* text;
+
+	struct {
+		float r;
+		float g;
+		float b;
+	} color;
 };
 
 struct _GltkLabelClass

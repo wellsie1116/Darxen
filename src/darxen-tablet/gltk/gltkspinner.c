@@ -64,6 +64,7 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void gltk_spinner_dispose(GObject* gobject);
 static void gltk_spinner_finalize(GObject* gobject);
 
+static void gltk_spinner_size_allocate	(GltkWidget* widget, GltkAllocation* allocation);
 static void gltk_spinner_size_request	(GltkWidget* widget, GltkSize* size);
 static void gltk_spinner_render			(GltkWidget* widget);
 
@@ -87,6 +88,7 @@ gltk_spinner_class_init(GltkSpinnerClass* klass)
 	gobject_class->dispose = gltk_spinner_dispose;
 	gobject_class->finalize = gltk_spinner_finalize;
 
+	gltkwidget_class->size_allocate = gltk_spinner_size_allocate;
 	gltkwidget_class->size_request = gltk_spinner_size_request;
 	gltkwidget_class->render = gltk_spinner_render;
 
@@ -174,6 +176,9 @@ gltk_spinner_add_item(GltkSpinner* spinner, const gchar* label)
 
 	item->text = g_strdup(label);
 	item->label = gltk_label_new(label);
+	GLTK_LABEL(item->label)->color.r = 0.0f;
+	GLTK_LABEL(item->label)->color.g = 0.0f;
+	GLTK_LABEL(item->label)->color.b = 0.0f;
 	gltk_box_append_widget(GLTK_BOX(priv->vbox), item->label, FALSE, FALSE);
 
 	priv->items = g_list_append(priv->items, item);
@@ -224,6 +229,9 @@ gltk_spinner_error_quark()
  * Private Functions *
  *********************/
 
+#define BORDER_WIDTH 10
+#define BORDER_HEIGHT 10
+
 static void
 gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 {
@@ -243,10 +251,23 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 		pItems = pItems->next;
 	}
 
-	size->width = width;
-	size->height = priv->itemHeight * 5;
+	size->width = width + 2*BORDER_WIDTH;
+	size->height = priv->itemHeight * 5 + 2*BORDER_HEIGHT;
 
-	widget->sizeRequest = *size;
+	widget->requisition = *size;
+}
+
+static void
+gltk_spinner_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
+{
+	//reserve our border
+	GltkAllocation childAllocation = *allocation;
+	childAllocation.x += BORDER_WIDTH;
+	childAllocation.y += BORDER_HEIGHT;
+	childAllocation.width -= 2*BORDER_WIDTH;
+	childAllocation.height -= 2*BORDER_HEIGHT;
+
+	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_allocate(widget, &childAllocation);
 }
 
 static void
@@ -254,64 +275,84 @@ gltk_spinner_render(GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
 
-	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
-	GltkSize size = gltk_screen_get_window_size(widget->screen);
-
-	//setup our rendering window how we like it
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	int offsetX = allocation.x;
-	int offsetY = size.height - allocation.height - allocation.y;
-	glViewport(offsetX, offsetY, allocation.width, allocation.height);
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, allocation.width, allocation.height, 0, -1, 1);
-	glMatrixMode(GL_MODELVIEW);
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 
 	glPushMatrix();
 	{
-		glLoadIdentity();
-
 		glBegin(GL_QUADS);
 		{
-			glColor3f(1.0f, 1.0f, 1.0f);
+			//border
+			glColor3f(0.65f, 0.65f, 0.71f);
+			glVertex2i(allocation.width + BORDER_WIDTH, -BORDER_HEIGHT);
+			glVertex2i(-BORDER_WIDTH, -BORDER_HEIGHT);
+			glColor3f(0.49f, 0.49f, 0.54f);
+			glVertex2i(-BORDER_WIDTH, allocation.height*0.5);
+			glVertex2i(allocation.width + BORDER_WIDTH, allocation.height*0.5);
+
+			glColor3f(0.33f, 0.33f, 0.38f);
+			glVertex2i(allocation.width + BORDER_WIDTH, allocation.height*0.5);
+			glVertex2i(-BORDER_WIDTH, allocation.height*0.5);
+			glColor3f(0.12f, 0.12f, 0.16f);
+			glVertex2i(-BORDER_WIDTH, allocation.height + BORDER_HEIGHT);
+			glVertex2i(allocation.width + BORDER_WIDTH, allocation.height + BORDER_HEIGHT);
+
+			//highlighting
+			static const float heights = 1.5f;
+			glColor3f(0.0f, 0.0f, 0.0f);
 			glVertex2i(allocation.width, 0);
 			glVertex2i(0, 0);
-			glColor3f(0.0f, 0.0f, 0.0f);
-			glVertex2i(0, priv->itemHeight);
-			glVertex2i(allocation.width, priv->itemHeight);
-			
-			glVertex2i(allocation.width, allocation.height - priv->itemHeight);
-			glVertex2i(0, allocation.height - priv->itemHeight);
 			glColor3f(1.0f, 1.0f, 1.0f);
+			glVertex2i(0, priv->itemHeight*heights);
+			glVertex2i(allocation.width, priv->itemHeight*heights);
+			
+			glVertex2i(0, priv->itemHeight*heights);
+			glVertex2i(allocation.width, priv->itemHeight*heights);
+			glVertex2i(allocation.width, allocation.height - priv->itemHeight*heights);
+			glVertex2i(0, allocation.height - priv->itemHeight*heights);
+
+			glVertex2i(allocation.width, allocation.height - priv->itemHeight*heights);
+			glVertex2i(0, allocation.height - priv->itemHeight*heights);
+			glColor3f(0.0f, 0.0f, 0.0f);
 			glVertex2i(0, allocation.height);
 			glVertex2i(allocation.width, allocation.height);
 		}
 		glEnd();
 
+		glTranslatef(BORDER_WIDTH, BORDER_HEIGHT, 0.0f);
 		GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->render(widget);
+		glTranslatef(-BORDER_WIDTH, -BORDER_HEIGHT, 0.0f);
 
 		glBegin(GL_QUADS);
 		{
-			glColor4f(0.0f, 0.0f, 1.0f, 0.3f);
-			glVertex2i(allocation.width, 2*priv->itemHeight);
-			glVertex2i(0, 2*priv->itemHeight);
+			//selector
+			glColor4f(0.53f, 0.54f, 0.77f, 0.3f);
+			glVertex2f(allocation.width, 2*priv->itemHeight);
+			glVertex2f(0, 2*priv->itemHeight);
+			glVertex2f(0, 2.5*priv->itemHeight);
+			glVertex2f(allocation.width, 2.5*priv->itemHeight);
+			
+			glColor4f(0.17f, 0.17f, 0.53f, 0.3f);
+			glVertex2f(allocation.width, 2.5*priv->itemHeight);
+			glVertex2f(0, 2.5*priv->itemHeight);
 			glVertex2i(0, 3*priv->itemHeight);
 			glVertex2i(allocation.width, 3*priv->itemHeight);
 		}
 		glEnd();
 
-		
-	
+		glBegin(GL_LINE_LOOP);
+		{
+			//border around selector
+			glColor4f(0.54f, 0.55f, 0.63f, 0.3f);
+			glVertex2f(allocation.width, 2*priv->itemHeight);
+			glVertex2f(0, 2*priv->itemHeight);
+			glVertex2i(0, 3*priv->itemHeight);
+			glVertex2i(allocation.width, 3*priv->itemHeight);
+		}
+		glEnd();
+
 	}
 	glPopMatrix();
 
-	//undo our changes to the state
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
 }
 

@@ -69,6 +69,10 @@ gltk_label_init(GltkLabel* self)
 	USING_PRIVATE(self);
 
 	self->text = NULL;
+	self->color.r = 1.0f;
+	self->color.g = 1.0f;
+	self->color.b = 1.0f;
+
 	priv->drawBorder = FALSE;
 	priv->fontSize = 16;
 }
@@ -177,11 +181,13 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 }
 
 static void
-gltk_label_render(GltkWidget* label)
+gltk_label_render(GltkWidget* widget)
 {
-	USING_PRIVATE(label);
+	USING_PRIVATE(widget);
 
-	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(label));
+	GltkLabel* label = GLTK_LABEL(widget);
+
+	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	// g_message("Allocation: %i %i %i %i", allocation.x, allocation.y, allocation.width, allocation.height);
 
 	if (priv->drawBorder)
@@ -205,11 +211,11 @@ gltk_label_render(GltkWidget* label)
 	glPushMatrix();
 	{
 		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, priv->fontSize, TRUE);
-		glColor3f(1.0f, 1.0f, 1.0f);
+		glColor3f(label->color.r, label->color.g, label->color.b);
 		glTranslatef(10.0f, font->ascender + font->descender + 10, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
-		gchar** lines = g_strsplit(GLTK_LABEL(label)->text, "\n", -1);
+		gchar** lines = g_strsplit(label->text, "\n", -1);
 		gchar** pLines = lines;
 		while (*pLines)
 		{
