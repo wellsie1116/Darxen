@@ -24,6 +24,7 @@
 #include "gltkvbox.h"
 #include "gltklabel.h"
 
+#include <math.h>
 #include <glib.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -64,9 +65,11 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void gltk_spinner_dispose(GObject* gobject);
 static void gltk_spinner_finalize(GObject* gobject);
 
-static void gltk_spinner_size_allocate	(GltkWidget* widget, GltkAllocation* allocation);
-static void gltk_spinner_size_request	(GltkWidget* widget, GltkSize* size);
-static void gltk_spinner_render			(GltkWidget* widget);
+static gboolean	gltk_spinner_touch_event	(GltkWidget* widget, GltkEventTouch* event);
+static gboolean	gltk_spinner_drag_event		(GltkWidget* widget, GltkEventDrag* event);
+static void gltk_spinner_size_allocate		(GltkWidget* widget, GltkAllocation* allocation);
+static void gltk_spinner_size_request		(GltkWidget* widget, GltkSize* size);
+static void gltk_spinner_render				(GltkWidget* widget);
 
 static void
 gltk_spinner_class_init(GltkSpinnerClass* klass)
@@ -88,6 +91,8 @@ gltk_spinner_class_init(GltkSpinnerClass* klass)
 	gobject_class->dispose = gltk_spinner_dispose;
 	gobject_class->finalize = gltk_spinner_finalize;
 
+	gltkwidget_class->touch_event = gltk_spinner_touch_event;
+	gltkwidget_class->drag_event = gltk_spinner_drag_event;
 	gltkwidget_class->size_allocate = gltk_spinner_size_allocate;
 	gltkwidget_class->size_request = gltk_spinner_size_request;
 	gltkwidget_class->render = gltk_spinner_render;
@@ -160,7 +165,7 @@ gltk_spinner_new()
 
 	USING_PRIVATE(self);
 
-	priv->vbox = gltk_vbox_new(1);
+	priv->vbox = gltk_vbox_new(0);
 
 	gltk_scrollable_set_widget(GLTK_SCROLLABLE(self), priv->vbox);
 
@@ -192,6 +197,8 @@ gltk_spinner_add_item(GltkSpinner* spinner, const gchar* label)
 	if (size.height > priv->itemHeight)
 	{
 		priv->itemHeight = size.height;
+		GLTK_SCROLLABLE(spinner)->paddingTop = 2*priv->itemHeight;
+		GLTK_SCROLLABLE(spinner)->paddingBottom = 2*priv->itemHeight;
 		size.width = -1;
 
 		GList* pItems = priv->items;
@@ -255,6 +262,40 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 	size->height = priv->itemHeight * 5 + 2*BORDER_HEIGHT;
 
 	widget->requisition = *size;
+}
+
+static gboolean
+gltk_spinner_touch_event(GltkWidget* widget, GltkEventTouch* event)
+{
+	USING_PRIVATE(widget);
+
+	gboolean res = GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->touch_event(widget, event);
+
+	if (event->touchType == TOUCH_END)
+	{
+		int index = round((float)GLTK_SCROLLABLE(widget)->offset.y / priv->itemHeight);
+		GLTK_SCROLLABLE(widget)->offset.y = index * priv->itemHeight;
+		index = -index + 2;
+
+		GList* pItems = g_list_nth(priv->items, index);
+		g_assert(pItems);
+		if (pItems != priv->pItems)
+		{
+			priv->pItems = pItems;
+			g_object_ref(widget);
+			g_signal_emit(widget, signals[ITEM_SELECTED], 0);
+			g_object_unref(widget);
+		}
+	}
+
+	return res;
+
+}
+
+static gboolean
+gltk_spinner_drag_event(GltkWidget* widget, GltkEventDrag* event)
+{
+	return GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->drag_event(widget, event);
 }
 
 static void

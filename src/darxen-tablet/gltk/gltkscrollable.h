@@ -40,6 +40,16 @@ typedef struct _GltkScrollableClass		GltkScrollableClass;
 struct _GltkScrollable
 {
 	GltkWidget parent;
+
+	struct {
+		int x;
+		int y;
+	} offset;
+
+	int paddingTop;
+	int paddingLeft;
+	int paddingRight;
+	int paddingBottom;
 };
 
 struct _GltkScrollableClass

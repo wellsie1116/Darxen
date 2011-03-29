@@ -39,10 +39,6 @@ typedef struct _GltkScrollablePrivate		GltkScrollablePrivate;
 struct _GltkScrollablePrivate
 {
 	GltkWidget* widget;
-	struct {
-		int x;
-		int y;
-	} offset;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -84,8 +80,13 @@ gltk_scrollable_init(GltkScrollable* self)
 	USING_PRIVATE(self);
 
 	priv->widget = NULL;
-	priv->offset.x = 0;
-	priv->offset.y = 0;
+	self->offset.x = 0;
+	self->offset.y = 0;
+
+	self->paddingTop = 0;
+	self->paddingLeft = 0;
+	self->paddingRight = 0;
+	self->paddingBottom = 0;
 }
 
 static void
@@ -132,8 +133,8 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 
 	g_object_ref_sink(G_OBJECT(widget));
 	priv->widget = widget;
-	priv->offset.x = 0;
-	priv->offset.y = 0;
+	scrollable->offset.x = 0;
+	scrollable->offset.y = 0;
 	gltk_widget_set_parent(widget, GLTK_WIDGET(scrollable));
 	if (GLTK_WIDGET(scrollable)->screen)
 		gltk_widget_set_screen(widget, GLTK_WIDGET(scrollable)->screen);
@@ -142,8 +143,6 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 void
 gltk_scrollable_transform_event(GltkScrollable* scrollable, GltkEvent* event)
 {
-	USING_PRIVATE(scrollable);
-
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
@@ -151,8 +150,8 @@ gltk_scrollable_transform_event(GltkScrollable* scrollable, GltkEvent* event)
 			int i;
 			for (i = 0; i < event->touch.fingers; i++)
 			{
-				event->touch.positions[i].x -= priv->offset.x;
-				event->touch.positions[i].y -= priv->offset.y;
+				event->touch.positions[i].x -= scrollable->offset.x;
+				event->touch.positions[i].y -= scrollable->offset.y;
 			}
 		}
 			break;
@@ -214,7 +213,7 @@ gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 	{
 		GltkSize size;
 		gltk_widget_size_request(priv->widget, &size);
-		GltkAllocation childAllocation = {priv->offset.x, priv->offset.y, MAX(allocation->width, size.width), MAX(allocation->height, size.height)};
+		GltkAllocation childAllocation = {GLTK_SCROLLABLE(widget)->offset.x, GLTK_SCROLLABLE(widget)->offset.y, MAX(allocation->width, size.width), MAX(allocation->height, size.height)};
 		gltk_widget_size_allocate(priv->widget, childAllocation);
 	}
 
@@ -247,7 +246,7 @@ gltk_scrollable_render(GltkWidget* widget)
 	glPushMatrix();
 	{
 		glLoadIdentity();
-		glTranslatef(priv->offset.x, priv->offset.y, 0.0f);
+		glTranslatef(GLTK_SCROLLABLE(widget)->offset.x, GLTK_SCROLLABLE(widget)->offset.y, 0.0f);
 		gltk_widget_render(priv->widget);
 
 	}
@@ -296,16 +295,18 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 {
 	if (event->longTouched)
 		return FALSE;
+	
+	GltkScrollable* scrollable = GLTK_SCROLLABLE(widget);
 
 	USING_PRIVATE(widget);
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	GltkAllocation childAllocation = gltk_widget_get_allocation(priv->widget);
 
-	priv->offset.x = CLAMP(priv->offset.x + event->dx, -(childAllocation.width - allocation.width), 0);
-	priv->offset.y = CLAMP(priv->offset.y + event->dy, -(childAllocation.height - allocation.height), 0);
+	scrollable->offset.x = CLAMP(scrollable->offset.x + event->dx, -(childAllocation.width - allocation.width) - scrollable->paddingRight, scrollable->paddingLeft);
+	scrollable->offset.y = CLAMP(scrollable->offset.y + event->dy, -(childAllocation.height - allocation.height) - scrollable->paddingBottom, scrollable->paddingTop);
 
-	childAllocation.x = priv->offset.x;
-	childAllocation.y = priv->offset.y;
+	childAllocation.x = scrollable->offset.x;
+	childAllocation.y = scrollable->offset.y;
 
 	gltk_widget_size_allocate(priv->widget, childAllocation);
 
