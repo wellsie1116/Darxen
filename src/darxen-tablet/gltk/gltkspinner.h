@@ -60,8 +60,9 @@ typedef enum
 GType			gltk_spinner_get_type			() G_GNUC_CONST;
 GltkWidget*		gltk_spinner_new				();
 
-void			gltk_spinner_add_item			(GltkSpinner* spinner, const gchar* label);
+void			gltk_spinner_add_item			(GltkSpinner* spinner, const gchar* id, const gchar* label);
 const gchar*	gltk_spinner_get_selected_item	(GltkSpinner* spinner);
+void			gltk_spinner_set_selected_item	(GltkSpinner* spinner, const gchar* id);
 
 GQuark			gltk_spinner_error_quark		();
 

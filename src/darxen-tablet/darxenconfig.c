@@ -271,7 +271,7 @@ darxen_config_view_updated(	DarxenConfig* config,
 {
 	g_return_if_fail(DARXEN_IS_CONFIG(config));
 	
-	g_signal_emit(config, signals[VIEW_NAME_CHANGED], 0, site, viewInfo);
+	g_signal_emit(config, signals[VIEW_UPDATED], 0, site, viewInfo);
 }
 
 

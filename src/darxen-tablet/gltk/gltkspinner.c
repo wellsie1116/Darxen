@@ -46,6 +46,7 @@ typedef struct _GltkSpinnerPrivate		GltkSpinnerPrivate;
 
 struct _SpinnerItem
 {
+	gchar* id;
 	gchar* text;
 	GltkWidget* label;
 };
@@ -65,11 +66,12 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void gltk_spinner_dispose(GObject* gobject);
 static void gltk_spinner_finalize(GObject* gobject);
 
+static gint 	find_spinner_item			(SpinnerItem* i1, const gchar* id);
 static gboolean	gltk_spinner_touch_event	(GltkWidget* widget, GltkEventTouch* event);
 static gboolean	gltk_spinner_drag_event		(GltkWidget* widget, GltkEventDrag* event);
-static void gltk_spinner_size_allocate		(GltkWidget* widget, GltkAllocation* allocation);
-static void gltk_spinner_size_request		(GltkWidget* widget, GltkSize* size);
-static void gltk_spinner_render				(GltkWidget* widget);
+static void		gltk_spinner_size_allocate		(GltkWidget* widget, GltkAllocation* allocation);
+static void		gltk_spinner_size_request		(GltkWidget* widget, GltkSize* size);
+static void		gltk_spinner_render				(GltkWidget* widget);
 
 static void
 gltk_spinner_class_init(GltkSpinnerClass* klass)
@@ -133,6 +135,7 @@ gltk_spinner_dispose(GObject* gobject)
 			SpinnerItem* item = (SpinnerItem*)pItems->data;
 		
 			g_free(item->text);
+			g_free(item->id);
 			g_object_unref(item->label);
 
 			g_slice_free(SpinnerItem, item);
@@ -173,12 +176,16 @@ gltk_spinner_new()
 }
 
 void
-gltk_spinner_add_item(GltkSpinner* spinner, const gchar* label)
+gltk_spinner_add_item(GltkSpinner* spinner, const gchar* id, const gchar* label)
 {
+	g_return_if_fail(GLTK_IS_SPINNER(spinner));
 	USING_PRIVATE(spinner);
+	
+	g_return_if_fail(!g_list_find_custom(priv->items, id, (GCompareFunc)find_spinner_item));
 
 	SpinnerItem* item  = g_slice_new(SpinnerItem);
 
+	item->id = g_strdup(id);
 	item->text = g_strdup(label);
 	item->label = gltk_label_new(label);
 	GLTK_LABEL(item->label)->color.r = 0.0f;
@@ -216,15 +223,34 @@ gltk_spinner_add_item(GltkSpinner* spinner, const gchar* label)
 const gchar*
 gltk_spinner_get_selected_item(GltkSpinner* spinner)
 {
+	g_return_val_if_fail(GLTK_IS_SPINNER(spinner), NULL);
 	USING_PRIVATE(spinner);
 
 	if (!priv->pItems)
 		return NULL;
 
 	SpinnerItem* item = (SpinnerItem*)priv->pItems->data;
-	return item->text;
+	return item->id;
 }
 
+void
+gltk_spinner_set_selected_item(GltkSpinner* spinner, const gchar* id)
+{
+	g_return_if_fail(GLTK_IS_SPINNER(spinner));
+	USING_PRIVATE(spinner);
+
+	GList* pItems = g_list_find_custom(priv->items, id, (GCompareFunc)find_spinner_item);
+	g_return_if_fail(pItems);
+
+	priv->pItems = pItems;
+	int index = g_list_position(priv->items, pItems);
+
+	GLTK_SCROLLABLE(spinner)->offset.y = (-index + 2) * priv->itemHeight;
+
+	g_object_ref(spinner);
+	g_signal_emit(spinner, signals[ITEM_SELECTED], 0);
+	g_object_unref(spinner);
+}
 
 GQuark
 gltk_spinner_error_quark()
@@ -236,6 +262,11 @@ gltk_spinner_error_quark()
  * Private Functions *
  *********************/
 
+static gint
+find_spinner_item(SpinnerItem* i1, const gchar* id)
+{
+	return g_strcmp0(i1->id, id);
+}
 #define BORDER_WIDTH 10
 #define BORDER_HEIGHT 10
 

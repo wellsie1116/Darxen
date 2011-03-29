@@ -102,8 +102,20 @@ txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
 static void
 spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewConfig)
 {
-	g_message("Spinner item selected: %s", gltk_spinner_get_selected_item(spinnerProduct));
-	//TODO something
+	USING_PRIVATE(viewConfig);
+
+	DarxenConfig* config = darxen_config_get_instance();
+	
+	const gchar* id = gltk_spinner_get_selected_item(spinnerProduct);
+
+	if (!g_strcmp0(priv->viewInfo->productCode, id))
+		return;
+	g_message("Spinner item selected: %s", id);
+
+	g_assert(strlen(priv->viewInfo->productCode) == strlen(id));
+	g_strlcpy(priv->viewInfo->productCode, id, strlen(id)+1);
+
+	darxen_config_view_updated(config, priv->site, priv->viewInfo);
 }
 
 GltkWidget*
@@ -142,16 +154,29 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
 
 		GltkWidget* spinnerProduct = gltk_spinner_new();
-		GltkSize size = {200, -1};
+		GltkSize size = {250, -1};
 		gltk_widget_set_size_request(spinnerProduct, size);
 
-		static const char* products[] = {	"N0R", "N1R", "N2R", "N3R",
-											"N0S", "N1S", "N2S", "N3S",
-	   										NULL};
+		typedef struct {
+			char* id;
+			char* label;
+		} Product;
 
-		const char** pProducts;
-		for (pProducts = products; *pProducts; pProducts++)
-			gltk_spinner_add_item(GLTK_SPINNER(spinnerProduct), *pProducts);
+		static const Product products[] = {	{"N0R", "Base Reflectivity (0.50)"},
+											{"N1R", "Base Reflectivity (1.45)"},
+											{"N2R", "Base Reflectivity (2.40)"},
+											{"N3R", "Base Reflectivity (3.35)"},
+											{"N0S", "Storm Velocity (0.50)"},
+											{"N1S", "Storm Velocity (1.45)"},
+											{"N2S", "Storm Velocity (2.40)"},
+											{"N3S", "Storm Velocity (3.35)"},
+											{NULL, NULL}
+										};
+
+		const Product* pProducts;
+		for (pProducts = products; pProducts->id; pProducts++)
+			gltk_spinner_add_item(GLTK_SPINNER(spinnerProduct), pProducts->id, pProducts->label);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerProduct), viewInfo->productCode);
 
 		g_signal_connect(spinnerProduct, "item-selected", (GCallback)spinnerProduct_itemSelected, self);
 		
