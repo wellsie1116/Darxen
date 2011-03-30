@@ -67,6 +67,9 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 		error = FT_Set_Char_Size(font->face, 0, size*64, 0, 0);
 		g_assert(!error);
 
+		//font->ascender = face->size->metrics->ascender;
+		//font->descender = face->size->metrics->descender;
+
 		{
 			font->glyphs = g_new(GltkGLFontBounds, 128);
 			int i;
@@ -121,7 +124,7 @@ gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 		if (*pTxt == '\n')
 		{
 			res.width = MAX(res.width, lineWidth);
-			res.height = MAX(res.height, lineHeight) + 5;
+			res.height += lineHeight + 5;
 			lineWidth = 0;
 			lineHeight = 0;
 		}
@@ -132,7 +135,7 @@ gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 		}
 	}
 	res.width = MAX(res.width, lineWidth);
-	res.height = MAX(res.height, lineHeight);
+	res.height += lineHeight + 5;
 
 	return res;
 }
