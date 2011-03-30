@@ -121,7 +121,7 @@ gltk_fonts_measure_string(GltkGLFont* font, const char* txt)
 		if (*pTxt == '\n')
 		{
 			res.width = MAX(res.width, lineWidth);
-			res.height = MAX(res.height, lineHeight);
+			res.height = MAX(res.height, lineHeight) + 5;
 			lineWidth = 0;
 			lineHeight = 0;
 		}
