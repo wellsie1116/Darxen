@@ -90,6 +90,7 @@ gltk_toggle_button_new(const char* text)
 	GltkToggleButton* self = GLTK_TOGGLE_BUTTON(gobject);
 
 	GLTK_BUTTON(self)->text = g_strdup(text);
+	GLTK_BUTTON(self)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 
 	return (GltkWidget*)gobject;
 }

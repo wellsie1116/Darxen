@@ -20,6 +20,7 @@
 
 #include "darxenviewconfig.h"
 
+#include <libdarxenShapefiles.h>
 
 G_DEFINE_TYPE(DarxenViewConfig, darxen_view_config, GLTK_TYPE_VBOX)
 
@@ -207,8 +208,44 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	{
 		GltkWidget* lblShapefiles = gltk_label_new("Shapefiles: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblShapefiles), 28);
+
+		GltkWidget* shapefiles = gltk_vbox_new(1);
+
+		gchar* items[] = {"Counties", "States", "Lakes", "Rivers", "Radar Sites", NULL};
+
+
+		gltk_box_append_widget(GLTK_BOX(shapefiles), gltk_button_new("Boo"), FALSE, FALSE);
+		gchar** pItems;
+		for (pItems = items; *pItems; pItems++)
+		{
+			GltkWidget* btn = gltk_toggle_button_new(*pItems);
+
+			gboolean visible = FALSE;
+			GSList* pShapefiles = priv->viewInfo->shapefiles;
+			while (pShapefiles)
+			{
+				DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
+			
+				if (!g_strcmp0(shapefile->name, *pItems))
+				{
+					visible = shapefile->visible;
+					break;
+				}
+			
+				pShapefiles = pShapefiles->next;
+			}
+
+			gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(btn), visible);
+
+			gltk_box_append_widget(GLTK_BOX(shapefiles), btn, FALSE, FALSE);
+			//gltk_list_add_item(GLTK_LIST(shapefiles), btn, items);
+		}
+
+		GltkWidget* scrollable = gltk_scrollable_new();
+		gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), shapefiles);
 		
 		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), lblShapefiles, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), scrollable, FALSE, FALSE);
 	}
 
 	GltkWidget* hboxSource = gltk_hbox_new(0);
