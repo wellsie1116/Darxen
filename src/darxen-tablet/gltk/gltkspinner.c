@@ -340,7 +340,7 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
 	
-	int totalWidth = 0;
+	int totalWidth = 2;
 
 	int i;
 	for (i = 0; i < priv->model->levels; i++)
@@ -364,7 +364,7 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 
 		gltk_widget_size_request(wheel->scrollable, size);
 
-		totalWidth += size->width;
+		totalWidth += size->width + 1;
 	}
 
 	size->width = totalWidth + 2*BORDER_WIDTH;
@@ -477,26 +477,27 @@ gltk_spinner_render(GltkWidget* widget)
 		glEnd();
 
 		//dividers
-		if (priv->model->levels > 1)
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glBegin(GL_LINES);
 		{
-			glColor3f(0.0f, 0.0f, 0.0f);
-			glBegin(GL_LINES);
+			glVertex2i(0, 0);
+			glVertex2i(0, allocation.height);
+			glVertex2i(allocation.width, 0);
+			glVertex2i(allocation.width, allocation.height);
+			int i;
+			int x = 1;
+			for (i = 0; i < priv->model->levels-1; i++)
 			{
-				int i;
-				int x = 1;
-				for (i = 0; i < priv->model->levels - 1; i++)
-				{
-					Wheel* wheel = priv->wheels + i;
+				Wheel* wheel = priv->wheels + i;
 
-					GltkAllocation wheelAllocation = gltk_widget_get_allocation(wheel->scrollable);
+				GltkAllocation wheelAllocation = gltk_widget_get_allocation(wheel->scrollable);
 
-					x += wheelAllocation.width + 1;
-					glVertex2i(x, 0);
-					glVertex2i(x, allocation.height);
-				}
+				x += wheelAllocation.width + 1;
+				glVertex2i(x, 0);
+				glVertex2i(x, allocation.height);
 			}
-			glEnd();
 		}
+		glEnd();
 
 		glTranslatef(BORDER_WIDTH, BORDER_HEIGHT, 0.0f);
 		GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->render(widget);
