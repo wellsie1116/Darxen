@@ -151,29 +151,16 @@ gltk_label_size_request(GltkWidget* widget, GltkSize* size)
 	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, priv->fontSize, FALSE);
 	g_assert(font);
 
-	size->height = 20;
+	size->height = 0;
 	size->width = 0;
+	
+	GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_LABEL(widget)->text);
 
-	gchar** lines = g_strsplit(GLTK_LABEL(widget)->text, "\n", -1);
-	gchar** pLines = lines;
-	while (*pLines)
-	{
-		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, *pLines);
-		// float bbox[6];
-		// ftglGetFontBBox(font->font, *pLines, -1, bbox);
-		// float width = bbox[3] - bbox[0];
-		// float height = bbox[4] - bbox[1];
-
-		//printf("Request line size: %f %f\n", bounds.width, bounds.height);
-
-		size->height += bounds.height + 5;
-		size->width = MAX(size->width, bounds.width);
-
-		pLines++;
-	}
-	g_strfreev(lines);
+	size->width = bounds.width;
+	size->height = bounds.height;
 
 	size->width += 20;
+	size->height += 20;
 
 	// g_message("Request: %i %i", size->width, size->height);
 
