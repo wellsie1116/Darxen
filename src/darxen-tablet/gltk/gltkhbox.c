@@ -134,7 +134,7 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 	GltkSize requisition;
    	gltk_widget_size_request(widget, &requisition);
 
-	int extraWidth = allocation->width - requisition.width - (box->childrenCount+1)*box->spacing;
+	int extraWidth = allocation->width - requisition.width;// - (box->childrenCount+1)*box->spacing;
 
 	//allocate space for the children, dividing the extra space appropriately
 	GList* pChildren = box->children;
@@ -143,7 +143,7 @@ gltk_hbox_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 		GltkSize childSize;
 		gltk_widget_size_request(child->widget, &childSize);
-		GltkAllocation childAllocation = {0, box->spacing, childSize.width, allocation->height};
+		GltkAllocation childAllocation = {0, box->spacing, childSize.width, allocation->height - 2*box->spacing};
 	
 		if (child->expand)
 		{
