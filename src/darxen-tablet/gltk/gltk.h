@@ -41,6 +41,7 @@
 #include <gltk/gltkvbox.h>
 #include <gltk/gltkbin.h>
 #include <gltk/gltklist.h>
+#include <gltk/gltkspinnermodel.h>
 #include <gltk/gltkspinner.h>
 #include <gltk/gltklabel.h>
 #include <gltk/gltkkeyboard.h>

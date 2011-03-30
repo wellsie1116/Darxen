@@ -21,7 +21,8 @@
 #ifndef GLTKSPINNER_H_5DRCPDQT
 #define GLTKSPINNER_H_5DRCPDQT
 
-#include "gltkscrollable.h"
+#include "gltkhbox.h"
+#include "gltkspinnermodel.h"
 
 G_BEGIN_DECLS
 
@@ -39,12 +40,12 @@ typedef struct _GltkSpinnerClass		GltkSpinnerClass;
 
 struct _GltkSpinner
 {
-	GltkScrollable parent;
+	GltkHBox parent;
 };
 
 struct _GltkSpinnerClass
 {
-	GltkScrollableClass parent_class;
+	GltkHBoxClass parent_class;
 	
 	/* signals */
 	void	(*item_selected)	(	GltkSpinner* spinner);
@@ -58,11 +59,10 @@ typedef enum
 } GltkSpinnerError;
 
 GType			gltk_spinner_get_type			() G_GNUC_CONST;
-GltkWidget*		gltk_spinner_new				();
+GltkWidget*		gltk_spinner_new				(GltkSpinnerModel* model);
 
-void			gltk_spinner_add_item			(GltkSpinner* spinner, const gchar* id, const gchar* label);
-const gchar*	gltk_spinner_get_selected_item	(GltkSpinner* spinner);
-void			gltk_spinner_set_selected_item	(GltkSpinner* spinner, const gchar* id);
+const gchar*	gltk_spinner_get_selected_item	(GltkSpinner* spinner, int level);
+void			gltk_spinner_set_selected_item	(GltkSpinner* spinner, int level, const gchar* id);
 
 GQuark			gltk_spinner_error_quark		();
 

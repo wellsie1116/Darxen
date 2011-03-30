@@ -106,16 +106,46 @@ spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewC
 
 	DarxenConfig* config = darxen_config_get_instance();
 	
-	const gchar* id = gltk_spinner_get_selected_item(spinnerProduct);
+	char productCode[4] = "Nxx";
+	const gchar* id;
+	id = gltk_spinner_get_selected_item(spinnerProduct, 0);
+	productCode[2] = *id;
+	id = gltk_spinner_get_selected_item(spinnerProduct, 1);
+	productCode[1] = *id;
+	id = gltk_spinner_get_selected_item(spinnerProduct, 2);
 
-	if (!g_strcmp0(priv->viewInfo->productCode, id))
-		return;
-	g_message("Spinner item selected: %s", id);
+	g_assert(strlen(priv->viewInfo->productCode) == strlen(productCode));
+	g_strlcpy(priv->viewInfo->productCode, productCode, strlen(productCode)+1);
 
-	g_assert(strlen(priv->viewInfo->productCode) == strlen(id));
-	g_strlcpy(priv->viewInfo->productCode, id, strlen(id)+1);
+	priv->viewInfo->smoothing = !g_strcmp0(id, "smooth");
+
+	g_message("Product changed to %s %s", productCode, priv->viewInfo->smoothing ? "smooth" : "raw");
 
 	darxen_config_view_updated(config, priv->site, priv->viewInfo);
+}
+
+static GList*
+model_getItems(GltkSpinnerModel* model, int level, int index, GltkSpinner* spinner)
+{
+	GList* res = NULL;
+
+	switch (level)
+	{
+		case 0:
+			res = g_list_prepend(res, gltk_spinner_model_item_new("0", "0.50 Elevation"));
+			res = g_list_prepend(res, gltk_spinner_model_item_new("1", "1.45 Elevation"));
+			res = g_list_prepend(res, gltk_spinner_model_item_new("2", "2.40 Elevation"));
+			res = g_list_prepend(res, gltk_spinner_model_item_new("3", "3.35 Elevation"));
+			break;
+		case 1:
+			res = g_list_prepend(res, gltk_spinner_model_item_new("raw", "Raw"));
+			res = g_list_prepend(res, gltk_spinner_model_item_new("smooth", "Smooth"));
+			break;
+		default:
+			g_assert_not_reached();
+	}
+
+	return g_list_reverse(res);
 }
 
 GltkWidget*
@@ -153,30 +183,19 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		GltkWidget* lblProduct = gltk_label_new("Product: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
 
-		GltkWidget* spinnerProduct = gltk_spinner_new();
-		GltkSize size = {250, -1};
-		gltk_widget_set_size_request(spinnerProduct, size);
+		GltkSpinnerModel* model = gltk_spinner_model_new(3);	
+		gltk_spinner_model_add_toplevel(model, "R", "Base Reflectivity");
+		gltk_spinner_model_add_toplevel(model, "S", "Storm Velocity");
 
-		typedef struct {
-			char* id;
-			char* label;
-		} Product;
+		GltkWidget* spinnerProduct = gltk_spinner_new(model);
+		g_signal_connect(model, "get-items", (GCallback)model_getItems, spinnerProduct);
 
-		static const Product products[] = {	{"N0R", "Base Reflectivity (0.50)"},
-											{"N1R", "Base Reflectivity (1.45)"},
-											{"N2R", "Base Reflectivity (2.40)"},
-											{"N3R", "Base Reflectivity (3.35)"},
-											{"N0S", "Storm Velocity (0.50)"},
-											{"N1S", "Storm Velocity (1.45)"},
-											{"N2S", "Storm Velocity (2.40)"},
-											{"N3S", "Storm Velocity (3.35)"},
-											{NULL, NULL}
-										};
-
-		const Product* pProducts;
-		for (pProducts = products; pProducts->id; pProducts++)
-			gltk_spinner_add_item(GLTK_SPINNER(spinnerProduct), pProducts->id, pProducts->label);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerProduct), viewInfo->productCode);
+		char key[2] = "x";
+		*key = viewInfo->productCode[2];
+		gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerProduct), 0, key);
+		*key = viewInfo->productCode[1];
+		gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerProduct), 1, key);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerProduct), 2, viewInfo->smoothing ? "smooth" : "raw");
 
 		g_signal_connect(spinnerProduct, "item-selected", (GCallback)spinnerProduct_itemSelected, self);
 		

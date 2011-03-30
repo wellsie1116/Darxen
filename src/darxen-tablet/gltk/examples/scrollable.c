@@ -20,7 +20,8 @@
 
 #include "common.h"
 
-GltkWidget* make_scrollable(GltkWidget* child)
+GltkWidget*
+make_scrollable(GltkWidget* child)
 {
 	GltkWidget* scrollable = gltk_scrollable_new();
 
@@ -29,7 +30,8 @@ GltkWidget* make_scrollable(GltkWidget* child)
 	return scrollable;
 }
 
-GltkWidget* label_widget(GltkWidget* child, const char* message)
+GltkWidget*
+label_widget(GltkWidget* child, const char* message)
 {
 	GltkWidget* vbox = gltk_vbox_new(0);
 
@@ -39,7 +41,8 @@ GltkWidget* label_widget(GltkWidget* child, const char* message)
 	return vbox;
 }
 
-GltkWidget* create_large_vbox()
+GltkWidget*
+create_large_vbox()
 {
 	GltkWidget* vbox = gltk_vbox_new(0);
 
@@ -56,6 +59,109 @@ GltkWidget* create_large_vbox()
 	return label_widget(make_scrollable(vbox), "Below are 100 labels");
 }
 
+GltkWidget*
+create_large_list()
+{
+	GltkWidget* list = gltk_list_new();
+
+	int i;
+	for (i = 0; i < 100; i++)
+	{
+		gchar* msg = g_strdup_printf("Label %i", i);
+		GltkWidget* label = gltk_label_new(msg);
+		g_free(msg);
+
+		gltk_list_add_item(GLTK_LIST(list), label, NULL);
+	}
+
+	return label_widget(make_scrollable(list), "Below are 100 labels\nin a list");
+}
+
+GltkWidget*
+create_basic_spinner()
+{
+	GltkSpinnerModel* model = gltk_spinner_model_new(1);
+
+	gltk_spinner_model_add_toplevel(model, "0", "Item 0");
+	gltk_spinner_model_add_toplevel(model, "1", "Item 1");
+	gltk_spinner_model_add_toplevel(model, "2", "Item 2");
+	gltk_spinner_model_add_toplevel(model, "3", "Item 3");
+	gltk_spinner_model_add_toplevel(model, "4", "Item 4");
+	gltk_spinner_model_add_toplevel(model, "5", "Item 5");
+	gltk_spinner_model_add_toplevel(model, "6", "Item 6");
+	gltk_spinner_model_add_toplevel(model, "7", "Item 7");
+	gltk_spinner_model_add_toplevel(model, "8", "Item 8");
+	gltk_spinner_model_add_toplevel(model, "9", "Item 9");
+
+	GltkWidget* spinner = gltk_spinner_new(model);
+
+	return label_widget(spinner, "Basic Spinner (1 level)");
+}
+
+GList*
+bilevel_getItems(GltkSpinnerModel* model, int level, int index, gpointer user_data)
+{
+	GList* res = NULL;
+
+	if (level == 1)
+	{
+		int i;
+		for (i = 0; i < 6; i++)
+		{
+			gchar* id = g_strdup_printf("%c%i", 'A'+index, i);
+			gchar* text = g_strdup_printf("Level %c.%i", 'A'+index, i);
+
+			res = g_list_prepend(res, gltk_spinner_model_item_new(id, text));
+			g_free(id);
+			g_free(text);
+		}
+	}
+	else
+	{
+		int i;
+		for (i = 0; i < 6; i++)
+		{
+			gchar* id = g_strdup_printf("%c%i", 'A'+index, i);
+			gchar* text = g_strdup_printf("Level %c.%i", 'A'+index, i);
+
+			res = g_list_prepend(res, gltk_spinner_model_item_new(id, text));
+			g_free(id);
+			g_free(text);
+		}
+	}
+
+	return g_list_reverse(res);
+}
+
+GltkWidget*
+create_bilevel_spinner()
+{
+	GltkSpinnerModel* model = gltk_spinner_model_new(3);
+
+	gltk_spinner_model_add_toplevel(model, "A", "Level A");
+	gltk_spinner_model_add_toplevel(model, "B", "Level B");
+	gltk_spinner_model_add_toplevel(model, "C", "Level C");
+	gltk_spinner_model_add_toplevel(model, "D", "Level D");
+	gltk_spinner_model_add_toplevel(model, "E", "Level E");
+
+	g_signal_connect(model, "get-items", (GCallback)bilevel_getItems, NULL);
+
+	GltkWidget* spinner = gltk_spinner_new(model);
+
+	return label_widget(spinner, "Bilevel Spinner (3 levels)");
+}
+
+GltkWidget*
+create_spinners()
+{
+	GltkWidget* vboxSpinners = gltk_vbox_new(5);
+	{
+		gltk_box_append_widget(GLTK_BOX(vboxSpinners), create_basic_spinner(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(vboxSpinners), create_bilevel_spinner(), FALSE, FALSE);
+	}
+	return label_widget(vboxSpinners, "Spinners:");
+}
+
 GltkWindow*
 create_window()
 {
@@ -63,8 +169,12 @@ create_window()
 	GltkWindow* window = gltk_window_new();
 
 	GltkWidget* hbox = gltk_hbox_new(0);
+	{
 
-	gltk_box_append_widget(GLTK_BOX(hbox), create_large_vbox(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hbox), create_large_vbox(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hbox), create_large_list(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hbox), create_spinners(), FALSE, FALSE);
+	}
 
 	gltk_screen_set_root(screen, hbox);
 	gltk_window_push_screen(window, screen);
