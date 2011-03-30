@@ -184,6 +184,8 @@ gltk_scrollable_size_request(GltkWidget* widget, GltkSize* size)
 	}
 
 	gltk_widget_size_request(priv->widget, size);
+
+	GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->size_request(widget, size);
 }
 
 static gboolean
@@ -211,8 +213,8 @@ gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 
 	if (priv->widget)
 	{
-		GltkSize size = widget->requisition;
-		//gltk_widget_size_request(priv->widget, &size);
+		GltkSize size;
+		gltk_widget_size_request(priv->widget, &size);
 		GltkAllocation childAllocation = {GLTK_SCROLLABLE(widget)->offset.x, GLTK_SCROLLABLE(widget)->offset.y, MAX(allocation->width, size.width), MAX(allocation->height, size.height)};
 		gltk_widget_size_allocate(priv->widget, childAllocation);
 	}

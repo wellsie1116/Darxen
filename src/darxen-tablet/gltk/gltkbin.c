@@ -64,6 +64,9 @@ gltk_bin_init(GltkBin* self)
 {
 	USING_PRIVATE(self);
 
+	self->border.width = 0;
+	self->border.height = 0;
+
 	priv->widget = NULL;
 }
 
@@ -139,6 +142,7 @@ static void
 gltk_bin_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
+
 	if (priv->widget)
 	{
 		gltk_widget_size_request(priv->widget, size);
@@ -148,16 +152,22 @@ gltk_bin_size_request(GltkWidget* widget, GltkSize* size)
 		size->width = 0;
 		size->height = 0;
 	}
+
+	size->width += 2*GLTK_BIN(widget)->border.width;
+	size->height += 2*GLTK_BIN(widget)->border.height;
+
+	GLTK_WIDGET_CLASS(gltk_bin_parent_class)->size_request(widget, size);
 }
 
 static void
 gltk_bin_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
+	GltkBin* bin = GLTK_BIN(widget);
 	USING_PRIVATE(widget);
 
 	if (priv->widget)
 	{
-		GltkAllocation childAllocation = {0, 0, allocation->width, allocation->height};
+		GltkAllocation childAllocation = {bin->border.width, bin->border.height, allocation->width-2*bin->border.width, allocation->height-2*bin->border.height};
 		gltk_widget_size_allocate(priv->widget, childAllocation);
 	}
 

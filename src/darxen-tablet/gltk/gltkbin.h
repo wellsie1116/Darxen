@@ -40,6 +40,8 @@ typedef struct _GltkBinClass		GltkBinClass;
 struct _GltkBin
 {
 	GltkBox parent;
+
+	GltkSize border;
 };
 
 struct _GltkBinClass

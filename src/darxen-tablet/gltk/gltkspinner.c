@@ -23,6 +23,7 @@
 #include "gltkscreen.h"
 #include "gltkscrollable.h"
 #include "gltkvbox.h"
+#include "gltkhbox.h"
 #include "gltklabel.h"
 
 #include <math.h>
@@ -30,10 +31,13 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-G_DEFINE_TYPE(GltkSpinner, gltk_spinner, GLTK_TYPE_HBOX)
+G_DEFINE_TYPE(GltkSpinner, gltk_spinner, GLTK_TYPE_BIN)
 
 #define USING_PRIVATE(obj) GltkSpinnerPrivate* priv = GLTK_SPINNER_GET_PRIVATE(obj)
 #define GLTK_SPINNER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GLTK_TYPE_SPINNER, GltkSpinnerPrivate))
+
+#define BORDER_WIDTH 10
+#define BORDER_HEIGHT 10
 
 enum
 {
@@ -56,6 +60,7 @@ struct _Wheel
 struct _GltkSpinnerPrivate
 {
 	GltkSpinnerModel* model;
+	GltkWidget* hbox;
 	Wheel* wheels;
 
 	gboolean heightChanged;
@@ -107,6 +112,7 @@ gltk_spinner_init(GltkSpinner* self)
 	USING_PRIVATE(self);
 	
 	priv->model = NULL;
+	priv->hbox = NULL;
 	priv->wheels = NULL;
 
 	priv->heightChanged = TRUE;
@@ -132,6 +138,12 @@ gltk_spinner_dispose(GObject* gobject)
 		g_free(priv->wheels);
 		priv->wheels = NULL;
 	}
+	
+	if (priv->hbox)
+	{
+		g_object_unref(priv->hbox);
+		priv->hbox = NULL;
+	}
 
 	if (priv->model)
 	{
@@ -156,7 +168,10 @@ gltk_spinner_new(GltkSpinnerModel* model)
 
 	USING_PRIVATE(self);
 
-	GLTK_BOX(self)->spacing = 1;
+	GLTK_BIN(self)->border.width = BORDER_WIDTH;
+	GLTK_BIN(self)->border.height = BORDER_HEIGHT;
+
+	priv->hbox = gltk_hbox_new(1);
 
 	g_object_ref(model);
 	priv->model = model;
@@ -173,16 +188,18 @@ gltk_spinner_new(GltkSpinnerModel* model)
 		g_object_ref(wheel->vbox);
 		g_object_ref(wheel->scrollable);
 		gltk_scrollable_set_widget(GLTK_SCROLLABLE(wheel->scrollable), wheel->vbox);
-		gltk_box_append_widget(GLTK_BOX(self), wheel->scrollable, TRUE, TRUE);
+		gltk_box_append_widget(GLTK_BOX(priv->hbox), wheel->scrollable, TRUE, TRUE);
 
 		g_signal_connect(wheel->scrollable, "touch-event", (GCallback)scrollable_touch_event, self);
 		
 		wheel->items = NULL;
 		wheel->index = 0;
-	}
+}
 
 	//load our toplevel items from the model 
 	load_items(self, 0, gltk_spinner_model_clone_items(priv->model, priv->model->toplevel)); 
+
+	gltk_bin_set_widget(GLTK_BIN(self), priv->hbox);
 
 	return (GltkWidget*)gobject;
 }
@@ -292,6 +309,10 @@ load_items(GltkSpinner* spinner, int level, GList* items)
 		if (size.height > itemHeight)
 			itemHeight = size.height;
 
+		size.width = -1;
+		size.height = priv->itemHeight;
+		gltk_widget_set_size_request(label, size);
+
 		pItems = pItems->next;
 	}
 
@@ -332,25 +353,19 @@ find_spinner_item(GltkSpinnerModelItem* i1, const gchar* id)
 {
 	return g_strcmp0(i1->id, id);
 }
-#define BORDER_WIDTH 10
-#define BORDER_HEIGHT 10
 
 static void
 gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 {
 	USING_PRIVATE(widget);
 	
-	int totalWidth = 2;
-
-	int i;
-	for (i = 0; i < priv->model->levels; i++)
+	//set a uniform height (if not already set)
+	if (priv->heightChanged)
 	{
-		Wheel* wheel = priv->wheels + i;
-
-		//set a uniform height (if not already set)
-		if (priv->heightChanged)
+		int i;
+		for (i = 0; i < priv->model->levels; i++)
 		{
-			GList* pChildren = GLTK_BOX(wheel->vbox)->children;
+			GList* pChildren = GLTK_BOX(priv->wheels[i].vbox)->children;
 			while (pChildren)
 			{
 				GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
@@ -358,20 +373,20 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 				size->width = -1;
 				size->height = priv->itemHeight;
 				gltk_widget_set_size_request(child->widget, *size);
+
 				pChildren = pChildren->next;
 			}
 		}
-
-		gltk_widget_size_request(wheel->scrollable, size);
-
-		totalWidth += size->width + 1;
+		priv->heightChanged = FALSE;
 	}
 
-	size->width = totalWidth + 2*BORDER_WIDTH;
-	size->height = priv->itemHeight * 5 + 2*BORDER_HEIGHT;
+	GltkSize sizeRequest = {-1, priv->itemHeight*5};
+	gltk_widget_set_size_request(priv->hbox, sizeRequest);
 
-	priv->heightChanged = FALSE;
+	//get the request from the hbox
+	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_request(widget, size);
 
+	//persist
 	widget->requisition = *size;
 }
 
@@ -418,14 +433,8 @@ scrollable_touch_event(GltkWidget* scrollable, GltkEventTouch* event, GltkSpinne
 static void
 gltk_spinner_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
-	//reserve our border
-	GltkAllocation childAllocation = *allocation;
-	childAllocation.x += BORDER_WIDTH;
-	childAllocation.y += BORDER_HEIGHT;
-	childAllocation.width -= 2*BORDER_WIDTH;
-	childAllocation.height -= 2*BORDER_HEIGHT;
-
-	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_allocate(widget, &childAllocation);
+	//pass through allocations
+	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_allocate(widget, allocation);
 }
 
 static void
@@ -437,6 +446,7 @@ gltk_spinner_render(GltkWidget* widget)
 
 	glPushMatrix();
 	{
+		glTranslated(BORDER_WIDTH, BORDER_HEIGHT, 0);
 		glBegin(GL_QUADS);
 		{
 			//border
@@ -499,9 +509,7 @@ gltk_spinner_render(GltkWidget* widget)
 		}
 		glEnd();
 
-		glTranslatef(BORDER_WIDTH, BORDER_HEIGHT, 0.0f);
 		GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->render(widget);
-		glTranslatef(-BORDER_WIDTH, -BORDER_HEIGHT, 0.0f);
 
 		glBegin(GL_QUADS);
 		{

@@ -21,7 +21,7 @@
 #ifndef GLTKSPINNER_H_5DRCPDQT
 #define GLTKSPINNER_H_5DRCPDQT
 
-#include "gltkhbox.h"
+#include "gltkbin.h"
 #include "gltkspinnermodel.h"
 
 G_BEGIN_DECLS
@@ -40,12 +40,12 @@ typedef struct _GltkSpinnerClass		GltkSpinnerClass;
 
 struct _GltkSpinner
 {
-	GltkHBox parent;
+	GltkBin parent;
 };
 
 struct _GltkSpinnerClass
 {
-	GltkHBoxClass parent_class;
+	GltkBinClass parent_class;
 	
 	/* signals */
 	void	(*item_selected)	(	GltkSpinner* spinner);
