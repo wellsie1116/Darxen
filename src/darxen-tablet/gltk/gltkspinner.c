@@ -443,8 +443,8 @@ gltk_spinner_render(GltkWidget* widget)
 	USING_PRIVATE(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
-	allocation.width -= BORDER_WIDTH;
-	allocation.height -= BORDER_HEIGHT;
+	allocation.width -= 2*BORDER_WIDTH;
+	allocation.height -= 2*BORDER_HEIGHT;
 
 	glPushMatrix();
 	{
