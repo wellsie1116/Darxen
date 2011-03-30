@@ -156,7 +156,7 @@ create_spinners()
 {
 	GltkWidget* vboxSpinners = gltk_vbox_new(5);
 	{
-		//gltk_box_append_widget(GLTK_BOX(vboxSpinners), create_basic_spinner(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(vboxSpinners), create_basic_spinner(), FALSE, FALSE);
 		gltk_box_append_widget(GLTK_BOX(vboxSpinners), create_bilevel_spinner(), FALSE, FALSE);
 	}
 	return label_widget(vboxSpinners, "Spinners:");
@@ -170,9 +170,8 @@ create_window()
 
 	GltkWidget* hbox = gltk_hbox_new(0);
 	{
-
-		//gltk_box_append_widget(GLTK_BOX(hbox), create_large_vbox(), FALSE, FALSE);
-		//gltk_box_append_widget(GLTK_BOX(hbox), create_large_list(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hbox), create_large_vbox(), FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(hbox), create_large_list(), FALSE, FALSE);
 		gltk_box_append_widget(GLTK_BOX(hbox), create_spinners(), FALSE, FALSE);
 	}
 
