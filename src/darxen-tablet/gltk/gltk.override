@@ -1,0 +1,17 @@
+%%
+headers
+#include <Python.h>
+#include "pygobject.h"
+#include "gltk.h"
+%%
+modulename gltk
+%%
+import gobject.GObject as PyGObject_Type
+import gobject.GObject as PyGInitiallyUnowned_Type
+%%
+ignore-glob
+  *_get_type
+  *_ERROR
+  *_error_quark
+
+%%

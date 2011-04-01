@@ -38,13 +38,14 @@ AC_ARG_ENABLE(darxen,
 ## Checks for programs ##
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PATH_PYTHON
 #AC_PROG_CXX
 AC_PROG_INSTALL
 #AC_ PROG_ RANLIB
 AC_AIX
 #AC_MINIX
 AC_ISC_POSIX
-LT_INIT([disable-shared])
+LT_INIT()#[disable-shared])
 # check for gtk-doc
 GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
@@ -85,6 +86,7 @@ AC_FUNC_STRTOD
 PKG_CHECK_MODULES(ftgl, ftgl >= 2.1.3)
 PKG_CHECK_MODULES(glib, glib-2.0 >= 2.0.0)
 PKG_CHECK_MODULES(gobject, gobject-2.0 >= 2.0.0)
+PKG_CHECK_MODULES(pygobject, pygobject-2.0 >= 2.0.0)
 PKG_CHECK_MODULES(pango, pango >= 1.0.0)
 PKG_CHECK_MODULES(gtk, gtk+-2.0 >= 2.16.0)
 PKG_CHECK_MODULES(libglade, libglade-2.0 >= 2.0.0)
