@@ -108,11 +108,11 @@ struct _GltkWidgetClass
 	gboolean (*click_event)			(	GltkWidget* widget,
 										GltkEventClick* event);
 
+	void (*render)					(	GltkWidget* widget);
+
 	/* virtual funcs */
 	void (*set_screen)				(	GltkWidget* widget,
 										GltkScreen* screen);
-
-	void (*render)					(	GltkWidget* widget);
 };
 
 typedef enum

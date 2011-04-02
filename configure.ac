@@ -45,7 +45,7 @@ AC_PROG_INSTALL
 AC_AIX
 #AC_MINIX
 AC_ISC_POSIX
-LT_INIT()#[disable-shared])
+LT_INIT()#([disable-shared])
 # check for gtk-doc
 GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 

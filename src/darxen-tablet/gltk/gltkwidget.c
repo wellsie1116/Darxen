@@ -41,6 +41,8 @@ enum
 	PINCH_EVENT,
 	ROTATE_EVENT,
 	CLICK_EVENT,
+	RENDER,
+
    	LAST_SIGNAL
 };
 
@@ -171,6 +173,15 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[RENDER] = 
+		g_signal_new(	"render",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, render),
+						NULL, NULL,
+						g_cclosure_user_marshal_NONE__NONE,
+						G_TYPE_NONE, 0);
+
 	gobject_class->dispose = gltk_widget_dispose;
 	gobject_class->finalize = gltk_widget_finalize;
 
@@ -184,9 +195,9 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->pinch_event = NULL;
 	klass->rotate_event = NULL;
 	klass->click_event = NULL;
+	klass->render = gltk_widget_render_default;
 
 	klass->set_screen = gltk_widget_set_screen_default;
-	klass->render = gltk_widget_render_default;
 }
 
 
@@ -366,7 +377,8 @@ gltk_widget_render(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 
-	GLTK_WIDGET_GET_CLASS(widget)->render(widget);
+	g_signal_emit(widget, signals[RENDER], 0);
+	//GLTK_WIDGET_GET_CLASS(widget)->render(widget);
 }
 
 gboolean
