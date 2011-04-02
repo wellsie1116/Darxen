@@ -37,8 +37,8 @@ class WindowDriver:
         e = gltk.Event(gltk.TOUCH)
         e.id = -1
         e.touchType = gltk.TOUCH_BEGIN if state else gltk.TOUCH_END
-        e.fingers = 1
-        e.positions = (x, y)
+        #e.fingers = 1
+        e.positions = ((x, y))
         self.window.send_event(e)
 
     def motion(self, x, y):

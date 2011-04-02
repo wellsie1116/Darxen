@@ -53,25 +53,6 @@ _wrap_gltk_window_new(PyGObject *self, PyObject *args, PyObject *kwargs)
     pygobject_register_wrapper((PyObject *)self);
     return 0;
 }
-/*%%
-override gltk_event_for_mouse
-static PyObject*
-_wrap_gltk_event_for_mouse(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-	GltkEvent event;
-
-	//PyArg_ParseTuple(args, "i(ii)", 
-	if (!PyArg_ParseTuple(args, "i", &event.touch.fingers))
-		return -1;
-
-	self->boxed = g_boxed_copy(GLTK_TYPE_EVENT, &event);
-
-	
-}*/
-
-
-
-
 %%
 override-slot GltkEvent.tp_getattr
 static PyObject *
@@ -134,6 +115,88 @@ _wrap_gltk_event_tp_getattr(PyObject *self, char *attr)
 }
 
 
+%%
+override-slot GltkEvent.tp_setattr
+#define INT_CHECK() \
+	if (!PyInt_Check(value)) { \
+		PyErr_Format(PyExc_TypeError, "%s must be an int", attr); \
+		return -1; \
+	} 
+#define INT_OR_LONG_CHECK() \
+	if (!PyInt_Check(value) && !PyLong_Check(value)) { \
+		PyErr_Format(PyExc_TypeError, "%s must be an int or a long", attr); \
+		return -1; \
+	}
+#define FLOAT_CHECK() \
+	if (!PyFloat_Check(value)) { \
+		PyErr_Format(PyExc_TypeError, "%s must be a float", attr); \
+		return -1; \
+	} 
+#define STRING_CHECK() \
+	if (!PyString_Check(value)) { \
+		PyErr_Format(PyExc_TypeError, "%s must be a string", attr); \
+		return -1; \
+	} 
+static int
+_wrap_gltk_event_tp_setattr(PyObject *self, char *attr, PyObject *value)
+{
+    GltkEvent *event;
+	int i;
+
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "can't delete attributes");
+        return -1;
+    }
+
+    event = pyg_boxed_get(self, GltkEvent);
+
+    /* Common members */
+    if (attr[0] == 't' && !strcmp(attr, "type")) {
+		PyErr_SetString(PyExc_AttributeError, "type is not writable");
+		return -1;
+	}
+	
+    switch(event->type) {
+    case GLTK_TOUCH:
+	if (!strcmp(attr, "id")) {
+		INT_CHECK();
+	    event->touch.id = PyInt_AsLong(value);
+	    return 0;
+	} else if (!strcmp(attr, "touchType")) {
+		INT_CHECK();
+		event->touch.touchType = PyInt_AsLong(value);
+	    return 0;
+	} else if (!strcmp(attr, "fingers")) {
+	    PyErr_SetString(PyExc_TypeError, "fingers is not writable");
+	    return -1;
+	} else if (!strcmp(attr, "positions")) {
+		if (!PyTuple_Check(value)) {
+			PyErr_SetString(PyExc_TypeError, "positions must be a tuple");
+			return -1;
+		}
+		event->touch.fingers = PyTuple_Size(value);
+		if (event->touch.positions)
+			g_free(event->touch.positions);
+		event->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
+		for (i = 0; i < event->touch.fingers; i++) {
+			PyObject* v = PyTuple_GetItem(value, i);
+			PyArg_ParseTuple(v, "(ii)", &event->touch.positions[i].x, &event->touch.positions[i].y);
+		}
+
+	    return 0;
+	}
+        break;
+    default:
+		break;
+    }
+    
+    PyErr_SetString(PyExc_AttributeError, "could not write attribute");
+    return -1;
+}
+#undef INT_CHECK
+#undef INT_OR_LONG_CHECK
+#undef FLOAT_CHECK
+#undef STRING_CHECK	
 
 
 
