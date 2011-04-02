@@ -83,6 +83,7 @@ class GlutWindowDriver(WindowDriver):
         glutReshapeFunc(self._reshape)
         glutMouseFunc(self._mouse)
         glutMotionFunc(self._motion)
+        glutIdleFunc(self._idle)
 
     def _display(self):
         self.expose()
@@ -96,6 +97,9 @@ class GlutWindowDriver(WindowDriver):
 
     def _motion(self, x, y):
         self.motion(x, y)
+
+    def _idle(self):
+
     
     def run(self):
         glutMainLoop()
