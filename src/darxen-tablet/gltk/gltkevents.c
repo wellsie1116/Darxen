@@ -33,11 +33,58 @@ gltk_event_get_type()
 	return type;
 }
 
+GType
+gltk_event_type_get_type()
+{
+	static GType etype = 0; 
+	if (G_UNLIKELY(etype == 0))
+	{
+		static const GEnumValue values[] =
+		{
+			{ GLTK_TOUCH, "GLTK_TOUCH", "touch"},
+			{ GLTK_LONG_TOUCH, "GLTK_LONG_TOUCH", "long_touch"},
+			{ GLTK_DRAG, "GLTK_DRAG", "drag"},
+			{ GLTK_MULTI_DRAG, "GLTK_MULTI_DRAG", "multi_drag"},
+			{ GLTK_PINCH, "GLTK_PINCH", "pinch"},
+			{ GLTK_ROTATE, "GLTK_ROTATE", "rotate"},
+			{ GLTK_CLICK, "GLTK_CLICK", "click"},
+			{ GLTK_SLIDE, "GLTK_SLIDE", "slide"},
+			{ 0, NULL, NULL }
+		};   
+		etype = g_enum_register_static (g_intern_static_string ("GltkEventType"), values);
+	}    
+	return etype;
+}
+
+
 GltkEvent*
 gltk_event_new(GltkEventType type)
 {
 	GltkEvent* event = g_new(GltkEvent, 1);
 	event->type = type;
+	switch (event->type)
+	{
+		case GLTK_TOUCH:
+			event->touch.positions = NULL;
+			break;
+		case GLTK_LONG_TOUCH:
+			break;
+		case GLTK_DRAG:
+			break;
+		case GLTK_MULTI_DRAG:
+			event->multidrag.positions = NULL;
+			break;
+		case GLTK_PINCH:
+			event->pinch.positions = NULL;
+			break;
+		case GLTK_ROTATE:
+			event->rotate.positions = NULL;
+			break;
+		case GLTK_CLICK:
+			break;
+		case GLTK_SLIDE:
+			break;
+	}
 	return event;
 }
 
@@ -101,7 +148,7 @@ gltk_event_free(GltkEvent* event)
 		case GLTK_DRAG:
 			break;
 		case GLTK_MULTI_DRAG:
-			g_free(event->pinch.positions);
+			g_free(event->multidrag.positions);
 			break;
 		case GLTK_PINCH:
 			g_free(event->pinch.positions);

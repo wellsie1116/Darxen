@@ -52,10 +52,10 @@ gltk_la_LDFLAGS = -g -avoid-version -module -shared
 gltk_la_CFLAGS = $(pygobject_CFLAGS) $(ftgl_CFLAGS) -I.. -I/usr/include/python2.6 -Wall -fPIC
 gltk_la_LIBADD = $(pygobject_LIBS) $(ftgl_LIBS) libgltk.la
 
-gltk.defs: libgltk.la
-	/usr/share/pygobject/2.0/codegen/h2def.py *.h > gltk.defs
+gltk-base.defs: libgltk.la
+	/usr/share/pygobject/2.0/codegen/h2def.py *.h > gltk-base.defs
 
-gltk.c: gltk.defs gltk.override
+gltk.c: gltk.defs gltk-base.defs gltk-types.defs gltk.override
 	python /usr/share/pygobject/2.0/codegen/codegen.py \
 		--override gltk.override \
 		--prefix gltk gltk.defs > gen-gltk.c \

@@ -1,0 +1,1427 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object SpinnerModel
+  (in-module "Gltk")
+  (parent "GObject")
+  (c-name "GltkSpinnerModel")
+  (gtype-id "GLTK_TYPE_SPINNER_MODEL")
+)
+
+(define-object Widget
+  (in-module "Gltk")
+  (parent "GInitiallyUnowned")
+  (c-name "GltkWidget")
+  (gtype-id "GLTK_TYPE_WIDGET")
+)
+
+(define-object Spacer
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkSpacer")
+  (gtype-id "GLTK_TYPE_SPACER")
+)
+
+(define-object Scrollable
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkScrollable")
+  (gtype-id "GLTK_TYPE_SCROLLABLE")
+)
+
+(define-object Screen
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkScreen")
+  (gtype-id "GLTK_TYPE_SCREEN")
+)
+
+(define-object MiniScreen
+  (in-module "Gltk")
+  (parent "GltkScreen")
+  (c-name "GltkMiniScreen")
+  (gtype-id "GLTK_TYPE_MINI_SCREEN")
+)
+
+(define-object Dialog
+  (in-module "Gltk")
+  (parent "GltkMiniScreen")
+  (c-name "GltkDialog")
+  (gtype-id "GLTK_TYPE_DIALOG")
+)
+
+(define-object Label
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkLabel")
+  (gtype-id "GLTK_TYPE_LABEL")
+)
+
+(define-object Button
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkButton")
+  (gtype-id "GLTK_TYPE_BUTTON")
+)
+
+(define-object ToggleButton
+  (in-module "Gltk")
+  (parent "GltkButton")
+  (c-name "GltkToggleButton")
+  (gtype-id "GLTK_TYPE_TOGGLE_BUTTON")
+)
+
+(define-object SlideButton
+  (in-module "Gltk")
+  (parent "GltkButton")
+  (c-name "GltkSlideButton")
+  (gtype-id "GLTK_TYPE_SLIDE_BUTTON")
+)
+
+(define-object Entry
+  (in-module "Gltk")
+  (parent "GltkButton")
+  (c-name "GltkEntry")
+  (gtype-id "GLTK_TYPE_ENTRY")
+)
+
+(define-object Box
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkBox")
+  (gtype-id "GLTK_TYPE_BOX")
+)
+
+(define-object VBox
+  (in-module "Gltk")
+  (parent "GltkBox")
+  (c-name "GltkVBox")
+  (gtype-id "GLTK_TYPE_VBOX")
+)
+
+(define-object Keyboard
+  (in-module "Gltk")
+  (parent "GltkVBox")
+  (c-name "GltkKeyboard")
+  (gtype-id "GLTK_TYPE_KEYBOARD")
+)
+
+(define-object List
+  (in-module "Gltk")
+  (parent "GltkVBox")
+  (c-name "GltkList")
+  (gtype-id "GLTK_TYPE_LIST")
+)
+
+(define-object HBox
+  (in-module "Gltk")
+  (parent "GltkBox")
+  (c-name "GltkHBox")
+  (gtype-id "GLTK_TYPE_HBOX")
+)
+
+(define-object Bin
+  (in-module "Gltk")
+  (parent "GltkBox")
+  (c-name "GltkBin")
+  (gtype-id "GLTK_TYPE_BIN")
+)
+
+(define-object Spinner
+  (in-module "Gltk")
+  (parent "GltkBin")
+  (c-name "GltkSpinner")
+  (gtype-id "GLTK_TYPE_SPINNER")
+)
+
+(define-object Window
+  (in-module "Gltk")
+  (parent "GObject")
+  (c-name "GltkWindow")
+  (gtype-id "GLTK_TYPE_WINDOW")
+)
+
+;; Enumerations and flags ...
+
+(define-enum BinError
+  (in-module "Gltk")
+  (c-name "GltkBinError")
+  (gtype-id "GLTK_TYPE_BIN_ERROR")
+  (values
+    '("failed" "GLTK_BIN_ERROR_FAILED")
+  )
+)
+
+(define-enum BoxError
+  (in-module "Gltk")
+  (c-name "GltkBoxError")
+  (gtype-id "GLTK_TYPE_BOX_ERROR")
+  (values
+    '("failed" "GLTK_BOX_ERROR_FAILED")
+  )
+)
+
+(define-enum ButtonError
+  (in-module "Gltk")
+  (c-name "GltkButtonError")
+  (gtype-id "GLTK_TYPE_BUTTON_ERROR")
+  (values
+    '("failed" "GLTK_BUTTON_ERROR_FAILED")
+  )
+)
+
+(define-enum DialogError
+  (in-module "Gltk")
+  (c-name "GltkDialogError")
+  (gtype-id "GLTK_TYPE_DIALOG_ERROR")
+  (values
+    '("failed" "GLTK_DIALOG_ERROR_FAILED")
+  )
+)
+
+(define-enum EntryError
+  (in-module "Gltk")
+  (c-name "GltkEntryError")
+  (gtype-id "GLTK_TYPE_ENTRY_ERROR")
+  (values
+    '("failed" "GLTK_ENTRY_ERROR_FAILED")
+  )
+)
+
+(define-enum HBoxError
+  (in-module "Gltk")
+  (c-name "GltkHBoxError")
+  (gtype-id "GLTK_TYPE_HBOX_ERROR")
+  (values
+    '("failed" "GLTK_HBOX_ERROR_FAILED")
+  )
+)
+
+(define-enum KeyboardError
+  (in-module "Gltk")
+  (c-name "GltkKeyboardError")
+  (gtype-id "GLTK_TYPE_KEYBOARD_ERROR")
+  (values
+    '("failed" "GLTK_KEYBOARD_ERROR_FAILED")
+  )
+)
+
+(define-enum LabelError
+  (in-module "Gltk")
+  (c-name "GltkLabelError")
+  (gtype-id "GLTK_TYPE_LABEL_ERROR")
+  (values
+    '("failed" "GLTK_LABEL_ERROR_FAILED")
+  )
+)
+
+(define-enum ListError
+  (in-module "Gltk")
+  (c-name "GltkListError")
+  (gtype-id "GLTK_TYPE_LIST_ERROR")
+  (values
+    '("failed" "GLTK_LIST_ERROR_FAILED")
+  )
+)
+
+(define-enum MiniScreenError
+  (in-module "Gltk")
+  (c-name "GltkMiniScreenError")
+  (gtype-id "GLTK_TYPE_MINI_SCREEN_ERROR")
+  (values
+    '("failed" "GLTK_MINI_SCREEN_ERROR_FAILED")
+  )
+)
+
+(define-enum ScreenError
+  (in-module "Gltk")
+  (c-name "GltkScreenError")
+  (gtype-id "GLTK_TYPE_SCREEN_ERROR")
+  (values
+    '("failed" "GLTK_SCREEN_ERROR_FAILED")
+  )
+)
+
+(define-enum ScrollableError
+  (in-module "Gltk")
+  (c-name "GltkScrollableError")
+  (gtype-id "GLTK_TYPE_SCROLLABLE_ERROR")
+  (values
+    '("failed" "GLTK_SCROLLABLE_ERROR_FAILED")
+  )
+)
+
+(define-enum SlideButtonError
+  (in-module "Gltk")
+  (c-name "GltkSlideButtonError")
+  (gtype-id "GLTK_TYPE_SLIDE_BUTTON_ERROR")
+  (values
+    '("failed" "GLTK_SLIDE_BUTTON_ERROR_FAILED")
+  )
+)
+
+(define-enum SpinnerError
+  (in-module "Gltk")
+  (c-name "GltkSpinnerError")
+  (gtype-id "GLTK_TYPE_SPINNER_ERROR")
+  (values
+    '("failed" "GLTK_SPINNER_ERROR_FAILED")
+  )
+)
+
+(define-enum SpinnerModelError
+  (in-module "Gltk")
+  (c-name "GltkSpinnerModelError")
+  (gtype-id "GLTK_TYPE_SPINNER_MODEL_ERROR")
+  (values
+    '("failed" "GLTK_SPINNER_MODEL_ERROR_FAILED")
+  )
+)
+
+(define-enum ToggleButtonError
+  (in-module "Gltk")
+  (c-name "GltkToggleButtonError")
+  (gtype-id "GLTK_TYPE_TOGGLE_BUTTON_ERROR")
+  (values
+    '("failed" "GLTK_TOGGLE_BUTTON_ERROR_FAILED")
+  )
+)
+
+(define-enum VBoxError
+  (in-module "Gltk")
+  (c-name "GltkVBoxError")
+  (gtype-id "GLTK_TYPE_VBOX_ERROR")
+  (values
+    '("failed" "GLTK_VBOX_ERROR_FAILED")
+  )
+)
+
+(define-enum WidgetError
+  (in-module "Gltk")
+  (c-name "GltkWidgetError")
+  (gtype-id "GLTK_TYPE_WIDGET_ERROR")
+  (values
+    '("failed" "GLTK_WIDGET_ERROR_FAILED")
+  )
+)
+
+(define-enum WindowError
+  (in-module "Gltk")
+  (c-name "GltkWindowError")
+  (gtype-id "GLTK_TYPE_WINDOW_ERROR")
+  (values
+    '("failed" "GLTK_WINDOW_ERROR_FAILED")
+  )
+)
+
+
+;; From gltkbin.h
+
+(define-function gltk_bin_get_type
+  (c-name "gltk_bin_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_bin_new
+  (c-name "gltk_bin_new")
+  (is-constructor-of "GltkBin")
+  (return-type "GltkWidget*")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method set_widget
+  (of-object "GltkBin")
+  (c-name "gltk_bin_set_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-function gltk_bin_error_quark
+  (c-name "gltk_bin_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkbox.h
+
+(define-function gltk_box_get_type
+  (c-name "gltk_box_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_box_new
+  (c-name "gltk_box_new")
+  (is-constructor-of "GltkBox")
+  (return-type "GltkWidget*")
+  (parameters
+  )
+)
+
+(define-method append_widget
+  (of-object "GltkBox")
+  (c-name "gltk_box_append_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+    '("gboolean" "expand")
+    '("gboolean" "fill")
+  )
+)
+
+(define-method remove_widget
+  (of-object "GltkBox")
+  (c-name "gltk_box_remove_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-function gltk_box_error_quark
+  (c-name "gltk_box_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkbutton.h
+
+(define-function gltk_button_get_type
+  (c-name "gltk_button_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_button_new
+  (c-name "gltk_button_new")
+  (is-constructor-of "GltkButton")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method get_text
+  (of-object "GltkButton")
+  (c-name "gltk_button_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-method set_text
+  (of-object "GltkButton")
+  (c-name "gltk_button_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-function gltk_button_error_quark
+  (c-name "gltk_button_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkdialog.h
+
+(define-function gltk_dialog_get_type
+  (c-name "gltk_dialog_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_dialog_new
+  (c-name "gltk_dialog_new")
+  (is-constructor-of "GltkDialog")
+  (return-type "GltkDialog*")
+  (parameters
+    '("GltkWidget*" "content")
+  )
+)
+
+(define-function gltk_dialog_error_quark
+  (c-name "gltk_dialog_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkentry.h
+
+(define-function gltk_entry_get_type
+  (c-name "gltk_entry_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_entry_new
+  (c-name "gltk_entry_new")
+  (is-constructor-of "GltkEntry")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-char*" "text")
+  )
+)
+
+(define-method get_text
+  (of-object "GltkEntry")
+  (c-name "gltk_entry_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-function gltk_entry_error_quark
+  (c-name "gltk_entry_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkevents.h
+
+(define-function gltk_event_get_type
+  (c-name "gltk_event_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_event_type_get_type
+  (c-name "gltk_event_type_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_event_new
+  (c-name "gltk_event_new")
+  (is-constructor-of "GltkEvent")
+  (return-type "GltkEvent*")
+  (parameters
+    '("GltkEventType" "type")
+  )
+)
+
+(define-method clone
+  (of-object "GltkEvent")
+  (c-name "gltk_event_clone")
+  (return-type "GltkEvent*")
+)
+
+(define-method free
+  (of-object "GltkEvent")
+  (c-name "gltk_event_free")
+  (return-type "none")
+)
+
+(define-function gltk_accum_event
+  (c-name "gltk_accum_event")
+  (return-type "gboolean")
+  (parameters
+    '("GSignalInvocationHint*" "ihint")
+    '("GValue*" "return_accu")
+    '("const-GValue*" "handler_return")
+    '("gpointer" "data")
+  )
+)
+
+
+
+;; From gltkfonts.h
+
+(define-function gltk_fonts_cache_free
+  (c-name "gltk_fonts_cache_free")
+  (return-type "none")
+  (parameters
+  )
+)
+
+(define-function gltk_fonts_cache_get_font
+  (c-name "gltk_fonts_cache_get_font")
+  (return-type "GltkGLFont*")
+  (parameters
+    '("const-char*" "path")
+    '("int" "size")
+    '("gboolean" "renderable")
+  )
+)
+
+(define-function gltk_fonts_measure_string
+  (c-name "gltk_fonts_measure_string")
+  (return-type "GltkGLFontBounds")
+  (parameters
+    '("GltkGLFont*" "font")
+    '("const-char*" "txt")
+  )
+)
+
+
+
+;; From gltk.h
+
+
+
+;; From gltkhbox.h
+
+(define-function gltk_hbox_get_type
+  (c-name "gltk_hbox_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_hbox_new
+  (c-name "gltk_hbox_new")
+  (is-constructor-of "GltkHbox")
+  (return-type "GltkWidget*")
+  (parameters
+    '("int" "spacing")
+  )
+)
+
+(define-function gltk_hbox_error_quark
+  (c-name "gltk_hbox_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkkeyboard.h
+
+(define-function gltk_keyboard_get_type
+  (c-name "gltk_keyboard_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_keyboard_new
+  (c-name "gltk_keyboard_new")
+  (is-constructor-of "GltkKeyboard")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method get_text
+  (of-object "GltkKeyboard")
+  (c-name "gltk_keyboard_get_text")
+  (return-type "const-gchar*")
+)
+
+(define-function gltk_keyboard_error_quark
+  (c-name "gltk_keyboard_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltklabel.h
+
+(define-function gltk_label_get_type
+  (c-name "gltk_label_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_label_new
+  (c-name "gltk_label_new")
+  (is-constructor-of "GltkLabel")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_text
+  (of-object "GltkLabel")
+  (c-name "gltk_label_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method set_draw_border
+  (of-object "GltkLabel")
+  (c-name "gltk_label_set_draw_border")
+  (return-type "none")
+  (parameters
+    '("gboolean" "drawBorder")
+  )
+)
+
+(define-method set_font_size
+  (of-object "GltkLabel")
+  (c-name "gltk_label_set_font_size")
+  (return-type "none")
+  (parameters
+    '("int" "size")
+  )
+)
+
+(define-function gltk_label_error_quark
+  (c-name "gltk_label_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltklist.h
+
+(define-function gltk_list_get_type
+  (c-name "gltk_list_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_list_new
+  (c-name "gltk_list_new")
+  (is-constructor-of "GltkList")
+  (return-type "GltkWidget*")
+  (parameters
+  )
+)
+
+(define-method add_item
+  (of-object "GltkList")
+  (c-name "gltk_list_add_item")
+  (return-type "GltkListItem*")
+  (parameters
+    '("GltkWidget*" "widget")
+    '("gpointer" "data")
+  )
+)
+
+(define-method remove_item
+  (of-object "GltkList")
+  (c-name "gltk_list_remove_item")
+  (return-type "none")
+  (parameters
+    '("GltkListItem*" "item")
+  )
+)
+
+(define-function gltk_list_error_quark
+  (c-name "gltk_list_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkmarshal.h
+
+
+
+;; From gltkminiscreen.h
+
+(define-function gltk_mini_screen_get_type
+  (c-name "gltk_mini_screen_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_mini_screen_new
+  (c-name "gltk_mini_screen_new")
+  (is-constructor-of "GltkMiniScreen")
+  (return-type "GltkScreen*")
+  (parameters
+  )
+)
+
+(define-function gltk_mini_screen_error_quark
+  (c-name "gltk_mini_screen_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkscreen.h
+
+(define-function gltk_screen_get_type
+  (c-name "gltk_screen_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_screen_new
+  (c-name "gltk_screen_new")
+  (is-constructor-of "GltkScreen")
+  (return-type "GltkScreen*")
+  (parameters
+  )
+)
+
+(define-method set_window
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_set_window")
+  (return-type "none")
+  (parameters
+    '("GltkWindow*" "window")
+  )
+)
+
+(define-method set_root
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_set_root")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method get_window_size
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_get_window_size")
+  (return-type "GltkSize")
+)
+
+(define-method push_screen
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_push_screen")
+  (return-type "none")
+  (parameters
+    '("GltkScreen*" "newScreen")
+  )
+)
+
+(define-method pop_screen
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_pop_screen")
+  (return-type "none")
+  (parameters
+    '("GltkScreen*" "newScreen")
+  )
+)
+
+(define-method close_window
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_close_window")
+  (return-type "none")
+)
+
+(define-method invalidate
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_invalidate")
+  (return-type "none")
+)
+
+(define-method layout
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_layout")
+  (return-type "none")
+)
+
+(define-method set_widget_pressed
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_set_widget_pressed")
+  (return-type "gboolean")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method set_widget_unpressed
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_set_widget_unpressed")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-function gltk_screen_error_quark
+  (c-name "gltk_screen_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkscrollable.h
+
+(define-function gltk_scrollable_get_type
+  (c-name "gltk_scrollable_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_scrollable_new
+  (c-name "gltk_scrollable_new")
+  (is-constructor-of "GltkScrollable")
+  (return-type "GltkWidget*")
+  (parameters
+  )
+)
+
+(define-method set_widget
+  (of-object "GltkScrollable")
+  (c-name "gltk_scrollable_set_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method transform_event
+  (of-object "GltkScrollable")
+  (c-name "gltk_scrollable_transform_event")
+  (return-type "none")
+  (parameters
+    '("GltkEvent*" "event")
+  )
+)
+
+(define-function gltk_scrollable_error_quark
+  (c-name "gltk_scrollable_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkslidebutton.h
+
+(define-function gltk_slide_button_get_type
+  (c-name "gltk_slide_button_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_slide_button_new
+  (c-name "gltk_slide_button_new")
+  (is-constructor-of "GltkSlideButton")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "text")
+  )
+)
+
+(define-function gltk_slide_button_error_quark
+  (c-name "gltk_slide_button_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkspacer.h
+
+(define-function gltk_spacer_get_type
+  (c-name "gltk_spacer_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_spacer_new
+  (c-name "gltk_spacer_new")
+  (is-constructor-of "GltkSpacer")
+  (return-type "GltkWidget*")
+  (parameters
+    '("int" "width")
+    '("int" "height")
+  )
+)
+
+
+
+;; From gltkspinner.h
+
+(define-function gltk_spinner_get_type
+  (c-name "gltk_spinner_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_spinner_new
+  (c-name "gltk_spinner_new")
+  (is-constructor-of "GltkSpinner")
+  (return-type "GltkWidget*")
+  (parameters
+    '("GltkSpinnerModel*" "model")
+  )
+)
+
+(define-method get_selected_item
+  (of-object "GltkSpinner")
+  (c-name "gltk_spinner_get_selected_item")
+  (return-type "const-gchar*")
+  (parameters
+    '("int" "level")
+  )
+)
+
+(define-method set_selected_item
+  (of-object "GltkSpinner")
+  (c-name "gltk_spinner_set_selected_item")
+  (return-type "none")
+  (parameters
+    '("int" "level")
+    '("const-gchar*" "id")
+  )
+)
+
+(define-function gltk_spinner_error_quark
+  (c-name "gltk_spinner_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkspinnermodel.h
+
+(define-function gltk_spinner_model_item_new
+  (c-name "gltk_spinner_model_item_new")
+  (is-constructor-of "GltkSpinnerModelItem")
+  (return-type "GltkSpinnerModelItem*")
+  (parameters
+    '("const-gchar*" "id")
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method clone
+  (of-object "GltkSpinnerModelItem")
+  (c-name "gltk_spinner_model_item_clone")
+  (return-type "GltkSpinnerModelItem*")
+)
+
+(define-method free
+  (of-object "GltkSpinnerModelItem")
+  (c-name "gltk_spinner_model_item_free")
+  (return-type "none")
+)
+
+(define-function gltk_spinner_model_get_type
+  (c-name "gltk_spinner_model_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_spinner_model_new
+  (c-name "gltk_spinner_model_new")
+  (is-constructor-of "GltkSpinnerModel")
+  (return-type "GltkSpinnerModel*")
+  (parameters
+    '("int" "levels")
+  )
+)
+
+(define-method add_toplevel
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_add_toplevel")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "id")
+    '("const-gchar*" "text")
+  )
+)
+
+(define-method get_toplevel
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_get_toplevel")
+  (return-type "GltkSpinnerModelItem*")
+  (parameters
+    '("int" "index")
+  )
+)
+
+(define-method get_items
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_get_items")
+  (return-type "GList*")
+  (parameters
+    '("int" "level")
+    '("int" "index")
+  )
+)
+
+(define-method clone_items
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_clone_items")
+  (return-type "GList*")
+  (parameters
+    '("GList*" "items")
+  )
+)
+
+(define-method free_items
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_free_items")
+  (return-type "none")
+  (parameters
+    '("GList*" "items")
+  )
+)
+
+(define-function gltk_spinner_model_error_quark
+  (c-name "gltk_spinner_model_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltktogglebutton.h
+
+(define-function gltk_toggle_button_get_type
+  (c-name "gltk_toggle_button_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_toggle_button_new
+  (c-name "gltk_toggle_button_new")
+  (is-constructor-of "GltkToggleButton")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-char*" "text")
+  )
+)
+
+(define-method is_toggled
+  (of-object "GltkToggleButton")
+  (c-name "gltk_toggle_button_is_toggled")
+  (return-type "gboolean")
+)
+
+(define-method set_toggled
+  (of-object "GltkToggleButton")
+  (c-name "gltk_toggle_button_set_toggled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "value")
+  )
+)
+
+(define-function gltk_toggle_button_error_quark
+  (c-name "gltk_toggle_button_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkvbox.h
+
+(define-function gltk_vbox_get_type
+  (c-name "gltk_vbox_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_vbox_new
+  (c-name "gltk_vbox_new")
+  (is-constructor-of "GltkVbox")
+  (return-type "GltkWidget*")
+  (parameters
+    '("int" "spacing")
+  )
+)
+
+(define-function gltk_vbox_error_quark
+  (c-name "gltk_vbox_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkwidget.h
+
+(define-function gltk_widget_get_type
+  (c-name "gltk_widget_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_widget_new
+  (c-name "gltk_widget_new")
+  (is-constructor-of "GltkWidget")
+  (return-type "GltkWidget*")
+  (parameters
+  )
+)
+
+(define-method get_parent
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_get_parent")
+  (return-type "GltkWidget*")
+)
+
+(define-method set_parent
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_set_parent")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "parent")
+  )
+)
+
+(define-method unparent
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_unparent")
+  (return-type "none")
+)
+
+(define-method set_screen
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_set_screen")
+  (return-type "none")
+  (parameters
+    '("GltkScreen*" "screen")
+  )
+)
+
+(define-method set_visible
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_set_visible")
+  (return-type "none")
+  (parameters
+    '("gboolean" "visible")
+  )
+)
+
+(define-method get_visible
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_get_visible")
+  (return-type "gboolean")
+)
+
+(define-method set_size_request
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_set_size_request")
+  (return-type "none")
+  (parameters
+    '("GltkSize" "size")
+  )
+)
+
+(define-method size_request
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_size_request")
+  (return-type "none")
+  (parameters
+    '("GltkSize*" "size")
+  )
+)
+
+(define-method size_allocate
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_size_allocate")
+  (return-type "none")
+  (parameters
+    '("GltkAllocation" "allocation")
+  )
+)
+
+(define-method get_allocation
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_get_allocation")
+  (return-type "GltkAllocation")
+)
+
+(define-method get_global_allocation
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_get_global_allocation")
+  (return-type "GltkAllocation")
+)
+
+(define-method invalidate
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_invalidate")
+  (return-type "none")
+)
+
+(define-method layout
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_layout")
+  (return-type "none")
+)
+
+(define-method render
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_render")
+  (return-type "none")
+)
+
+(define-method send_event
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_send_event")
+  (return-type "gboolean")
+  (parameters
+    '("GltkEvent*" "event")
+  )
+)
+
+(define-function gltk_widget_error_quark
+  (c-name "gltk_widget_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
+;; From gltkwindow.h
+
+(define-function gltk_window_get_type
+  (c-name "gltk_window_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_window_new
+  (c-name "gltk_window_new")
+  (is-constructor-of "GltkWindow")
+  (return-type "GltkWindow*")
+  (parameters
+  )
+)
+
+(define-method set_size
+  (of-object "GltkWindow")
+  (c-name "gltk_window_set_size")
+  (return-type "none")
+  (parameters
+    '("int" "width")
+    '("int" "height")
+  )
+)
+
+(define-method get_size
+  (of-object "GltkWindow")
+  (c-name "gltk_window_get_size")
+  (return-type "GltkSize")
+)
+
+(define-method layout
+  (of-object "GltkWindow")
+  (c-name "gltk_window_layout")
+  (return-type "none")
+)
+
+(define-method render
+  (of-object "GltkWindow")
+  (c-name "gltk_window_render")
+  (return-type "none")
+)
+
+(define-method send_event
+  (of-object "GltkWindow")
+  (c-name "gltk_window_send_event")
+  (return-type "gboolean")
+  (parameters
+    '("GltkEvent*" "event")
+  )
+)
+
+(define-method push_screen
+  (of-object "GltkWindow")
+  (c-name "gltk_window_push_screen")
+  (return-type "none")
+  (parameters
+    '("GltkScreen*" "screen")
+  )
+)
+
+(define-method pop_screen
+  (of-object "GltkWindow")
+  (c-name "gltk_window_pop_screen")
+  (return-type "none")
+  (parameters
+    '("GltkScreen*" "screen")
+  )
+)
+
+(define-method close
+  (of-object "GltkWindow")
+  (c-name "gltk_window_close")
+  (return-type "none")
+)
+
+(define-method invalidate
+  (of-object "GltkWindow")
+  (c-name "gltk_window_invalidate")
+  (return-type "none")
+)
+
+(define-method set_widget_pressed
+  (of-object "GltkWindow")
+  (c-name "gltk_window_set_widget_pressed")
+  (return-type "gboolean")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method set_widget_unpressed
+  (of-object "GltkWindow")
+  (c-name "gltk_window_set_widget_unpressed")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-function gltk_window_error_quark
+  (c-name "gltk_window_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+

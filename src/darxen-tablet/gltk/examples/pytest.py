@@ -1,45 +1,32 @@
 #!/usr/bin/python
 
 import gltk
-from gltkdriver import GlutWindowDriver
-
-def create_screen():
-    screen = gltk.Screen()
-    vbox = gltk.VBox()
-
-    btn1 = gltk.Button("Hello World")
-    btn2 = gltk.Button("Button 2")
-
-    vbox.append_widget(btn1, False, False)
-    vbox.append_widget(btn2, False, False)
-
-    screen.set_root(vbox)
-    return screen
-
+from gltkdriver import GlutWindowDriver as WindowDriver
 
 class MyScreen(gltk.Screen):
     def __init__(self):
+        gltk.Screen.__init__(self)
         vbox = gltk.VBox()
 
+        lbl = gltk.Label("This is a label")
         btn1 = gltk.Button("Hello World")
         btn2 = gltk.Button("Button 2")
 
+        vbox.append_widget(lbl, False, False)
         vbox.append_widget(btn1, False, False)
         vbox.append_widget(btn2, False, False)
 
         self.set_root(vbox)
 
-class MyWindow(GlutWindowDriver):
+class MyWindow(WindowDriver):
     def create_window(self):
         window = gltk.Window()
 
-        #self.screen = MyScreen()
+        self.screen = MyScreen()
 
-        #window.push_screen(self.screen)
-        window.push_screen(create_screen())
+        window.push_screen(self.screen)
 
         return window
-
 
 def main():
     win = MyWindow()

@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #define GLTK_TYPE_EVENT					(gltk_event_get_type())
+#define GLTK_TYPE_EVENT_TYPE			(gltk_event_type_get_type())
 
 typedef enum   _GltkEventType			GltkEventType;
 
@@ -174,6 +175,7 @@ union _GltkEvent
 };
 
 GType		gltk_event_get_type				()	G_GNUC_CONST;
+GType		gltk_event_type_get_type		()	G_GNUC_CONST;
 
 GltkEvent*	gltk_event_new					(	GltkEventType type);
 GltkEvent*	gltk_event_clone				(	GltkEvent* event);

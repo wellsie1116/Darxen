@@ -1,0 +1,25 @@
+
+(define-boxed Event
+  (in-module "Gltk")
+  (c-name "GltkEvent")
+  (gtype-id "GLTK_TYPE_EVENT")
+  (copy-func "gdk_event_clone")
+  (release-func "gdk_event_free")
+)
+
+(define-enum EventType
+  (in-module "Gltk")
+  (c-name "GltkEventType")
+  (gtype-id "GLTK_TYPE_EVENT_TYPE")
+  (values
+	'("touch" "GLTK_TOUCH")
+	'("long_touch" "GLTK_LONG_TOUCH")
+	'("drag" "GLTK_DRAG")
+	'("multi_drag" "GLTK_MULTI_DRAG")
+	'("pinch" "GLTK_PINCH")
+	'("rotate" "GLTK_ROTATE")
+	'("click" "GLTK_CLICK")
+	'("slide" "GLTK_SLIDE")
+  )
+)
+

@@ -1,3 +1,4 @@
+/* vim: set filetype=c : */
 %%
 headers
 #include <Python.h>
@@ -11,8 +12,31 @@ import gobject.GObject as PyGInitiallyUnowned_Type
 %%
 ignore-glob
   *_get_type
-  *_ERROR
   *_error_quark
+%%
+ignore
+  gltk_accum_event
+%%
+ignore-type
+  GltkBinError
+  GltkBoxError
+  GltkButtonError
+  GltkDialogError
+  GltkEntryError
+  GltkHBoxError
+  GltkKeyboardError
+  GltkLabelError
+  GltkListError
+  GltkMiniScreenError
+  GltkScreenError
+  GltkScrollableError
+  GltkSlideButtonError
+  GltkSpinnerError
+  GltkSpinnerModelError
+  GltkToggleButtonError
+  GltkVBoxError
+  GltkWidgetError
+  GltkWindowError
 %%
 new-constructor GLTK_TYPE_WINDOW
 %%
@@ -29,3 +53,19 @@ _wrap_gltk_window_new(PyGObject *self, PyObject *args, PyObject *kwargs)
     pygobject_register_wrapper((PyObject *)self);
     return 0;
 }
+/*%%
+override gltk_event_for_mouse
+static PyObject*
+_wrap_gltk_event_for_mouse(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	GltkEvent event;
+
+	//PyArg_ParseTuple(args, "i(ii)", 
+	if (!PyArg_ParseTuple(args, "i", &event.touch.fingers))
+		return -1;
+
+	self->boxed = g_boxed_copy(GLTK_TYPE_EVENT, &event);
+
+	
+}*/
+
