@@ -143,17 +143,29 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 void
 gltk_scrollable_transform_event(GltkScrollable* scrollable, GltkEvent* event)
 {
+	GltkAllocation allocation = gltk_widget_get_allocation(GLTK_WIDGET(scrollable));
+	int i;
+
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
-		{
-			int i;
 			for (i = 0; i < event->touch.fingers; i++)
 			{
-				event->touch.positions[i].x -= scrollable->offset.x;
-				event->touch.positions[i].y -= scrollable->offset.y;
+				event->touch.positions[i].x -= allocation.x;
+				event->touch.positions[i].y -= allocation.y;
 			}
-		}
+			break;
+		case GLTK_MULTI_DRAG:
+			event->multidrag.center.x -= allocation.x;
+			event->multidrag.center.y -= allocation.y;
+			break;
+		case GLTK_PINCH:
+			event->pinch.center.x -= allocation.x;
+			event->pinch.center.y -= allocation.y;
+			break;
+		case GLTK_ROTATE:
+			event->rotate.center.x -= allocation.x;
+			event->rotate.center.y -= allocation.y;
 			break;
 		default:
 			break;
@@ -198,7 +210,7 @@ gltk_scrollable_event(GltkWidget* widget, GltkEvent* event)
 	if (priv->widget)
 	{
 		GltkEvent* transformed = gltk_event_clone(event);
-		//gltk_scrollable_transform_event(GLTK_SCROLLABLE(widget), transformed);
+		gltk_scrollable_transform_event(GLTK_SCROLLABLE(widget), transformed);
 		returnValue = gltk_widget_send_event(priv->widget, transformed);
 		gltk_event_free(transformed);
 	}
