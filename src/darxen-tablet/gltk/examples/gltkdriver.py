@@ -36,13 +36,16 @@ class WindowDriver:
     def mouse(self, state, x, y):
         e = gltk.Event(gltk.TOUCH)
         e.id = -1
-        e.touchType = gltk.TOUCH_BEGIN if state else gltk.TOUCH_END
-        #e.fingers = 1
-        e.positions = ((x, y))
+        e.touchType = gltk.TOUCH_BEGIN if state == GLUT_DOWN else gltk.TOUCH_END
+        e.positions = ((x, y),)
         self.window.send_event(e)
 
     def motion(self, x, y):
-        pass
+        e = gltk.Event(gltk.TOUCH)
+        e.id = -1
+        e.touchType = gltk.TOUCH_MOVE
+        e.positions = ((x, y),)
+        self.window.send_event(e)
 
     def create_window(self):
         raise NotImplemented

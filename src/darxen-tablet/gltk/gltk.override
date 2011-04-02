@@ -180,7 +180,14 @@ _wrap_gltk_event_tp_setattr(PyObject *self, char *attr, PyObject *value)
 		event->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
 		for (i = 0; i < event->touch.fingers; i++) {
 			PyObject* v = PyTuple_GetItem(value, i);
-			PyArg_ParseTuple(v, "(ii)", &event->touch.positions[i].x, &event->touch.positions[i].y);
+			if (!PyTuple_Check(v) || PyTuple_Size(v) != 2) {
+				PyErr_SetString(PyExc_TypeError, "elements in positions must be a tuple of size 2");
+				g_free(event->touch.positions);
+				event->touch.positions = NULL;
+				event->touch.fingers = 0;
+				return -1;
+			}
+			PyArg_ParseTuple(v, "ii;elements must be 2-tuples", &event->touch.positions[i].x, &event->touch.positions[i].y);
 		}
 
 	    return 0;
