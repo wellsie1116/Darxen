@@ -27,7 +27,7 @@ gltk_event_get_type()
 
 	if (!type)
 		type = g_boxed_type_register_static(g_intern_static_string("GltkEvent"),
-				(GBoxedCopyFunc)gltk_event_clone,
+				(GBoxedCopyFunc)gltk_event_copy,
 				(GBoxedFreeFunc)gltk_event_free);
 
 	return type;
@@ -89,7 +89,7 @@ gltk_event_new(GltkEventType type)
 }
 
 GltkEvent*
-gltk_event_clone(GltkEvent* event)
+gltk_event_copy(GltkEvent* event)
 {
 	GltkEvent* newEvent = gltk_event_new(event->type);
 	int i;

@@ -178,7 +178,7 @@ GType		gltk_event_get_type				()	G_GNUC_CONST;
 GType		gltk_event_type_get_type		()	G_GNUC_CONST;
 
 GltkEvent*	gltk_event_new					(	GltkEventType type);
-GltkEvent*	gltk_event_clone				(	GltkEvent* event);
+GltkEvent*	gltk_event_copy				(	GltkEvent* event);
 void		gltk_event_free					(	GltkEvent* event);
 
 gboolean	gltk_accum_event				(	GSignalInvocationHint* ihint,

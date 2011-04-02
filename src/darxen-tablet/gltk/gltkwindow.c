@@ -361,7 +361,7 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			if (!returnValue)
 			{
 				//instead, redirect touch move event to pressed widget
-				e = gltk_event_clone(event);
+				e = gltk_event_copy(event);
 				GltkWidget* parent = priv->pressed;
 				for (parent = priv->pressed; parent; parent = gltk_widget_get_parent(parent))
 				{

@@ -226,7 +226,7 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 		case GLTK_PINCH:
 		case GLTK_ROTATE:
 		{
-			GltkEvent* childEvent = gltk_event_clone(event);
+			GltkEvent* childEvent = gltk_event_copy(event);
 
 			int x;
 			int y;

@@ -523,9 +523,9 @@
   )
 )
 
-(define-method clone
+(define-method copy
   (of-object "GltkEvent")
-  (c-name "gltk_event_clone")
+  (c-name "gltk_event_copy")
   (return-type "GltkEvent*")
 )
 

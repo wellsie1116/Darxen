@@ -197,7 +197,7 @@ gltk_scrollable_event(GltkWidget* widget, GltkEvent* event)
 
 	if (priv->widget)
 	{
-		GltkEvent* transformed = gltk_event_clone(event);
+		GltkEvent* transformed = gltk_event_copy(event);
 		//gltk_scrollable_transform_event(GLTK_SCROLLABLE(widget), transformed);
 		returnValue = gltk_widget_send_event(priv->widget, transformed);
 		gltk_event_free(transformed);
