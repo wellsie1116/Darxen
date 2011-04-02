@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#define GLTK_TYPE_EVENT					(gltk_event_get_type())
+
 typedef enum   _GltkEventType			GltkEventType;
 
 typedef struct _GltkEventAny			GltkEventAny;
@@ -170,6 +172,8 @@ union _GltkEvent
 	GltkEventClick click;
 	GltkEventSlide slide;
 };
+
+GType		gltk_event_get_type				()	G_GNUC_CONST;
 
 GltkEvent*	gltk_event_new					(	GltkEventType type);
 GltkEvent*	gltk_event_clone				(	GltkEvent* event);

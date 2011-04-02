@@ -20,6 +20,19 @@
 
 #include "gltkevents.h"
 
+GType
+gltk_event_get_type()
+{
+	static GType type = 0;
+
+	if (!type)
+		type = g_boxed_type_register_static(g_intern_static_string("GltkEvent"),
+				(GBoxedCopyFunc)gltk_event_clone,
+				(GBoxedFreeFunc)gltk_event_free);
+
+	return type;
+}
+
 GltkEvent*
 gltk_event_new(GltkEventType type)
 {

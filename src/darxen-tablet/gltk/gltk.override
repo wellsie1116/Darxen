@@ -13,5 +13,19 @@ ignore-glob
   *_get_type
   *_ERROR
   *_error_quark
-
 %%
+new-constructor GLTK_TYPE_WINDOW
+%%
+override gltk_window_new kwargs
+static int
+_wrap_gltk_window_new(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    self->obj = (GObject *)gltk_window_new();
+
+    if (!self->obj) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GltkWindow object");
+        return -1;
+    }
+    pygobject_register_wrapper((PyObject *)self);
+    return 0;
+}

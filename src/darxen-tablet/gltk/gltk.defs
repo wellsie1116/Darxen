@@ -143,6 +143,7 @@
 ;; Enumerations and flags ...
 
 
+
 ;; From gltkbin.h
 
 (define-function gltk_bin_get_type
@@ -176,6 +177,8 @@
   (parameters
   )
 )
+
+
 
 ;; From gltkbox.h
 
@@ -326,6 +329,13 @@
 
 
 ;; From gltkevents.h
+
+(define-function gltk_event_get_type
+  (c-name "gltk_event_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
 
 (define-function gltk_event_new
   (c-name "gltk_event_new")
