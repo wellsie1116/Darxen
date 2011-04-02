@@ -56,6 +56,25 @@ gltk_event_type_get_type()
 	return etype;
 }
 
+GType
+gltk_touch_event_type_get_type()
+{
+	static GType etype = 0; 
+	if (G_UNLIKELY(etype == 0))
+	{
+		static const GEnumValue values[] =
+		{
+			{ TOUCH_BEGIN, "TOUCH_BEGIN", "touch_begin"},
+			{ TOUCH_MOVE, "TOUCH_MOVE", "touch_move"},
+			{ TOUCH_END, "TOUCH_END", "touch_end"},
+			{ 0, NULL, NULL }
+		};   
+		etype = g_enum_register_static (g_intern_static_string ("GltkTouchEventType"), values);
+	}    
+	return etype;
+}
+
+
 
 GltkEvent*
 gltk_event_new(GltkEventType type)

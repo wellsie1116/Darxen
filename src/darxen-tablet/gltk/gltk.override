@@ -69,3 +69,74 @@ _wrap_gltk_event_for_mouse(PyObject *self, PyObject *args, PyObject *kwargs)
 	
 }*/
 
+
+
+
+%%
+override-slot GltkEvent.tp_getattr
+static PyObject *
+_wrap_gltk_event_tp_getattr(PyObject *self, char *attr)
+{
+    GltkEvent *event = pyg_boxed_get(self, GltkEvent);
+    guint i;
+
+    switch(event->type) {
+    case GLTK_TOUCH:
+        if (!strcmp(attr, "__members__"))
+            return Py_BuildValue("[sssss]",
+                                 "type", "id", "touchType",
+                                 "fingers", "positions");
+        if (!strcmp(attr, "id"))
+            return PyInt_FromLong(event->touch.id);
+		if (!strcmp(attr, "touchType"))
+			return pyg_enum_from_gtype(GLTK_TYPE_TOUCH_EVENT_TYPE, event->touch.touchType);
+        if (!strcmp(attr, "fingers"))
+            return PyInt_FromLong(event->touch.fingers);
+		if (!strcmp(attr, "positions")) {
+			if (event->touch.positions) {
+				PyObject *v = PyTuple_New(event->touch.fingers);
+				if (!v) return NULL;
+				for (i = 0; i < event->touch.fingers; i++)
+					PyTuple_SetItem(v, i, Py_BuildValue("(ii)", event->touch.positions[i].x,
+															   	event->touch.positions[i].y));
+				return v;
+			} else {
+				Py_INCREF(Py_None);
+				return Py_None;
+			}
+		}
+        break;
+	case GLTK_LONG_TOUCH:
+	case GLTK_CLICK:
+        if (!strcmp(attr, "__members__"))
+            return Py_BuildValue("[s]", "type");
+		break;
+	case GLTK_DRAG:
+	case GLTK_MULTI_DRAG:
+	case GLTK_PINCH:
+	case GLTK_ROTATE:
+	case GLTK_SLIDE:
+		//FIXME These should not be opaque
+        if (!strcmp(attr, "__members__"))
+            return Py_BuildValue("[s]", "type");
+		break;
+	
+    default:
+        break;
+    }
+    
+    if (!strcmp(attr, "type"))
+        return pyg_enum_from_gtype(GLTK_TYPE_EVENT_TYPE, event->type);
+    if (!strcmp(attr, "__members__"))
+        return Py_BuildValue("[sss]", "type");
+
+    return Py_FindMethod((PyMethodDef*)_PyGltkEvent_methods, self, attr);
+}
+
+
+
+
+
+
+
+

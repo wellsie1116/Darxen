@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import gltk
+
 from OpenGL.GLUT import *
 from OpenGL.GLU  import *
 from OpenGL.GL   import *
@@ -32,7 +34,12 @@ class WindowDriver:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     def mouse(self, state, x, y):
-        pass
+        e = gltk.Event(gltk.TOUCH)
+        e.id = -1
+        e.touchType = gltk.TOUCH_BEGIN if state else gltk.TOUCH_END
+        e.fingers = 1
+        e.positions = (x, y)
+        self.window.send_event(e)
 
     def motion(self, x, y):
         pass

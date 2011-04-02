@@ -3,8 +3,8 @@
   (in-module "Gltk")
   (c-name "GltkEvent")
   (gtype-id "GLTK_TYPE_EVENT")
-  (copy-func "gdk_event_clone")
-  (release-func "gdk_event_free")
+  (copy-func "gltk_event_copy")
+  (release-func "gltk_event_free")
 )
 
 (define-enum EventType
@@ -23,3 +23,13 @@
   )
 )
 
+(define-enum TouchEventType
+  (in-module "Gltk")
+  (c-name "GltkTouchEventType")
+  (gtype-id "GLTK_TYPE_TOUCH_EVENT_TYPE")
+  (values
+	'("touch_begin" "TOUCH_BEGIN")
+	'("touch_move" "TOUCH_MOVE")
+	'("touch_end" "TOUCH_END")
+  )
+)

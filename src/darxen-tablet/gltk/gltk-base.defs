@@ -514,6 +514,13 @@
   )
 )
 
+(define-function gltk_touch_event_type_get_type
+  (c-name "gltk_touch_event_type_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
 (define-function gltk_event_new
   (c-name "gltk_event_new")
   (is-constructor-of "GltkEvent")
