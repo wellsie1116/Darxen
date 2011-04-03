@@ -23,6 +23,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkbox.c gltkbox.h \
 			 gltkhbox.c gltkhbox.h \
 			 gltkvbox.c gltkvbox.h \
+			 gltktable.c gltktable.h \
 			 gltkbin.c gltkbin.h \
 			 gltklist.c gltklist.h \
 			 gltkspinnermodel.c gltkspinnermodel.h \

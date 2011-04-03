@@ -182,6 +182,8 @@ void
 layout_screen(GltkScreen* screen, GltkWindow* window)
 {
 	USING_PRIVATE(window);
+	if (priv->width <= 0 || priv->height <= 0)
+		return;
 
 	if (screen->maximized)
 	{
