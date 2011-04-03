@@ -209,13 +209,19 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		GltkWidget* lblShapefiles = gltk_label_new("Shapefiles: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblShapefiles), 28);
 
-		GltkWidget* shapefiles = gltk_vbox_new(1);
+		GltkWidget* shapefiles = gltk_table_new(3, 2);
+		gltk_table_set_col_options(GLTK_TABLE(shapefiles), 0, CELL_ALIGN_JUSTIFY, FALSE, 5);
+		gltk_table_set_col_options(GLTK_TABLE(shapefiles), 1, CELL_ALIGN_JUSTIFY, FALSE, 5);
+		gltk_table_set_col_options(GLTK_TABLE(shapefiles), 2, CELL_ALIGN_JUSTIFY, FALSE, 5);
+		
+		gltk_table_set_row_options(GLTK_TABLE(shapefiles), 0, CELL_ALIGN_JUSTIFY, FALSE, 5);
+		gltk_table_set_row_options(GLTK_TABLE(shapefiles), 1, CELL_ALIGN_JUSTIFY, FALSE, 5);
 
 		gchar* items[] = {"Counties", "States", "Lakes", "Rivers", "Radar Sites", NULL};
 
-
-		gltk_box_append_widget(GLTK_BOX(shapefiles), gltk_button_new("Boo"), FALSE, FALSE);
 		gchar** pItems;
+		int x = 0;
+		int y = 0;
 		for (pItems = items; *pItems; pItems++)
 		{
 			GltkWidget* btn = gltk_toggle_button_new(*pItems);
@@ -237,7 +243,14 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 
 			gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(btn), visible);
 
-			gltk_box_append_widget(GLTK_BOX(shapefiles), btn, FALSE, FALSE);
+			gltk_table_insert_widget(GLTK_TABLE(shapefiles), btn, x, y);
+			x++;
+			if (x >= 3)
+			{
+				x = 0;
+				y++;
+			}
+			//gltk_box_append_widget(GLTK_BOX(shapefiles), btn, FALSE, FALSE);
 			//gltk_list_add_item(GLTK_LIST(shapefiles), btn, items);
 		}
 

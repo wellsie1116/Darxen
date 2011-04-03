@@ -310,13 +310,13 @@ gltk_table_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 	if (dwidth < 0)
 	{
 		//remove width from every widget equally (unless that widget is too small?)
-		g_assert_not_reached();
+		g_return_if_reached();
 	}
 	else
 	{
 		//add extra width to widgets that want to expand
 		//position other widgets accordingly
-		int extraWidth = dwidth / priv->expandWidth;
+		int extraWidth = priv->expandWidth ? dwidth / priv->expandWidth : 0;
 		int posX = 0;
 		for (x = 0; x < priv->width; x++)
 		{
@@ -360,17 +360,17 @@ gltk_table_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 		}
 	}
 
-	//FIXME this is a duplicate of above.
+	//FIXME this is basically a duplicate of above.
 	if (dheight < 0)
 	{
 		//remove height from every widget equally (unless that widget is too small?)
-		g_assert_not_reached();
+		g_return_if_reached();
 	}
 	else
 	{
 		//add extra height to widgets that want to expand
 		//position other widgets accordingly
-		int extraHeight = dheight / priv->expandHeight;
+		int extraHeight = priv->expandHeight ? dheight / priv->expandHeight : 0;
 		int posY = 0;
 		for (y = 0; y < priv->height; y++)
 		{
