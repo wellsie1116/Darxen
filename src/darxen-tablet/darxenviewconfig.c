@@ -100,6 +100,30 @@ txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
 	}
 }
 
+static gboolean
+btnShapefile_clicked(GltkToggleButton* btn, GltkEventClick* event, DarxenViewConfig* viewConfig)
+{
+	USING_PRIVATE(viewConfig);
+
+	const gchar* id = GLTK_BUTTON(btn)->text;
+
+	GSList* pShapefiles;
+	for (pShapefiles = priv->viewInfo->shapefiles; pShapefiles; pShapefiles = pShapefiles->next)
+	{
+		DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
+		if (g_strcmp0(shapefile->name, id))
+			continue;
+
+		shapefile->visible = gltk_toggle_button_is_toggled(btn);
+
+		return TRUE;
+	}
+	
+	//TODO create the shapefile
+
+	return TRUE;
+}
+
 static void
 spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewConfig)
 {
@@ -246,6 +270,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 			}
 
 			gltk_toggle_button_set_toggled(GLTK_TOGGLE_BUTTON(btn), visible);
+			g_signal_connect_after(btn, "click-event", (GCallback)btnShapefile_clicked, self);
 
 			gltk_table_insert_widget(GLTK_TABLE(shapefiles), btn, x, y);
 			x++;
@@ -254,8 +279,6 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 				x = 0;
 				y++;
 			}
-			//gltk_box_append_widget(GLTK_BOX(shapefiles), btn, FALSE, FALSE);
-			//gltk_list_add_item(GLTK_LIST(shapefiles), btn, items);
 		}
 
 		GltkWidget* scrollable = gltk_scrollable_new();

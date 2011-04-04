@@ -554,7 +554,6 @@ gltk_table_event(GltkWidget* widget, GltkEvent* event)
 		{
 			GltkEvent* childEvent = gltk_event_clone(event);
 
-
 			int px;
 			int py;
 			switch (event->type)
