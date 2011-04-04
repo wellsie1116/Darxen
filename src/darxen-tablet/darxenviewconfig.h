@@ -41,12 +41,12 @@ typedef struct _DarxenViewConfigClass		DarxenViewConfigClass;
 
 struct _DarxenViewConfig
 {
-	GltkVBox parent;
+	GltkTable parent;
 };
 
 struct _DarxenViewConfigClass
 {
-	GltkVBoxClass parent_class;
+	GltkTableClass parent_class;
 	
 	/* signals */
 	void	(*site_changed)	(	);

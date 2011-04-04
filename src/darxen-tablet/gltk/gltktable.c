@@ -32,6 +32,15 @@ enum
 	LAST_SIGNAL
 };
 
+enum
+{
+	PROP_0,
+	PROP_COLS,
+	PROP_ROWS,
+
+	N_PROPERTIES
+};
+
 typedef struct _GltkTableOptions		GltkTableOptions;
 typedef struct _GltkTablePrivate		GltkTablePrivate;
 
@@ -58,9 +67,13 @@ struct _GltkTablePrivate
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
 
 static void gltk_table_dispose(GObject* gobject);
 static void gltk_table_finalize(GObject* gobject);
+
+static void	gltk_table_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_table_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
 
 static void gltk_table_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_table_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
@@ -78,12 +91,26 @@ gltk_table_class_init(GltkTableClass* klass)
 	
 	gobject_class->dispose = gltk_table_dispose;
 	gobject_class->finalize = gltk_table_finalize;
+	gobject_class->set_property = gltk_table_set_property;
+	gobject_class->get_property = gltk_table_get_property;
 
 	gltkwidget_class->size_request = gltk_table_size_request;
 	gltkwidget_class->size_allocate = gltk_table_size_allocate;
 	gltkwidget_class->set_screen = gltk_table_set_screen;
 	gltkwidget_class->render = gltk_table_render;
 	gltkwidget_class->event = gltk_table_event;
+
+	properties[PROP_COLS] = 
+		g_param_spec_int(	"cols", "Cols", "Number of columns",
+							1, 100,
+							1, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	
+	properties[PROP_ROWS] = 
+		g_param_spec_int(	"rows", "Rows", "Number of rows",
+							1, 100,
+							1, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 static void
@@ -147,17 +174,7 @@ gltk_table_finalize(GObject* gobject)
 GltkWidget*
 gltk_table_new(int cols, int rows)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_TABLE, NULL);
-	GltkTable* self = GLTK_TABLE(gobject);
-
-	USING_PRIVATE(self);
-
-	priv->width = cols;
-	priv->height = rows;
-
-	priv->widgets = g_new0(GltkWidget*, cols*rows);
-	priv->xOpts = g_new0(GltkTableOptions, cols);
-	priv->yOpts = g_new0(GltkTableOptions, rows);
+	GObject *gobject = g_object_new(GLTK_TYPE_TABLE, "cols", cols, "rows", rows, NULL);
 
 	return (GltkWidget*)gobject;
 }
@@ -243,6 +260,50 @@ gltk_table_remove_widget(GltkTable* table, int x, int y)
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_table_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkTable* self = GLTK_TABLE(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_COLS:
+			priv->width = g_value_get_int(value);
+			priv->xOpts = g_new0(GltkTableOptions, priv->width);
+			if (priv->width && priv->height)
+				priv->widgets = g_new0(GltkWidget*, priv->width*priv->height);
+			break;
+		case PROP_ROWS:
+			priv->height = g_value_get_int(value);
+			priv->yOpts = g_new0(GltkTableOptions, priv->height);
+			if (priv->width && priv->height)
+				priv->widgets = g_new0(GltkWidget*, priv->width*priv->height);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_table_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkTable* self = GLTK_TABLE(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_COLS:
+			g_value_set_int(value, priv->width);
+			break;
+		case PROP_ROWS:
+			g_value_set_int(value, priv->height);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 
 static void
 gltk_table_size_request(GltkWidget* widget, GltkSize* size)
@@ -493,53 +554,55 @@ gltk_table_event(GltkWidget* widget, GltkEvent* event)
 		{
 			GltkEvent* childEvent = gltk_event_clone(event);
 
-			int x;
-			int y;
 
+			int px;
+			int py;
 			switch (event->type)
 			{
 				case GLTK_TOUCH:
 					childEvent->touch.positions->x -= allocation.x;
 					childEvent->touch.positions->y -= allocation.y;
-					x = childEvent->touch.positions->x;
-					y = childEvent->touch.positions->y;
+					px = childEvent->touch.positions->x;
+					py = childEvent->touch.positions->y;
 					break;
 				case GLTK_MULTI_DRAG:
 					childEvent->multidrag.center.x -= allocation.x;
 					childEvent->multidrag.center.y -= allocation.y;
-					x = childEvent->multidrag.center.x;
-					y = childEvent->multidrag.center.y;
+					px = childEvent->multidrag.center.x;
+					py = childEvent->multidrag.center.y;
 					break;
 				case GLTK_PINCH:
 					childEvent->pinch.center.x -= allocation.x;
 					childEvent->pinch.center.y -= allocation.y;
-					x = childEvent->pinch.center.x;
-					y = childEvent->pinch.center.y;
+					px = childEvent->pinch.center.x;
+					py = childEvent->pinch.center.y;
 					break;
 				case GLTK_ROTATE:
 					childEvent->rotate.center.x -= allocation.x;
 					childEvent->rotate.center.y -= allocation.y;
-					x = childEvent->rotate.center.x;
-					y = childEvent->rotate.center.y;
+					px = childEvent->rotate.center.x;
+					py = childEvent->rotate.center.y;
 					break;
 				default:
 					g_assert_not_reached();
 			}
 
+			int x;
+			int y;
 			for (y = 0; y < priv->height && !returnValue; y++)
 			{
 				for (x = 0; x < priv->width && !returnValue; x++)
 				{
-					GltkWidget* widget = priv->widgets[y*priv->width+x];
-					if (!widget)
+					GltkWidget* childWidget = priv->widgets[y*priv->width+x];
+					if (!childWidget)
 						continue;
 
-					GltkAllocation childAllocation = gltk_widget_get_allocation(widget);
+					GltkAllocation childAllocation = gltk_widget_get_allocation(childWidget);
 
-					if (childAllocation.x < x && childAllocation.x + childAllocation.width > x &&
-						childAllocation.y < y && childAllocation.y + childAllocation.height > y)
+					if (childAllocation.x < px && childAllocation.x + childAllocation.width > px &&
+						childAllocation.y < py && childAllocation.y + childAllocation.height > py)
 					{
-						returnValue = gltk_widget_send_event(widget, childEvent);
+						returnValue = gltk_widget_send_event(childWidget, childEvent);
 					}
 				}
 			}

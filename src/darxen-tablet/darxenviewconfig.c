@@ -22,7 +22,7 @@
 
 #include <libdarxenShapefiles.h>
 
-G_DEFINE_TYPE(DarxenViewConfig, darxen_view_config, GLTK_TYPE_VBOX)
+G_DEFINE_TYPE(DarxenViewConfig, darxen_view_config, GLTK_TYPE_TABLE)
 
 #define USING_PRIVATE(obj) DarxenViewConfigPrivate* priv = DARXEN_VIEW_CONFIG_GET_PRIVATE(obj)
 #define DARXEN_VIEW_CONFIG_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DARXEN_TYPE_VIEW_CONFIG, DarxenViewConfigPrivate))
@@ -152,7 +152,7 @@ model_getItems(GltkSpinnerModel* model, int level, int index, GltkSpinner* spinn
 GltkWidget*
 darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 {
-	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW_CONFIG, NULL);
+	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW_CONFIG, "cols", 2, "rows", 4, NULL);
 	DarxenViewConfig* self = DARXEN_VIEW_CONFIG(gobject);
 
 	USING_PRIVATE(self);
@@ -165,21 +165,26 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	//Change Source Type - Radio buttons
 	//Select Date Range - Text Box (with numeric filter) OR Number spinners
 	
-	GLTK_BOX(self)->spacing = 5;
+	gltk_table_set_col_options(GLTK_TABLE(self), 0, CELL_ALIGN_LEFT, FALSE, 5);
+	gltk_table_set_col_options(GLTK_TABLE(self), 1, CELL_ALIGN_LEFT, FALSE, 5);
 	
-	GltkWidget* hboxName = gltk_hbox_new(0);
+	gltk_table_set_row_options(GLTK_TABLE(self), 0, CELL_ALIGN_LEFT, FALSE, 5);
+	gltk_table_set_row_options(GLTK_TABLE(self), 1, CELL_ALIGN_LEFT, FALSE, 5);
+	gltk_table_set_row_options(GLTK_TABLE(self), 2, CELL_ALIGN_LEFT, FALSE, 5);
+	gltk_table_set_row_options(GLTK_TABLE(self), 3, CELL_ALIGN_LEFT, FALSE, 5);
+	
 	{
 		GltkWidget* lblName = gltk_label_new("Name: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblName), 28);
+
 		GltkWidget* txtName = gltk_entry_new(viewInfo->name);
 
 		g_signal_connect(txtName, "text-changed", (GCallback)txtName_textChanged, self);
 
-		gltk_box_append_widget(GLTK_BOX(hboxName), lblName, FALSE, FALSE);
-		gltk_box_append_widget(GLTK_BOX(hboxName), txtName, FALSE, FALSE);
+		gltk_table_insert_widget(GLTK_TABLE(self), lblName, 0, 0);
+		gltk_table_insert_widget(GLTK_TABLE(self), txtName, 1, 0);
 	}
 
-	GltkWidget* hboxProduct = gltk_hbox_new(0);
 	{
 		GltkWidget* lblProduct = gltk_label_new("Product: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblProduct), 28);
@@ -200,11 +205,10 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 
 		g_signal_connect(spinnerProduct, "item-selected", (GCallback)spinnerProduct_itemSelected, self);
 		
-		gltk_box_append_widget(GLTK_BOX(hboxProduct), lblProduct, FALSE, FALSE);
-		gltk_box_append_widget(GLTK_BOX(hboxProduct), spinnerProduct, FALSE, FALSE);
+		gltk_table_insert_widget(GLTK_TABLE(self), lblProduct, 0, 1);
+		gltk_table_insert_widget(GLTK_TABLE(self), spinnerProduct, 1, 1);
 	}
 
-	GltkWidget* hboxShapefiles = gltk_hbox_new(0);
 	{
 		GltkWidget* lblShapefiles = gltk_label_new("Shapefiles: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblShapefiles), 28);
@@ -257,22 +261,16 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		GltkWidget* scrollable = gltk_scrollable_new();
 		gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), shapefiles);
 		
-		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), lblShapefiles, FALSE, FALSE);
-		gltk_box_append_widget(GLTK_BOX(hboxShapefiles), scrollable, FALSE, FALSE);
+		gltk_table_insert_widget(GLTK_TABLE(self), lblShapefiles, 0, 2);
+		gltk_table_insert_widget(GLTK_TABLE(self), scrollable, 1, 2);
 	}
 
-	GltkWidget* hboxSource = gltk_hbox_new(0);
 	{
 		GltkWidget* lblSource = gltk_label_new("Source: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);
 		
-		gltk_box_append_widget(GLTK_BOX(hboxSource), lblSource, FALSE, FALSE);
+		gltk_table_insert_widget(GLTK_TABLE(self), lblSource, 0, 3);
 	}
-
-	gltk_box_append_widget(GLTK_BOX(self), hboxName, FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(self), hboxProduct, FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(self), hboxShapefiles, FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(self), hboxSource, FALSE, FALSE);
 
 	return (GltkWidget*)gobject;
 }
