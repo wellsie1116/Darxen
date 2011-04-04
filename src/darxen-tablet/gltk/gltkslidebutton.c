@@ -233,7 +233,35 @@ gltk_slide_button_render(GltkWidget* widget)
 			}
 		}
 		glEnd();
+
+		glColor4f(0.0f, 0.0f, 0.0f, 0.3f);
+		glBegin(GL_TRIANGLES);
+		{
+			float offset1 = 0.05f;
+			float offset2 = 0.05f;
+			static const float arrowLen = 0.05f;
+			if (priv->slideOffset < 0.0f)
+				if (priv->slideOffset < -0.5f)
+					offset1 = 0.0f;
+				else
+					offset1 = 0.05 - -0.1f * (priv->slideOffset);
+			else
+				if (priv->slideOffset > 0.5f)
+					offset2 = 0.0f;
+				else
+					offset2 = 0.05f - 0.1f * priv->slideOffset;
+
+			glVertex2i(allocation.width * offset1, 0.5 * allocation.height);
+			glVertex2i(allocation.width * (offset1+arrowLen), 0.3 * allocation.height);
+			glVertex2i(allocation.width * (offset1+arrowLen), 0.7 * allocation.height);
+			
+			glVertex2i(allocation.width * (1.0f-offset2), 0.5 * allocation.height);
+			glVertex2i(allocation.width * (1.0f-(offset2+arrowLen)), 0.3 * allocation.height);
+			glVertex2i(allocation.width * (1.0f-(offset2+arrowLen)), 0.7 * allocation.height);
+		}
+		glEnd();
 	}
+
 
 	glPushMatrix();
 	{
