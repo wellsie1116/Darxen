@@ -186,7 +186,7 @@ gesture_callback(	GtkWidget* widget,
 static gboolean
 button_press_event(GtkWidget* widget, GdkEventButton* event)
 {
-	g_message("Press event");
+	//g_message("Press event");
 	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
 	e->touch.id = -1;
@@ -206,7 +206,7 @@ button_press_event(GtkWidget* widget, GdkEventButton* event)
 static gboolean
 button_release_event(GtkWidget* widget, GdkEventButton* event)
 {
-	g_message("Release event");
+	//g_message("Release event");
 	GltkEvent* e = gltk_event_new(GLTK_TOUCH);
 
 	e->touch.id = -1;

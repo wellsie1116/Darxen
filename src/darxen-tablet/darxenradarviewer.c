@@ -210,7 +210,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 					continue;
 				}
 				fclose(f);
-				printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
+				//printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
 				RenderData* renderData = g_new(RenderData, 1);
 				renderData->id = g_strdup(ids[i]);
 				renderData->data = parsed;
@@ -346,7 +346,7 @@ darxen_radar_viewer_data_received(DarxenPoller* poller, RadarData* data, DarxenR
 		return;
 	}
 	fclose(f);
-	printf("Header: %s\n", parsed->chrWmoHeader);
+	//printf("Header: %s\n", parsed->chrWmoHeader);
 
 	RenderData* renderData = g_new(RenderData, 1);
 	renderData->id = g_strdup(data->ID);
