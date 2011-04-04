@@ -319,6 +319,10 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 	scrollable->offset.x = CLAMP(scrollable->offset.x + event->dx, -(childAllocation.width - allocation.width) - scrollable->paddingRight, scrollable->paddingLeft);
 	scrollable->offset.y = CLAMP(scrollable->offset.y + event->dy, -(childAllocation.height - allocation.height) - scrollable->paddingBottom, scrollable->paddingTop);
 
+	//stop if we didn't actually scroll
+	if (childAllocation.x == scrollable->offset.x && childAllocation.y == scrollable->offset.y)
+		return FALSE;
+
 	childAllocation.x = scrollable->offset.x;
 	childAllocation.y = scrollable->offset.y;
 
@@ -326,6 +330,6 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 
 	gltk_screen_invalidate(widget->screen);
 
-	return TRUE; //or FALSE if we cannot scroll at all?
+	return TRUE;
 }
 

@@ -444,9 +444,16 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 		if (!returnValue)
 			returnValue = eventReturnValue;
 
-		//only send long touches to 1 widget
-		if (returnValue && event->type == GLTK_LONG_TOUCH)
-			break;
+		//only send certain events to 1 widget
+		if (returnValue)
+			switch (event->type)
+			{
+				case GLTK_LONG_TOUCH:
+				case GLTK_DRAG:
+					return returnValue;
+				default:
+					break;
+			}
 	}
 
 	return returnValue;
