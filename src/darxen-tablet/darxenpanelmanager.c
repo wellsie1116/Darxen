@@ -198,7 +198,10 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	g_return_if_fail(pair);
 	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
 
-	gltk_bin_set_widget(GLTK_BIN(manager), (GltkWidget*)pair->config);
+	GltkWidget* scrollable = gltk_scrollable_new();
+	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), (GltkWidget*)pair->config);
+
+	gltk_bin_set_widget(GLTK_BIN(manager), scrollable);
 }
 
 GQuark

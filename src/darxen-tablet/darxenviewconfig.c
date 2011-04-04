@@ -280,19 +280,31 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 				y++;
 			}
 		}
-
-		GltkWidget* scrollable = gltk_scrollable_new();
-		gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), shapefiles);
 		
 		gltk_table_insert_widget(GLTK_TABLE(self), lblShapefiles, 0, 2);
-		gltk_table_insert_widget(GLTK_TABLE(self), scrollable, 1, 2);
+		gltk_table_insert_widget(GLTK_TABLE(self), shapefiles, 1, 2);
 	}
 
 	{
 		GltkWidget* lblSource = gltk_label_new("Source: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);
+
+		GltkWidget* hboxSource = gltk_hbox_new(1);
+		{
+			GltkSpinnerModel* model = gltk_spinner_model_new(1);
+			gltk_spinner_model_add_toplevel(model, "live", "Live");
+			gltk_spinner_model_add_toplevel(model, "archived", "Archived");
+
+			GltkWidget* spinnerSource = gltk_spinner_new(model);
+
+			char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
+			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
+
+			gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
+		}
 		
 		gltk_table_insert_widget(GLTK_TABLE(self), lblSource, 0, 3);
+		gltk_table_insert_widget(GLTK_TABLE(self), hboxSource, 1, 3);
 	}
 
 	return (GltkWidget*)gobject;
