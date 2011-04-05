@@ -79,7 +79,6 @@ gltk_bin_dispose(GObject* gobject)
 	//free and release references
 	if (priv->widget)
 	{
-		gltk_box_remove_widget(GLTK_BOX(self), priv->widget);
 		g_object_unref(G_OBJECT(priv->widget));
 		priv->widget = NULL;
 	}
@@ -120,7 +119,7 @@ gltk_bin_set_widget(GltkBin* bin, GltkWidget* widget)
 
 	if (widget)
 	{
-		g_object_ref_sink(G_OBJECT(widget));
+		g_object_ref(G_OBJECT(widget));
 		priv->widget = widget;
 		gltk_box_append_widget(GLTK_BOX(bin), widget, TRUE, TRUE);
 	}

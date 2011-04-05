@@ -98,6 +98,7 @@ gltk_scrollable_dispose(GObject* gobject)
 	if (priv->widget)
 	{
 		gltk_widget_unparent(priv->widget);
+		gltk_widget_set_screen(priv->widget, NULL);
 		g_object_unref(G_OBJECT(priv->widget));
 		priv->widget = NULL;
 	}
@@ -128,6 +129,7 @@ gltk_scrollable_set_widget(GltkScrollable* scrollable, GltkWidget* widget)
 	if (priv->widget)
 	{
 		gltk_widget_unparent(priv->widget);
+		gltk_widget_set_screen(priv->widget, NULL);
 		g_object_unref(G_OBJECT(priv->widget));
 	}
 

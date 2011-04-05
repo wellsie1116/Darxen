@@ -209,12 +209,12 @@ gltk_widget_init(GltkWidget* self)
 static void
 gltk_widget_dispose(GObject* gobject)
 {
-	GltkWidget* self = GLTK_WIDGET(gobject);
+	GltkWidget* widget = GLTK_WIDGET(gobject);
 
-	if (self->parentWidget)
+	if (widget->parentWidget)
 	{
-		g_object_unref(G_OBJECT(self->parentWidget));
-		self->parentWidget = NULL;
+		g_object_remove_weak_pointer(G_OBJECT(widget->parentWidget), (gpointer*)&widget->parentWidget);
+		widget->parentWidget = NULL;
 	}
 
 	G_OBJECT_CLASS(gltk_widget_parent_class)->dispose(gobject);
@@ -250,7 +250,7 @@ gltk_widget_set_parent(GltkWidget* widget, GltkWidget* parent)
 	g_return_if_fail(widget != parent);
 	g_return_if_fail(!widget->parentWidget);
 
-	g_object_ref(parent);
+	g_object_add_weak_pointer(G_OBJECT(parent), (gpointer*)&widget->parentWidget);
 	widget->parentWidget = parent;
 }
 
@@ -260,7 +260,7 @@ gltk_widget_unparent(GltkWidget* widget)
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 	g_return_if_fail(GLTK_IS_WIDGET(widget->parentWidget));
 
-	g_object_unref(G_OBJECT(widget->parentWidget));
+	g_object_remove_weak_pointer(G_OBJECT(widget->parentWidget), (gpointer*)&widget->parentWidget);
 	widget->parentWidget = NULL;
 }
 

@@ -86,6 +86,8 @@ gltk_box_dispose(GObject* gobject)
 		{
 			GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 
+			gltk_widget_unparent(child->widget);
+			gltk_widget_set_screen(child->widget, NULL);
 			g_object_unref(G_OBJECT(child->widget));
 			g_free(child);
 
