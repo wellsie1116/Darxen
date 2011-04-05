@@ -77,6 +77,7 @@ static gint 	find_spinner_item				(GltkSpinnerModelItem* i1, const gchar* id);
 static gboolean	scrollable_touch_event			(GltkWidget* scrollable, GltkEventTouch* event, GltkSpinner* spinner);
 static void		gltk_spinner_size_allocate		(GltkWidget* widget, GltkAllocation* allocation);
 static void		gltk_spinner_size_request		(GltkWidget* widget, GltkSize* size);
+static gboolean	gltk_spinner_drag_event			(GltkWidget* widget, GltkEventDrag* event);
 static void		gltk_spinner_render				(GltkWidget* widget);
 
 static void
@@ -101,6 +102,7 @@ gltk_spinner_class_init(GltkSpinnerClass* klass)
 
 	gltkwidget_class->size_allocate = gltk_spinner_size_allocate;
 	gltkwidget_class->size_request = gltk_spinner_size_request;
+	gltkwidget_class->drag_event = gltk_spinner_drag_event;
 	gltkwidget_class->render = gltk_spinner_render;
 
 	klass->item_selected = NULL;
@@ -435,6 +437,13 @@ gltk_spinner_size_allocate(GltkWidget* widget, GltkAllocation* allocation)
 {
 	//pass through allocations
 	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_allocate(widget, allocation);
+}
+
+static gboolean
+gltk_spinner_drag_event(GltkWidget* widget, GltkEventDrag* event)
+{
+	//om nom nom
+	return TRUE;
 }
 
 static void
