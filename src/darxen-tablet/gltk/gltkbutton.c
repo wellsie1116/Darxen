@@ -42,6 +42,14 @@ enum
 	LAST_SIGNAL
 };
 
+enum
+{
+	PROP_0,
+	PROP_TEXT,
+
+	N_PROPERTIES
+};
+
 typedef struct _GltkButtonPrivate		GltkButtonPrivate;
 struct _GltkButtonPrivate
 {
@@ -49,9 +57,15 @@ struct _GltkButtonPrivate
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
 
 static void gltk_button_dispose(GObject* gobject);
 static void gltk_button_finalize(GObject* gobject);
+
+static void	gltk_button_set_property	(	GObject* object, guint property_id,
+											const GValue* value, GParamSpec* pspec);
+static void	gltk_button_get_property	(	GObject* object, guint property_id,
+											GValue* value, GParamSpec* pspec);
 
 static void gltk_button_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_button_render(GltkWidget* widget);
@@ -67,11 +81,18 @@ gltk_button_class_init(GltkButtonClass* klass)
 	
 	gobject_class->dispose = gltk_button_dispose;
 	gobject_class->finalize = gltk_button_finalize;
+	gobject_class->set_property = gltk_button_set_property;
+	gobject_class->get_property = gltk_button_get_property;
 
 	gltkwidget_class->size_request = gltk_button_size_request;
 	gltkwidget_class->render = gltk_button_render;
 	gltkwidget_class->touch_event = gltk_button_touch_event;
 
+	properties[PROP_TEXT] = 
+		g_param_spec_string(	"text", "Text", "Text to display",
+								"", G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 static void
@@ -136,6 +157,41 @@ gltk_button_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_button_set_property	(	GObject* object, guint property_id,
+								const GValue* value, GParamSpec* pspec)
+{
+	GltkButton* self = GLTK_BUTTON(object);
+
+	switch (property_id)
+	{
+		case PROP_TEXT:
+			if (self->text)
+				g_free(self->text);
+			self->text = g_value_dup_string(value);
+			gltk_widget_invalidate(GLTK_WIDGET(self));
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_button_get_property	(	GObject* object, guint property_id,
+								GValue* value, GParamSpec* pspec)
+{
+	GltkButton* self = GLTK_BUTTON(object);
+
+	switch (property_id)
+	{
+		case PROP_TEXT:
+			g_value_set_string(value, self->text);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 
 static void
 gltk_button_size_request(GltkWidget* widget, GltkSize* size)
