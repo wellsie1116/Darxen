@@ -90,7 +90,9 @@ g_cclosure_user_marshal_BOOLEAN__POINTER (GClosure     *closure,
 
 /* NONE:POINTER (gltkmarshal.list:2) */
 
-/* NONE:POINTER,POINTER (gltkmarshal.list:3) */
+/* NONE:BOOL (gltkmarshal.list:3) */
+
+/* NONE:POINTER,POINTER (gltkmarshal.list:4) */
 void
 g_cclosure_user_marshal_VOID__POINTER_POINTER (GClosure     *closure,
                                                GValue       *return_value G_GNUC_UNUSED,
@@ -127,7 +129,7 @@ g_cclosure_user_marshal_VOID__POINTER_POINTER (GClosure     *closure,
             data2);
 }
 
-/* NONE:STRING,POINTER (gltkmarshal.list:4) */
+/* NONE:STRING,POINTER (gltkmarshal.list:5) */
 void
 g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
                                               GValue       *return_value G_GNUC_UNUSED,
@@ -164,7 +166,7 @@ g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
             data2);
 }
 
-/* NONE:STRING,POINTER,STRING (gltkmarshal.list:5) */
+/* NONE:STRING,POINTER,STRING (gltkmarshal.list:6) */
 void
 g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
                                                      GValue       *return_value G_GNUC_UNUSED,
@@ -203,9 +205,9 @@ g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
             data2);
 }
 
-/* NONE:NONE (gltkmarshal.list:6) */
+/* NONE:NONE (gltkmarshal.list:7) */
 
-/* POINTER:INT,INT (gltkmarshal.list:7) */
+/* POINTER:INT,INT (gltkmarshal.list:8) */
 void
 g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                           GValue       *return_value G_GNUC_UNUSED,
