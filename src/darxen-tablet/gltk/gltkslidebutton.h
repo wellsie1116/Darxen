@@ -47,8 +47,8 @@ struct _GltkSlideButtonClass
 	GltkButtonClass parent_class;
 	
 	/* signals */
-	gboolean (*slide_event)			(	GltkSlideButton* button,
-										GltkEventSlide* event);
+	void (*slide_event)			(	GltkSlideButton* button,
+									gboolean dirRight);
 
 	/* virtual funcs */
 };

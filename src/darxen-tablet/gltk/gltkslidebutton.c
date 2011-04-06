@@ -64,10 +64,10 @@ gltk_slide_button_class_init(GltkSlideButtonClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(GltkSlideButtonClass, slide_event),
-						gltk_accum_event, NULL,
-						g_cclosure_user_marshal_BOOLEAN__POINTER,
-						G_TYPE_BOOLEAN, 1,
-						G_TYPE_POINTER);
+						NULL, NULL,
+						g_cclosure_user_marshal_NONE__BOOL,
+						G_TYPE_NONE, 1,
+						G_TYPE_BOOLEAN);
 	
 	gobject_class->dispose = gltk_slide_button_dispose;
 	gobject_class->finalize = gltk_slide_button_finalize;
@@ -301,13 +301,8 @@ gltk_slide_button_touch_event(GltkWidget* widget, GltkEventTouch* touch)
 	{
 		if (priv->slideOffset > 0.5f || priv->slideOffset < -0.5f)
 		{
-			GltkEvent* event = gltk_event_new(GLTK_SLIDE);
-			event->slide.dirRight = priv->slideOffset > 0.0f;
-
-			gboolean returnValue;
-			g_signal_emit(widget, signals[SLIDE_EVENT], 0, event, &returnValue);
-
-			gltk_event_free(event);
+			gboolean dirRight = priv->slideOffset > 0.0f;
+			g_signal_emit(widget, signals[SLIDE_EVENT], 0, dirRight);
 		}
 	}
 

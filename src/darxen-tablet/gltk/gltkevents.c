@@ -68,9 +68,6 @@ gltk_event_clone(GltkEvent* event)
 		case GLTK_CLICK:
 			newEvent->click = event->click;
 			break;
-		case GLTK_SLIDE:
-			newEvent->slide = event->slide;
-			break;
 	}
 	return newEvent;
 }
@@ -97,8 +94,6 @@ gltk_event_free(GltkEvent* event)
 			g_free(event->rotate.positions);
 			break;
 		case GLTK_CLICK:
-			break;
-		case GLTK_SLIDE:
 			break;
 	}
 	g_free(event);
