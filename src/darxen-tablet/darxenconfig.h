@@ -132,6 +132,8 @@ void					darxen_config_view_updated		(	DarxenConfig* config,
 															const gchar* site,
 															DarxenViewInfo* viewInfo);
 															
+DarxenViewInfo*			darxen_view_info_copy			(	const DarxenViewInfo* viewInfo);
+void					darxen_view_info_free			(	DarxenViewInfo* viewInfo);
 
 
 GQuark					darxen_config_error_quark		();

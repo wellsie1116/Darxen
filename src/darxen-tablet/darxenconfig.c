@@ -113,7 +113,7 @@ darxen_config_get_instance()
 	return (DarxenConfig*)gobject;
 }
 
-#define ADD_SHAPEFILE(id) sf = darxen_shapefiles_clone(darxen_shapefiles_load_by_id( id )); sf->visible=TRUE; view->shapefiles = g_slist_append(view->shapefiles, sf)
+#define ADD_SHAPEFILE(id) sf = darxen_shapefiles_load_by_id( id ); sf->visible=TRUE; view->shapefiles = g_slist_append(view->shapefiles, sf)
 
 GList*
 darxen_config_get_sites(DarxenConfig* config)
@@ -272,6 +272,56 @@ darxen_config_view_updated(	DarxenConfig* config,
 	g_return_if_fail(DARXEN_IS_CONFIG(config));
 	
 	g_signal_emit(config, signals[VIEW_UPDATED], 0, site, viewInfo);
+}
+
+DarxenViewInfo*
+darxen_view_info_copy(const DarxenViewInfo* viewInfo)
+{
+	DarxenViewInfo* newInfo = g_new(DarxenViewInfo, 1);
+
+	*newInfo = *viewInfo;
+
+	newInfo->name = g_strdup(newInfo->name);
+	newInfo->productCode = g_strdup(newInfo->productCode);
+
+	switch (newInfo->sourceType)
+	{
+		case DARXEN_VIEW_SOURCE_ARCHIVE:
+			newInfo->source.archive.startId = g_strdup(newInfo->source.archive.startId);
+			newInfo->source.archive.endId = g_strdup(newInfo->source.archive.endId);
+			break;
+		case DARXEN_VIEW_SOURCE_LIVE:
+			break;
+	}
+
+	newInfo->shapefiles = g_slist_copy(newInfo->shapefiles);
+	GSList* pShapefiles;
+	for (pShapefiles = newInfo->shapefiles; pShapefiles; pShapefiles = pShapefiles->next)
+		pShapefiles->data = darxen_shapefiles_clone((DarxenShapefile*)pShapefiles->data);
+
+	return newInfo;
+}
+
+void
+darxen_view_info_free(DarxenViewInfo* viewInfo)
+{
+	g_free(viewInfo->name);
+	g_free(viewInfo->productCode);
+
+	switch (viewInfo->sourceType)
+	{
+		case DARXEN_VIEW_SOURCE_ARCHIVE:
+			g_free(viewInfo->source.archive.startId);
+			g_free(viewInfo->source.archive.endId);
+			break;
+		case DARXEN_VIEW_SOURCE_LIVE:
+			break;
+	}
+
+	GSList* pShapefiles;
+	for (pShapefiles = viewInfo->shapefiles; pShapefiles; pShapefiles = pShapefiles->next)
+		darxen_shapefiles_free_shapefile((DarxenShapefile*)pShapefiles->data);
+	g_slist_free(viewInfo->shapefiles);
 }
 
 
