@@ -130,9 +130,18 @@ gltk_config_button_class_init(GltkConfigButtonClass* klass)
 static void
 gltk_config_button_init(GltkConfigButton* self)
 {
+	GltkSlideButton* slideButton = GLTK_SLIDE_BUTTON(self);
 	USING_PRIVATE(self);
 
 	self->displayText = NULL;
+
+	gltk_color_init(&slideButton->colorText, 0.87f, 0.87f, 0.87f);
+	gltk_color_init(&slideButton->colorTextDown, 0.87f, 0.87f, 0.87f);
+
+	gltk_color_init(&slideButton->colorSlideLeft, 1.0f, 0.2f, 0.2f);
+	gltk_color_init(&slideButton->colorSlideRight, 0.2f, 1.0f, 0.2f);
+	
+	gltk_color_init(&slideButton->colorHighlight, 0.0f, 0.0f, 0.0f);
 
 	priv->isConfig = FALSE;
 

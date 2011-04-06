@@ -27,6 +27,7 @@
 #include <GL/glu.h>
 
 #include <gltk/gltkmarshal.h>
+#include <gltk/gltkstructs.h>
 #include <gltk/gltkevents.h>
 #include <gltk/gltkfonts.h>
 #include <gltk/gltkwidget.h>

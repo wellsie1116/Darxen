@@ -12,6 +12,7 @@
 lib_LTLIBRARIES = libgltk.la
 libgltk_la_SOURCES = gltk.h \
 			 gltkmarshal.c gltkmarshal.h \
+			 gltkstructs.c gltkstructs.h \
 		     gltkwindow.c gltkwindow.h \
 			 gltkscreen.c gltkscreen.h \
 			 gltkminiscreen.c gltkminiscreen.h \

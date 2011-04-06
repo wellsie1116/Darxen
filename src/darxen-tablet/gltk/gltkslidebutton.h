@@ -23,6 +23,8 @@
 
 #include "gltkbutton.h"
 
+#include "gltkstructs.h"
+
 G_BEGIN_DECLS
 
 #define GLTK_SLIDE_BUTTON_ERROR gltk_slide_button_error_quark()
@@ -40,6 +42,14 @@ typedef struct _GltkSlideButtonClass		GltkSlideButtonClass;
 struct _GltkSlideButton
 {
 	GltkButton parent;
+	
+	GltkColor colorText;
+	GltkColor colorTextDown;
+
+	GltkColor colorSlideLeft;
+	GltkColor colorSlideRight;
+
+	GltkColor colorHighlight;;
 };
 
 struct _GltkSlideButtonClass

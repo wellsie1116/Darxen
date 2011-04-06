@@ -87,6 +87,14 @@ gltk_slide_button_init(GltkSlideButton* self)
 {
 	USING_PRIVATE(self);
 
+	gltk_color_init(&self->colorText, 0.87f, 0.87f, 0.87f);
+	gltk_color_init(&self->colorTextDown, 0.0f, 0.0f, 0.0f);
+
+	gltk_color_init(&self->colorSlideLeft, 0.78f, 0.78f, 0.78f);
+	gltk_color_init(&self->colorSlideRight, 0.78f, 0.78f, 0.78f);
+	
+	gltk_color_init(&self->colorHighlight, 1.0f, 0.6f, 0.03f);
+
 	priv->slideOffset = 0.0f;
 }
 
@@ -131,23 +139,18 @@ gltk_slide_button_size_request(GltkWidget* widget, GltkSize* size)
 	//size->width += 50;
 }
 
-static float colorBright[] = {0.87f, 0.87f, 0.87f};
-static float colorDark[] = {0.78f, 0.78f, 0.78f};
-
-static float colorHighlightBright[] = {1.0f, 0.6f, 0.03f};
-//static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
-
 static void
 gltk_slide_button_render(GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
 	GltkButton* button = GLTK_BUTTON(widget);
+	GltkSlideButton* slideButton = GLTK_SLIDE_BUTTON(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	
 	glBegin(GL_LINES);
 	{
-		glColor3fv(colorDark);
+		glColor3fv(gltk_color_get_array(&slideButton->colorSlideLeft));
 		glVertex2i(0, 0);
 		glVertex2i(allocation.width, 0);
 		glVertex2i(0, allocation.height);
@@ -164,10 +167,10 @@ gltk_slide_button_render(GltkWidget* widget)
 			if (offset < 0.1f && offset > -0.1f)
 			{
 				//left gradient
-				glColor3fv(colorDark);
+				glColor3fv(gltk_color_get_array(&slideButton->colorSlideRight));
 				glVertex2i(0, 0);
 				glVertex2i(0, allocation.height);
-				glColor3fv(colorHighlightBright);
+				glColor3fv(gltk_color_get_array(&slideButton->colorHighlight));
 				glVertex2i(allocation.width * (offset+0.1), allocation.height);
 				glVertex2i(allocation.width * (offset+0.1), 0);
 
@@ -180,14 +183,14 @@ gltk_slide_button_render(GltkWidget* widget)
 				//right gradient
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
-				glColor3fv(colorDark);
+				glColor3fv(gltk_color_get_array(&slideButton->colorSlideLeft));
 				glVertex2i(allocation.width, allocation.height);
 				glVertex2i(allocation.width, 0);
 			}
 			else if (offset >= 0.1f)
 			{
 				//render slide part
-				glColor3fv(colorDark);
+				glColor3fv(gltk_color_get_array(&slideButton->colorSlideRight));
 				glVertex2i(0, allocation.height);
 				glVertex2i(0, 0);
 				glVertex2i(allocation.width * (offset-0.1), 0);
@@ -196,14 +199,14 @@ gltk_slide_button_render(GltkWidget* widget)
 				//render slide gradient
 				glVertex2i(allocation.width * (offset-0.1), 0);
 				glVertex2i(allocation.width * (offset-0.1), allocation.height);
-				glColor3fv(colorHighlightBright);
+				glColor3fv(gltk_color_get_array(&slideButton->colorHighlight));
 				glVertex2i(allocation.width * (offset+0.1), allocation.height);
 				glVertex2i(allocation.width * (offset+0.1), 0);
 
 				//render selection
 				glVertex2i(allocation.width, 0);
 				glVertex2i(allocation.width * (offset+0.1), 0);
-				glColor3fv(colorHighlightBright);
+				glColor3fv(gltk_color_get_array(&slideButton->colorHighlight));
 				glVertex2i(allocation.width * (offset+0.1), allocation.height);
 				glVertex2i(allocation.width, allocation.height);
 
@@ -211,7 +214,7 @@ gltk_slide_button_render(GltkWidget* widget)
 			else // (offset <= -0.1f)
 			{
 				//render slide part
-				glColor3fv(colorDark);
+				glColor3fv(gltk_color_get_array(&slideButton->colorSlideLeft));
 				glVertex2i(allocation.width, allocation.height);
 				glVertex2i(allocation.width, 0);
 				glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
@@ -220,14 +223,14 @@ gltk_slide_button_render(GltkWidget* widget)
 				//render slide gradient
 				glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
 				glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
-				glColor3fv(colorHighlightBright);
+				glColor3fv(gltk_color_get_array(&slideButton->colorHighlight));
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
 
 				//render selection
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
 				glVertex2i(0, 0);
-				glColor3fv(colorHighlightBright);
+				glColor3fv(gltk_color_get_array(&slideButton->colorHighlight));
 				glVertex2i(0, allocation.height);
 				glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
 			}
@@ -267,9 +270,9 @@ gltk_slide_button_render(GltkWidget* widget)
 	{
 		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
 		if (button->isDown)
-			glColor3f(0.0f, 0.0f, 0.0f);
+			glColor3fv(gltk_color_get_array(&slideButton->colorTextDown));
 		else
-			glColor3fv(colorBright);
+			glColor3fv(gltk_color_get_array(&slideButton->colorText));
 
 		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
 		float height = bounds.height;
