@@ -576,7 +576,8 @@ gltk_table_event(GltkWidget* widget, GltkEvent* event)
 			py = childEvent->rotate.center.y;
 			break;
 		default:
-			break;
+			g_assert_not_reached();
+			return FALSE;
 	}
 
 	int x;
