@@ -116,7 +116,7 @@ gltk_config_button_class_init(GltkConfigButtonClass* klass)
 	properties[PROP_CONFIG_MODE] = 
 		g_param_spec_boolean(	"config-mode", "Configuration Mode",
 								"Flag specifying whether or not button is in config mode",
-								FALSE, G_PARAM_READABLE);
+								FALSE, G_PARAM_READWRITE);
 
 	properties[PROP_DISPLAY_TEXT] = 
 		g_param_spec_string(	"display-text", "Display Text", "Text to display on top of the button",
@@ -186,9 +186,29 @@ gltk_config_button_set_property	(	GObject* object, guint property_id,
 									const GValue* value, GParamSpec* pspec)
 {
 	GltkConfigButton* self = GLTK_CONFIG_BUTTON(object);
+	USING_PRIVATE(object);
 
 	switch (property_id)
 	{
+		case PROP_CONFIG_MODE:
+		{
+			gboolean config = g_value_get_boolean(value);
+			if (config && !priv->isConfig)
+			{
+				g_signal_emit(object, signals[CONFIG_START], 0);
+				priv->animDrag = 0;
+				priv->isConfig = config;
+			}
+			else if (!config && priv->isConfig)
+			{
+				priv->isConfig = config;
+			}
+			else
+			{
+				break;
+			}
+			gltk_widget_invalidate(GLTK_WIDGET(self));
+		} break;
 		case PROP_DISPLAY_TEXT:
 			if (self->displayText)
 				g_free(self->displayText);
@@ -223,8 +243,21 @@ gltk_config_button_get_property	(	GObject* object, guint property_id,
 static void
 gltk_config_button_size_request(GltkWidget* widget, GltkSize* size)
 {
+	GltkConfigButton* configButton = GLTK_CONFIG_BUTTON(widget);
+
 	GLTK_WIDGET_CLASS(gltk_config_button_parent_class)->size_request(widget, size);
-	//size->width += 50;
+
+	GltkSize overlaySize;
+	GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
+
+	GltkGLFontBounds bounds = gltk_fonts_measure_string(font, configButton->displayText);
+	overlaySize.width = bounds.width;
+	overlaySize.height = bounds.height;
+
+	overlaySize.width += 50;
+
+	size->width = MAX(size->width, overlaySize.width);
+	size->height = MAX(size->height, overlaySize.height);
 }
 
 static void
@@ -257,7 +290,7 @@ static void
 render_overlay(GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
-	GltkButton* button = GLTK_BUTTON(widget);
+	GltkConfigButton* configButton = GLTK_CONFIG_BUTTON(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 
@@ -288,19 +321,19 @@ render_overlay(GltkWidget* widget)
 		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
 		glColor3fv(colorBright);
 
-		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, GLTK_BUTTON(widget)->text);
+		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, configButton->displayText);
 		float height = bounds.height;
 		float width = bounds.width;
 
 		float x;
 	   	float y;
-		x = (allocation.width - width) / 2.0;
+		x = (allocation.width - width) - 50;// / 2.0;
 		y = (allocation.height - height) / 2.0 + font->ascender + font->descender;
 
 		glTranslatef(x, y, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
-		ftglRenderFont(font->font, button->text, FTGL_RENDER_ALL);
+		ftglRenderFont(font->font, configButton->displayText, FTGL_RENDER_ALL);
 	}
 	glPopMatrix();
 

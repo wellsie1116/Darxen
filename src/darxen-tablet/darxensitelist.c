@@ -47,6 +47,8 @@ typedef struct _View						View;
 struct _DarxenSiteListPrivate
 {
 	GHashTable* siteMap; //gchar* -> GltkListItem (data = Site)
+
+	GltkWidget* currentConfigButton;
 };
 
 struct _Site
@@ -134,6 +136,8 @@ darxen_site_list_init(DarxenSiteList* self)
 	USING_PRIVATE(self);
 
 	priv->siteMap = NULL;
+
+	priv->currentConfigButton = NULL;
 }
 
 static void
@@ -216,9 +220,21 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	g_hash_table_insert(priv->siteMap, g_strdup(site), listItem);
 }
 
+static void
+set_current_config_button(DarxenSiteList* list, GltkWidget* button)
+{
+	USING_PRIVATE(list);
+
+	if (priv->currentConfigButton)
+		g_object_set(priv->currentConfigButton, "config-mode", FALSE, NULL);
+
+	priv->currentConfigButton = button;
+}
+
 static gboolean
 view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
 {
+	set_current_config_button(viewInfo->site->list, NULL);
 	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
 	return FALSE;
 }
@@ -226,13 +242,17 @@ view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
 static void
 view_config(GltkButton* button, View* viewInfo)
 {
+	set_current_config_button(viewInfo->site->list, GLTK_WIDGET(button));
+
 	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_CONFIG], 0, viewInfo->site->name, viewInfo->name);
 }
 
 static void
 view_slide(GltkButton* button, gboolean dirRight, View* viewInfo)
 {
-	//g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_CONFIG], 0, viewInfo->site->name, viewInfo->name);
+	set_current_config_button(viewInfo->site->list, GLTK_WIDGET(button));
+
+	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
 }
 
 void
@@ -249,7 +269,9 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	View* viewInfo = g_new(View, 1);
 	viewInfo->site = siteInfo;
 	viewInfo->name = g_strdup(view);
-	viewInfo->button = gltk_config_button_new(view, "configure");
+	gchar* editText = g_strdup_printf("- %s -", view);
+	viewInfo->button = gltk_config_button_new(editText, view);
+	g_free(editText);
 	g_object_ref(G_OBJECT(viewInfo->button));
 	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
 	g_signal_connect(viewInfo->button, "slide-event", (GCallback)view_slide, viewInfo);
