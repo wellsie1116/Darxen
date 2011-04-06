@@ -315,7 +315,11 @@ config_viewNameChanged(	DarxenConfig* config,
 	g_free(view->name);
 	g_free(key);
 	view->name = g_strdup(viewInfo->name);
-	gltk_button_set_text(GLTK_BUTTON(view->button), viewInfo->name);
+
+	gchar* editText = g_strdup_printf("- %s -", viewInfo->name);
+	g_object_set(G_OBJECT(view->button), "text", editText, "display-text", viewInfo->name, NULL);
+	g_free(editText);
+
 	g_hash_table_insert(siteInfo->viewMap, g_strdup(viewInfo->name), itemView);
 }
 

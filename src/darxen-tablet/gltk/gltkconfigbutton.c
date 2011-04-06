@@ -263,7 +263,7 @@ gltk_config_button_size_request(GltkWidget* widget, GltkSize* size)
 	overlaySize.width = bounds.width;
 	overlaySize.height = bounds.height;
 
-	overlaySize.width += 50;
+	overlaySize.width += 60;
 
 	size->width = MAX(size->width, overlaySize.width);
 	size->height = MAX(size->height, overlaySize.height);
