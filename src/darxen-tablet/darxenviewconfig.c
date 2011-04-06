@@ -149,6 +149,21 @@ spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewC
 	darxen_config_view_updated(config, priv->site, priv->viewInfo);
 }
 
+static void
+spinnerSource_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewConfig)
+{
+	USING_PRIVATE(viewConfig);
+
+	DarxenConfig* config = darxen_config_get_instance();
+
+	const gchar* id = gltk_spinner_get_selected_item(spinnerSource, 0);
+
+	//TODO: set appropriate view source parameters
+	
+	if (0)
+		darxen_config_view_updated(config, priv->site, priv->viewInfo);
+}
+
 static GList*
 model_getItems(GltkSpinnerModel* model, int level, int index, GltkSpinner* spinner)
 {
@@ -178,6 +193,8 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW_CONFIG, "cols", 2, "rows", 4, NULL);
 	DarxenViewConfig* self = DARXEN_VIEW_CONFIG(gobject);
+
+	viewInfo = darxen_view_info_copy(viewInfo);
 
 	USING_PRIVATE(self);
 
@@ -299,6 +316,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 
 			char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
 			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
+			g_signal_connect(spinnerSource, "item-selected", (GCallback)spinnerSource_itemSelected, self);
 
 			gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
 		}

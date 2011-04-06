@@ -220,14 +220,19 @@ static gboolean
 view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
 {
 	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
-	return TRUE;
+	return FALSE;
 }
 
-static gboolean
-view_slide(GltkButton* button, GltkEventSlide* event, View* viewInfo)
+static void
+view_config(GltkButton* button, View* viewInfo)
 {
 	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_CONFIG], 0, viewInfo->site->name, viewInfo->name);
-	return TRUE;
+}
+
+static void
+view_slide(GltkButton* button, gboolean dirRight, View* viewInfo)
+{
+	//g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_CONFIG], 0, viewInfo->site->name, viewInfo->name);
 }
 
 void
@@ -244,10 +249,11 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	View* viewInfo = g_new(View, 1);
 	viewInfo->site = siteInfo;
 	viewInfo->name = g_strdup(view);
-	viewInfo->button = gltk_slide_button_new(view);
+	viewInfo->button = gltk_config_button_new(view, "configure");
 	g_object_ref(G_OBJECT(viewInfo->button));
 	g_signal_connect(viewInfo->button, "click-event", (GCallback)view_clicked, viewInfo);
 	g_signal_connect(viewInfo->button, "slide-event", (GCallback)view_slide, viewInfo);
+	g_signal_connect(viewInfo->button, "config-start", (GCallback)view_config, viewInfo);
 	
 	GltkListItem* viewListItem = gltk_list_add_item(GLTK_LIST(siteInfo->views), viewInfo->button, viewInfo);
 

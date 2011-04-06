@@ -54,6 +54,7 @@ struct _ViewPair
 {
 	DarxenView* view;
 	DarxenViewConfig* config;
+	GltkWidget* configScrollable;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -151,9 +152,11 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 
 	pair->view = (DarxenView*)darxen_view_new(site, viewInfo);
 	pair->config = (DarxenViewConfig*)darxen_view_config_new(site, viewInfo);
-	//g_signal_connect(pair->config, "site-changed", (GCallback)viewConfig_siteChanged, manager);
-	g_object_ref_sink(G_OBJECT(pair->view));
-	g_object_ref_sink(G_OBJECT(pair->config));
+	pair->configScrollable = gltk_scrollable_new();
+	gltk_scrollable_set_widget(GLTK_SCROLLABLE(pair->configScrollable), GLTK_WIDGET(pair->config));
+	g_object_ref_sink(pair->view);
+	g_object_ref_sink(pair->config);
+	g_object_ref_sink(pair->configScrollable);
 
 	g_hash_table_insert(priv->viewMap, site_view_pair_new(site, viewInfo->name), pair);
 }
@@ -197,11 +200,8 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
 	g_return_if_fail(pair);
 	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
-
-	GltkWidget* scrollable = gltk_scrollable_new();
-	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), (GltkWidget*)pair->config);
-
-	gltk_bin_set_widget(GLTK_BIN(manager), scrollable);
+	
+	gltk_bin_set_widget(GLTK_BIN(manager), pair->configScrollable);
 }
 
 GQuark
@@ -254,6 +254,7 @@ view_pair_free(ViewPair* pair)
 {
 	g_object_unref(G_OBJECT(pair->view));
 	g_object_unref(G_OBJECT(pair->config));
+	g_object_unref(G_OBJECT(pair->configScrollable));
 }
 
 //static void
