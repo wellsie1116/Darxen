@@ -545,61 +545,73 @@ gltk_table_event(GltkWidget* widget, GltkEvent* event)
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	gboolean returnValue = FALSE;
 
-	GltkEvent* childEvent = gltk_event_clone(event);
-
-	int px;
-	int py;
 	switch (event->type)
 	{
 		case GLTK_TOUCH:
-			childEvent->touch.positions->x -= allocation.x;
-			childEvent->touch.positions->y -= allocation.y;
-			px = childEvent->touch.positions->x;
-			py = childEvent->touch.positions->y;
-			break;
 		case GLTK_MULTI_DRAG:
-			childEvent->multidrag.center.x -= allocation.x;
-			childEvent->multidrag.center.y -= allocation.y;
-			px = childEvent->multidrag.center.x;
-			py = childEvent->multidrag.center.y;
-			break;
 		case GLTK_PINCH:
-			childEvent->pinch.center.x -= allocation.x;
-			childEvent->pinch.center.y -= allocation.y;
-			px = childEvent->pinch.center.x;
-			py = childEvent->pinch.center.y;
-			break;
 		case GLTK_ROTATE:
-			childEvent->rotate.center.x -= allocation.x;
-			childEvent->rotate.center.y -= allocation.y;
-			px = childEvent->rotate.center.x;
-			py = childEvent->rotate.center.y;
-			break;
-		default:
-			g_assert_not_reached();
-			return FALSE;
-	}
-
-	int x;
-	int y;
-	for (y = 0; y < priv->height && !returnValue; y++)
-	{
-		for (x = 0; x < priv->width && !returnValue; x++)
 		{
-			GltkWidget* childWidget = priv->widgets[y*priv->width+x];
-			if (!childWidget)
-				continue;
+			GltkEvent* childEvent = gltk_event_clone(event);
 
-			GltkAllocation childAllocation = gltk_widget_get_allocation(childWidget);
-
-			if (childAllocation.x < px && childAllocation.x + childAllocation.width > px &&
-				childAllocation.y < py && childAllocation.y + childAllocation.height > py)
+			int px;
+			int py;
+			switch (event->type)
 			{
-				returnValue = gltk_widget_send_event(childWidget, childEvent);
+				case GLTK_TOUCH:
+					childEvent->touch.positions->x -= allocation.x;
+					childEvent->touch.positions->y -= allocation.y;
+					px = childEvent->touch.positions->x;
+					py = childEvent->touch.positions->y;
+					break;
+				case GLTK_MULTI_DRAG:
+					childEvent->multidrag.center.x -= allocation.x;
+					childEvent->multidrag.center.y -= allocation.y;
+					px = childEvent->multidrag.center.x;
+					py = childEvent->multidrag.center.y;
+					break;
+				case GLTK_PINCH:
+					childEvent->pinch.center.x -= allocation.x;
+					childEvent->pinch.center.y -= allocation.y;
+					px = childEvent->pinch.center.x;
+					py = childEvent->pinch.center.y;
+					break;
+				case GLTK_ROTATE:
+					childEvent->rotate.center.x -= allocation.x;
+					childEvent->rotate.center.y -= allocation.y;
+					px = childEvent->rotate.center.x;
+					py = childEvent->rotate.center.y;
+					break;
+				default:
+					g_assert_not_reached();
+					return FALSE;
 			}
-		}
+
+			int x;
+			int y;
+			for (y = 0; y < priv->height && !returnValue; y++)
+			{
+				for (x = 0; x < priv->width && !returnValue; x++)
+				{
+					GltkWidget* childWidget = priv->widgets[y*priv->width+x];
+					if (!childWidget)
+						continue;
+
+					GltkAllocation childAllocation = gltk_widget_get_allocation(childWidget);
+
+					if (childAllocation.x < px && childAllocation.x + childAllocation.width > px &&
+						childAllocation.y < py && childAllocation.y + childAllocation.height > py)
+					{
+						returnValue = gltk_widget_send_event(childWidget, childEvent);
+					}
+				}
+			}
+			gltk_event_free(childEvent);
+		} break;
+
+		default:
+			break;
 	}
-	gltk_event_free(childEvent);
 
 	if (!returnValue)
 		returnValue = GLTK_WIDGET_CLASS(gltk_table_parent_class)->event(widget, event);
