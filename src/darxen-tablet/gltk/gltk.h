@@ -49,6 +49,7 @@
 #include <gltk/gltkbutton.h>
 #include <gltk/gltktogglebutton.h>
 #include <gltk/gltkslidebutton.h>
+#include <gltk/gltkconfigbutton.h>
 #include <gltk/gltkentry.h>
 
 

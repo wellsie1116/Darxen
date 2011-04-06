@@ -34,6 +34,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkkeyboard.c gltkkeyboard.h \
 			 gltkentry.c gltkentry.h \
 			 gltkslidebutton.c gltkslidebutton.h \
+			 gltkconfigbutton.c gltkconfigbutton.h \
 			 gltkevents.c gltkevents.h
 
 libgltk_la_LDFLAGS = -g -version-info 1:1:0
