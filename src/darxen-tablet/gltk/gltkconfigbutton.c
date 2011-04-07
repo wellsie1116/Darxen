@@ -296,7 +296,7 @@ static float colorDark[] = {0.78f, 0.78f, 0.78f};
 //static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f};
 
 static void
-render_overlay(GltkWidget* widget)
+render_overlay(GltkWidget* widget, gboolean overlay)
 {
 	USING_PRIVATE(widget);
 	GltkConfigButton* configButton = GLTK_CONFIG_BUTTON(widget);
@@ -328,7 +328,6 @@ render_overlay(GltkWidget* widget)
 	glPushMatrix();
 	{
 		GltkGLFont* font = gltk_fonts_cache_get_font(GLTK_FONTS_BASE, 24, TRUE);
-		glColor3fv(colorBright);
 
 		GltkGLFontBounds bounds = gltk_fonts_measure_string(font, configButton->displayText);
 		float height = bounds.height;
@@ -342,6 +341,15 @@ render_overlay(GltkWidget* widget)
 		glTranslatef(x, y, 0.1f);
 		glScalef(1.0f, -1.0f, 1.0f);
 
+		if (overlay)
+		{
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+			glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+			ftglRenderFont(font->font, configButton->displayText, FTGL_RENDER_ALL);
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		}
+
+		glColor3fv(colorBright);
 		ftglRenderFont(font->font, configButton->displayText, FTGL_RENDER_ALL);
 	}
 	glPopMatrix();
@@ -363,7 +371,7 @@ gltk_config_button_render(GltkWidget* widget)
 	//render our overlay on top
 	if (!button->isDown && !priv->animDrag && !priv->isConfig)
 	{
-		render_overlay(widget);
+		render_overlay(widget, FALSE);
 	}
 	
 	glBegin(GL_LINES);
@@ -471,36 +479,36 @@ gltk_config_button_render_overlay(GltkScreen* screen, GltkWidget* widget)
 	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
 
 	//Create an alpha mask in the output buffer
-	//glDisable(GL_BLEND);
-	//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
-	//glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-	//glRectf(allocation.x,
-	//		allocation.y,
-	//		allocation.x + allocation.width*2,
-	//		allocation.y + allocation.height);
-	//glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-	//glRectf(allocation.x,
-	//		allocation.y,
-	//		allocation.x + allocation.width*1.4,
-	//		allocation.y + allocation.height);
-	//glBegin(GL_QUADS);
-	//{
-	//	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-	//	glVertex2i(allocation.x + allocation.width*1.4, allocation.y);
-	//	glVertex2i(allocation.x + allocation.width*1.4, allocation.y + allocation.height);
-	//	glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-	//	glVertex2i(allocation.x + allocation.width*1.5, allocation.y + allocation.height);
-	//	glVertex2i(allocation.x + allocation.width*1.5, allocation.y);
-	//}
-	//glEnd();
-	//glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDisable(GL_BLEND);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+	glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+	glRectf(allocation.x,
+			allocation.y,
+			allocation.x + allocation.width*3,
+			allocation.y + allocation.height);
+	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+	glRectf(allocation.x,
+			allocation.y,
+			allocation.x + allocation.width*1.4,
+			allocation.y + allocation.height);
+	glBegin(GL_QUADS);
+	{
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		glVertex2i(allocation.x + allocation.width*1.4, allocation.y);
+		glVertex2i(allocation.x + allocation.width*1.4, allocation.y + allocation.height);
+		glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+		glVertex2i(allocation.x + allocation.width*1.5, allocation.y + allocation.height);
+		glVertex2i(allocation.x + allocation.width*1.5, allocation.y);
+	}
+	glEnd();
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-	//glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-	//glEnable(GL_BLEND);
+	glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+	glEnable(GL_BLEND);
 	//TODO fade out
 
 	glTranslatef(allocation.x + priv->slideOffset * allocation.width, allocation.y, 0.0f);
-	render_overlay(widget);
+	render_overlay(widget, TRUE);
 	glTranslatef(-allocation.x - priv->slideOffset * allocation.width, -allocation.y, 0.0f);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
