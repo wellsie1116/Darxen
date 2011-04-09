@@ -37,6 +37,9 @@ enum
 	//view deleted
 	VIEW_SELECTED,
 	VIEW_CONFIG,
+	SAVE_VIEW_CONFIG,
+	REVERT_VIEW_CONFIG,
+
 	LAST_SIGNAL
 };
 
@@ -100,6 +103,26 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_TYPE_FROM_CLASS(klass),
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, view_config),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_POINTER);
+	
+	signals[SAVE_VIEW_CONFIG] = 
+		g_signal_new(	"save-view-config",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(DarxenSiteListClass, save_view_config),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_POINTER);
+	
+	signals[REVERT_VIEW_CONFIG] = 
+		g_signal_new(	"revert-view-config",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(DarxenSiteListClass, revert_view_config),
 						NULL, NULL,
 						g_cclosure_user_marshal_VOID__POINTER_POINTER,
 						G_TYPE_NONE, 2,
@@ -220,21 +243,27 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	g_hash_table_insert(priv->siteMap, g_strdup(site), listItem);
 }
 
-static void
+static GltkWidget*
 set_current_config_button(DarxenSiteList* list, GltkWidget* button)
 {
 	USING_PRIVATE(list);
 
-	if (priv->currentConfigButton)
-		g_object_set(priv->currentConfigButton, "config-mode", FALSE, NULL);
+	GltkWidget* prevConfigButton = priv->currentConfigButton;
+	if (prevConfigButton)
+		g_object_set(prevConfigButton, "config-mode", FALSE, NULL);
 
 	priv->currentConfigButton = button;
+
+	return prevConfigButton;
 }
 
 static gboolean
 view_clicked(GltkButton* button, GltkEventClick* event, View* viewInfo)
 {
-	set_current_config_button(viewInfo->site->list, NULL);
+	if (GLTK_WIDGET(button) == set_current_config_button(viewInfo->site->list, NULL))
+		g_signal_emit(	G_OBJECT(viewInfo->site->list), signals[SAVE_VIEW_CONFIG], 0,
+						viewInfo->site->name, viewInfo->name);
+	
 	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
 	return FALSE;
 }
@@ -250,9 +279,17 @@ view_config(GltkButton* button, View* viewInfo)
 static void
 view_slide(GltkButton* button, gboolean dirRight, View* viewInfo)
 {
-	set_current_config_button(viewInfo->site->list, GLTK_WIDGET(button));
+	set_current_config_button(viewInfo->site->list, NULL);
 
-	g_signal_emit(G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0, viewInfo->site->name, viewInfo->name);
+	if (dirRight)
+		g_signal_emit(	G_OBJECT(viewInfo->site->list), signals[SAVE_VIEW_CONFIG], 0,
+						viewInfo->site->name, viewInfo->name);
+	else
+		g_signal_emit(	G_OBJECT(viewInfo->site->list), signals[REVERT_VIEW_CONFIG], 0,
+						viewInfo->site->name, viewInfo->name);
+
+	g_signal_emit(	G_OBJECT(viewInfo->site->list), signals[VIEW_SELECTED], 0,
+					viewInfo->site->name, viewInfo->name);
 }
 
 void

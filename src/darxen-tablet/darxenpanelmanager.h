@@ -65,6 +65,8 @@ void		darxen_panel_manager_create_view		(DarxenPanelManager* manager, gchar* sit
 void		darxen_panel_manager_view_main			(DarxenPanelManager* manager);
 void		darxen_panel_manager_view_view			(DarxenPanelManager* manager, gchar* site, gchar* view);
 void		darxen_panel_manager_view_view_config	(DarxenPanelManager* manager, gchar* site, gchar* view);
+void		darxen_panel_manager_save_view_config	(DarxenPanelManager* manager, gchar* site, gchar* view);
+void		darxen_panel_manager_revert_view_config	(DarxenPanelManager* manager, gchar* site, gchar* view);
 
 GQuark		darxen_panel_manager_error_quark	();
 

@@ -204,6 +204,40 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	gltk_bin_set_widget(GLTK_BIN(manager), pair->configScrollable);
 }
 
+void
+darxen_panel_manager_save_view_config(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+	
+	darxen_view_config_save(pair->config);
+}
+
+void
+darxen_panel_manager_revert_view_config(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+	
+	darxen_view_config_revert(pair->config);
+}
+
 GQuark
 darxen_panel_manager_error_quark()
 {

@@ -343,6 +343,20 @@ view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManag
 	darxen_panel_manager_view_view_config(panelManager, site, view);
 }
 
+static void
+save_view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
+{
+	g_message("%s/%s saving config", site, view);
+	darxen_panel_manager_save_view_config(panelManager, site, view);
+}
+
+static void
+revert_view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
+{
+	g_message("%s/%s reverting config", site, view);
+	darxen_panel_manager_revert_view_config(panelManager, site, view);
+}
+
 //END GLTK Events
 
 static GltkWidget*
@@ -399,6 +413,8 @@ create_screen()
 
 	g_signal_connect(G_OBJECT(siteList), "view-selected", G_CALLBACK(view_selected), panelManager);
 	g_signal_connect(G_OBJECT(siteList), "view-config", G_CALLBACK(view_config), panelManager);
+	g_signal_connect(G_OBJECT(siteList), "save-view-config", G_CALLBACK(save_view_config), panelManager);
+	g_signal_connect(G_OBJECT(siteList), "revert-view-config", G_CALLBACK(revert_view_config), panelManager);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_sidebar(siteList), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), (GltkWidget*)panelManager, TRUE, TRUE);

@@ -50,11 +50,17 @@ struct _DarxenSiteListClass
 	
 	/* signals */
 
-	void (*view_selected)	(	gchar* site,
-								gchar* view);
+	void (*view_selected)		(	gchar* site,
+									gchar* view);
 	
-	void (*view_config)		(	gchar* site,
-								gchar* view);
+	void (*view_config)			(	gchar* site,
+									gchar* view);
+
+	void (*save_view_config)	(	gchar* site,
+									gchar* view);
+	
+	void (*revert_view_config)	(	gchar* site,
+									gchar* view);
 	/* virtual funcs */
 };
 

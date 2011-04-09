@@ -39,6 +39,7 @@ typedef struct _DarxenViewConfigPrivate		DarxenViewConfigPrivate;
 struct _DarxenViewConfigPrivate
 {
 	gchar* site;
+	DarxenViewInfo* origViewInfo;
 	DarxenViewInfo* viewInfo;
 
 	GltkWidget* binSourceConfig;
@@ -342,17 +343,16 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	GObject *gobject = g_object_new(DARXEN_TYPE_VIEW_CONFIG, "cols", 2, "rows", 4, NULL);
 	DarxenViewConfig* self = DARXEN_VIEW_CONFIG(gobject);
 
-	viewInfo = darxen_view_info_copy(viewInfo);
-
 	USING_PRIVATE(self);
 
 	priv->site = g_strdup(site);
-	priv->viewInfo = viewInfo;
+	priv->origViewInfo = viewInfo;
+	priv->viewInfo = darxen_view_info_copy(viewInfo);;
 
 	//Change Name - Text box
-	//Change Product - Selectable/Scrollable List box OR Combo box
-	//Change Source Type - Radio buttons
-	//Select Date Range - Text Box (with numeric filter) OR Number spinners
+	//Change Product - Spinner
+	//Change Source Type - Toggle buttons
+	//Select Date Range - Date spinners
 	
 	gltk_table_set_col_options(GLTK_TABLE(self), 0, CELL_ALIGN_LEFT, FALSE, 5);
 	gltk_table_set_col_options(GLTK_TABLE(self), 1, CELL_ALIGN_LEFT, FALSE, 5);
@@ -524,7 +524,6 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), priv->spinnerEnd, 1, 1);
 			}
 
-			//gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
 			gltk_box_append_widget(GLTK_BOX(hboxSource), priv->binSourceConfig, TRUE, TRUE);
 		}
 		
@@ -553,6 +552,18 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	}
 
 	return (GltkWidget*)gobject;
+}
+
+void
+darxen_view_config_save(DarxenViewConfig* viewConfig)
+{
+	g_debug("TODO save");
+}
+
+void
+darxen_view_config_revert(DarxenViewConfig* viewConfig)
+{
+	g_debug("TODO revert");
 }
 
 
