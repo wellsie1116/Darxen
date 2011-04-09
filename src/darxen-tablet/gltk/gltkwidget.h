@@ -134,6 +134,7 @@ gboolean		gltk_widget_get_visible				(GltkWidget* widget);
 void			gltk_widget_set_size_request		(GltkWidget* widget, GltkSize size);
 void			gltk_widget_size_request			(GltkWidget* widget, GltkSize* size);
 void			gltk_widget_size_allocate			(GltkWidget* widget, GltkAllocation allocation);
+void			gltk_widget_update_allocation		(GltkWidget* widget, GltkAllocation allocation);
 GltkAllocation	gltk_widget_get_allocation			(GltkWidget* widget);
 GltkAllocation	gltk_widget_get_global_allocation	(GltkWidget* widget);
 void			gltk_widget_invalidate				(GltkWidget* widget);

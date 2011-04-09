@@ -316,6 +316,17 @@ gltk_widget_size_allocate(GltkWidget* widget, GltkAllocation allocation)
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_ALLOCATE], 0, &allocation);
 }
 
+void
+gltk_widget_update_allocation(GltkWidget* widget, GltkAllocation allocation)
+{
+	USING_PRIVATE(widget);
+
+	g_return_if_fail(priv->allocation.width == allocation.width
+			&& priv->allocation.height == allocation.height);
+
+	priv->allocation = allocation;
+}
+
 GltkAllocation
 gltk_widget_get_allocation(GltkWidget* widget)
 {
