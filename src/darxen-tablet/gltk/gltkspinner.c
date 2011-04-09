@@ -196,7 +196,7 @@ gltk_spinner_new(GltkSpinnerModel* model)
 		
 		wheel->items = NULL;
 		wheel->index = 0;
-}
+	}
 
 	//load our toplevel items from the model 
 	load_items(self, 0, gltk_spinner_model_clone_items(priv->model, priv->model->toplevel)); 
@@ -231,21 +231,18 @@ gltk_spinner_get_selected_item(GltkSpinner* spinner, int level)
 
 	GltkSpinnerModelItem* item;
 	item = (GltkSpinnerModelItem*)g_list_nth_data(priv->wheels[level].items, priv->wheels[level].index);
+	g_assert(item);
 
 	return item->id;
 }
 
 void
-gltk_spinner_set_selected_item(GltkSpinner* spinner, int level, const gchar* id)
+gltk_spinner_set_selected_index(GltkSpinner* spinner, int level, int index)
 {
 	g_return_if_fail(GLTK_IS_SPINNER(spinner));
 	USING_PRIVATE(spinner);
 	g_return_if_fail(level >= 0 && level < priv->model->levels);
-
-	GList* pItems = g_list_find_custom(priv->wheels[level].items, id, (GCompareFunc)find_spinner_item);
-	g_return_if_fail(pItems);
-
-	int index = g_list_position(priv->wheels[level].items, pItems);
+	g_return_if_fail(index >= 0 && index < g_list_length(priv->wheels[level].items));
 
 	set_selected_index(spinner, level, index);
 	priv->wheels[level].index = index;
@@ -260,6 +257,21 @@ gltk_spinner_set_selected_item(GltkSpinner* spinner, int level, const gchar* id)
 	{
 		load_items(spinner, level+1, gltk_spinner_model_get_items(priv->model, level, index));
 	}
+}
+
+void
+gltk_spinner_set_selected_item(GltkSpinner* spinner, int level, const gchar* id)
+{
+	g_return_if_fail(GLTK_IS_SPINNER(spinner));
+	USING_PRIVATE(spinner);
+	g_return_if_fail(level >= 0 && level < priv->model->levels);
+
+	GList* pItems = g_list_find_custom(priv->wheels[level].items, id, (GCompareFunc)find_spinner_item);
+	g_return_if_fail(pItems);
+
+	int index = g_list_position(priv->wheels[level].items, pItems);
+
+	gltk_spinner_set_selected_index(spinner, level, index);
 }
 
 GQuark
@@ -331,6 +343,8 @@ load_items(GltkSpinner* spinner, int level, GList* items)
 	int len = g_list_length(wheel->items);
 	if (wheel->index >= len - 1)
 		wheel->index = len-1;
+	if (wheel->index < 0)
+		wheel->index = 0;
 	set_selected_index(spinner, level, wheel->index);
 		
 	//set allowable amount to scroll past the vbox
