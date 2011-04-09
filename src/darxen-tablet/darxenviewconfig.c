@@ -246,7 +246,6 @@ model_getItems(GltkSpinnerModel* model, int level, int index, GltkSpinner* spinn
 static char chrMonths[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-
 static GList*
 range_getItems(DarxenViewConfig* viewConfig, GltkSpinnerModel* model, GltkSpinner* spinner, int level, int index)
 {
@@ -452,19 +451,9 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 	}
 
 	{
-		GltkWidget* lblSource = gltk_label_new("Source: ");
-		gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);
 
 		GltkWidget* hboxSource = gltk_hbox_new(1);
 		{
-			GltkSpinnerModel* model = gltk_spinner_model_new(1);
-			gltk_spinner_model_add_toplevel(model, "live", "Live");
-			gltk_spinner_model_add_toplevel(model, "archived", "Archived");
-
-			GltkWidget* spinnerSource = gltk_spinner_new(model);
-
-			char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
-
 			priv->binSourceConfig = gltk_bin_new(NULL);
 			g_object_ref(priv->binSourceConfig);
 			{
@@ -527,20 +516,39 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 
 				}
 
+				gltk_table_set_col_padding(GLTK_TABLE(priv->sourceConfigArchived), 1);
+
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("Start:"), 0, 0);
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("End:"), 1, 0);
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), priv->spinnerStart, 0, 1);
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), priv->spinnerEnd, 1, 1);
 			}
 
-			g_signal_connect(spinnerSource, "item-selected", (GCallback)spinnerSource_itemSelected, self);
-			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
-
-			gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
+			//gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
 			gltk_box_append_widget(GLTK_BOX(hboxSource), priv->binSourceConfig, TRUE, TRUE);
 		}
 		
-		gltk_table_insert_widget(GLTK_TABLE(self), lblSource, 0, 3);
+		GltkWidget* vboxSource = gltk_vbox_new(1);
+		{
+			GltkWidget* lblSource = gltk_label_new("Source: ");
+			gltk_label_set_font_size(GLTK_LABEL(lblSource), 28);
+
+			GltkSpinnerModel* model = gltk_spinner_model_new(1);
+			gltk_spinner_model_add_toplevel(model, "live", "Live");
+			gltk_spinner_model_add_toplevel(model, "archived", "Archived");
+
+			GltkWidget* spinnerSource = gltk_spinner_new(model);
+			g_object_set(G_OBJECT(spinnerSource), "visible-items", 3, NULL);
+
+			const char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
+			g_signal_connect(spinnerSource, "item-selected", (GCallback)spinnerSource_itemSelected, self);
+			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
+
+			gltk_box_append_widget(GLTK_BOX(vboxSource), lblSource, FALSE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(vboxSource), spinnerSource, FALSE, FALSE);
+		}
+		
+		gltk_table_insert_widget(GLTK_TABLE(self), vboxSource, 0, 3);
 		gltk_table_insert_widget(GLTK_TABLE(self), hboxSource, 1, 3);
 	}
 
