@@ -21,6 +21,7 @@
 #include "darxenviewconfig.h"
 
 #include <libdarxenShapefiles.h>
+#include <DarxenConversions.h>
 
 #include <glib.h>
 
@@ -497,8 +498,34 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 				g_signal_connect(priv->spinnerStart, "item-selected", (GCallback)spinnerStart_itemSelected, self);
 				g_signal_connect(priv->spinnerEnd, "item-selected", (GCallback)spinnerEnd_itemSelected, self);
 
-				gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerStart), 0, 0);
-				gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerEnd), 0, 0);
+
+				if (priv->viewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE)
+				{
+					DateTime startTime;
+					DateTime endTime;
+					g_assert(id_to_datetime(priv->viewInfo->source.archive.startId, &startTime));
+					g_assert(id_to_datetime(priv->viewInfo->source.archive.endId, &endTime));
+
+					char id[7];
+					sprintf(id, "%i", startTime.year);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 0, id);
+					sprintf(id, "%i", startTime.month);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 1, id);
+					sprintf(id, "%i", startTime.day);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 2, id);
+					sprintf(id, "%i", startTime.hour * 100 + startTime.minute);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 3, id);
+
+					sprintf(id, "%i", endTime.year);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 0, id);
+					sprintf(id, "%i", endTime.month);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 1, id);
+					sprintf(id, "%i", endTime.day);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 2, id);
+					sprintf(id, "%i", endTime.hour * 100 + endTime.minute);
+					gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 3, id);
+
+				}
 
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("Start:"), 0, 0);
 				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("End:"), 1, 0);

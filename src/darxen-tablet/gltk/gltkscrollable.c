@@ -328,7 +328,8 @@ gltk_scrollable_drag_event(GltkWidget* widget, GltkEventDrag* event)
 	childAllocation.x = scrollable->offset.x;
 	childAllocation.y = scrollable->offset.y;
 
-	gltk_widget_size_allocate(priv->widget, childAllocation);
+	//priv->widget->allocation = childAllocation;
+	gltk_widget_update_allocation(priv->widget, childAllocation);
 
 	gltk_screen_invalidate(widget->screen);
 
