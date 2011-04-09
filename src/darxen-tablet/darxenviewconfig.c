@@ -22,6 +22,8 @@
 
 #include <libdarxenShapefiles.h>
 
+#include <glib.h>
+
 G_DEFINE_TYPE(DarxenViewConfig, darxen_view_config, GLTK_TYPE_TABLE)
 
 #define USING_PRIVATE(obj) DarxenViewConfigPrivate* priv = DARXEN_VIEW_CONFIG_GET_PRIVATE(obj)
@@ -37,6 +39,12 @@ struct _DarxenViewConfigPrivate
 {
 	gchar* site;
 	DarxenViewInfo* viewInfo;
+
+	GltkWidget* binSourceConfig;
+	GltkWidget* sourceConfigArchived;
+
+	GltkWidget* spinnerStart;
+	GltkWidget* spinnerEnd;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -64,11 +72,43 @@ darxen_view_config_init(DarxenViewConfig* self)
 
 	priv->site = NULL;
 	priv->viewInfo = NULL;
+
+	priv->binSourceConfig = NULL;
+	priv->sourceConfigArchived = NULL;
+
+	priv->spinnerStart = NULL;
+	priv->spinnerEnd = NULL;
 }
 
 static void
 darxen_view_config_dispose(GObject* gobject)
 {
+	USING_PRIVATE(gobject);
+
+	if (priv->binSourceConfig)
+	{
+		g_object_unref(priv->binSourceConfig);
+		priv->binSourceConfig = NULL;
+	}
+	
+	if (priv->sourceConfigArchived)
+	{
+		g_object_unref(priv->sourceConfigArchived);
+		priv->sourceConfigArchived = NULL;
+	}
+
+	if (priv->spinnerStart)
+	{
+		g_object_unref(priv->spinnerStart);
+		priv->spinnerStart = NULL;
+	}
+
+	if (priv->spinnerEnd)
+	{
+		g_object_unref(priv->spinnerEnd);
+		priv->spinnerEnd = NULL;
+	}
+
 	G_OBJECT_CLASS(darxen_view_config_parent_class)->dispose(gobject);
 }
 
@@ -158,6 +198,20 @@ spinnerSource_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewCon
 
 	const gchar* id = gltk_spinner_get_selected_item(spinnerSource, 0);
 
+	if (!strcmp(id, "archived"))
+	{
+		gltk_bin_set_widget(GLTK_BIN(priv->binSourceConfig), priv->sourceConfigArchived);
+	}
+	else if (!strcmp(id, "live"))
+	{
+		gltk_bin_set_widget(GLTK_BIN(priv->binSourceConfig), NULL);
+	}
+	else
+	{
+		g_assert_not_reached();
+	}
+
+
 	//TODO: set appropriate view source parameters
 	
 	if (0)
@@ -186,6 +240,100 @@ model_getItems(GltkSpinnerModel* model, int level, int index, GltkSpinner* spinn
 	}
 
 	return g_list_reverse(res);
+}
+
+static char chrMonths[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+
+static GList*
+range_getItems(DarxenViewConfig* viewConfig, GltkSpinnerModel* model, GltkSpinner* spinner, int level, int index)
+{
+	USING_PRIVATE(viewConfig);
+
+	int year = -1;
+	int month = -1;
+	int day = -1;
+
+	switch (level)
+	{
+		case 2:
+			day = atoi(gltk_spinner_get_selected_item(spinner, 2));
+		case 1:
+			month = atoi(gltk_spinner_get_selected_item(spinner, 1));
+		case 0:
+			year = atoi(gltk_spinner_get_selected_item(spinner, 0));
+			break;
+		default:
+			g_assert_not_reached();
+	}
+
+	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
+	int count;
+	gint* ids;
+	ids = darxen_restful_client_search_data_range(	client, priv->site, priv->viewInfo->productCode, 
+													year, month, day, &count, NULL);
+	g_assert(ids);
+
+	GList* res = NULL;
+	int i;
+	for (i = 0; i < count; i++)
+	{
+		gchar* id = g_strdup_printf("%i", ids[i]);
+		gchar* display;
+		switch (level)
+		{
+			case 0:
+				//month, convert to string
+				display = g_strdup(chrMonths[ids[i]]);
+				break;
+			case 1:
+				//day, no change
+				display = g_strdup(id);
+				break;
+			case 2:
+			{
+				//time, format
+				char timePart[5];
+				sprintf(timePart, "%04d", ids[i]);
+				display = g_strdup_printf("%.2s:%s", timePart, timePart+2);
+			} break;
+			default:
+				g_assert_not_reached();
+		}
+		res = g_list_prepend(res, gltk_spinner_model_item_new(id, display));
+		g_free(id);
+		g_free(display);
+	}
+	g_free(ids);
+
+	return g_list_reverse(res);
+}
+
+static GList*
+modelStart_getItems(GltkSpinnerModel* model, int level, int index, DarxenViewConfig* viewConfig)
+{
+	USING_PRIVATE(viewConfig);
+	return range_getItems(viewConfig, model, GLTK_SPINNER(priv->spinnerStart), level, index);
+}
+
+static GList*
+modelEnd_getItems(GltkSpinnerModel* model, int level, int index, DarxenViewConfig* viewConfig)
+{
+	USING_PRIVATE(viewConfig);
+	return range_getItems(viewConfig, model, GLTK_SPINNER(priv->spinnerEnd), level, index);
+}
+
+static void
+spinnerStart_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewConfig)
+{
+	//TODO something
+}
+
+static void
+spinnerEnd_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewConfig)
+{
+	//TODO something
 }
 
 GltkWidget*
@@ -315,10 +463,54 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 			GltkWidget* spinnerSource = gltk_spinner_new(model);
 
 			char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
-			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
+
+			priv->binSourceConfig = gltk_bin_new(NULL);
+			g_object_ref(priv->binSourceConfig);
+			{
+				priv->sourceConfigArchived = gltk_table_new(2, 2);
+				g_object_ref(priv->sourceConfigArchived);
+
+				DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
+				int count;
+				gint* years;
+				years = darxen_restful_client_search_data_range(client, site, viewInfo->productCode,
+					   											-1, -1, -1, &count, NULL);
+				g_assert(years);
+
+				GltkSpinnerModel* modelStart = gltk_spinner_model_new(4);
+				GltkSpinnerModel* modelEnd = gltk_spinner_model_new(4);
+				int i;
+				for (i = 0; i < count; i++)
+				{
+					gchar year[5];
+					sprintf(year, "%i", years[i]);
+					gltk_spinner_model_add_toplevel(modelStart, year, year);
+					gltk_spinner_model_add_toplevel(modelEnd, year, year);
+				}
+				g_free(years);
+
+				priv->spinnerStart = gltk_spinner_new(modelStart);
+				priv->spinnerEnd = gltk_spinner_new(modelEnd);
+				
+				g_signal_connect(modelStart, "get-items", (GCallback)modelStart_getItems, self);
+				g_signal_connect(modelEnd, "get-items", (GCallback)modelEnd_getItems, self);
+				g_signal_connect(priv->spinnerStart, "item-selected", (GCallback)spinnerStart_itemSelected, self);
+				g_signal_connect(priv->spinnerEnd, "item-selected", (GCallback)spinnerEnd_itemSelected, self);
+
+				gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerStart), 0, 0);
+				gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerEnd), 0, 0);
+
+				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("Start:"), 0, 0);
+				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), gltk_label_new("End:"), 1, 0);
+				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), priv->spinnerStart, 0, 1);
+				gltk_table_insert_widget(GLTK_TABLE(priv->sourceConfigArchived), priv->spinnerEnd, 1, 1);
+			}
+
 			g_signal_connect(spinnerSource, "item-selected", (GCallback)spinnerSource_itemSelected, self);
+			gltk_spinner_set_selected_item(GLTK_SPINNER(spinnerSource), 0, source);
 
 			gltk_box_append_widget(GLTK_BOX(hboxSource), spinnerSource, FALSE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hboxSource), priv->binSourceConfig, TRUE, TRUE);
 		}
 		
 		gltk_table_insert_widget(GLTK_TABLE(self), lblSource, 0, 3);

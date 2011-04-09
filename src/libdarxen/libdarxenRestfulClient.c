@@ -336,6 +336,71 @@ darxen_restful_client_list_pollers(DarxenRestfulClient* self, int* size, GError*
 	return pollers;
 }
 
+static gint*
+search_range	(	DarxenRestfulClient* self,
+					const gchar* site,
+					const gchar* product,
+					int year,
+					int month,
+					int day,
+					int* count,
+					GError** error)
+{
+	USING_PRIVATE(self);
+	ResponseBody body = {0,};
+
+	
+	gchar* url = g_strdup_printf(
+			(year == -1) ?  "/cache/range/%s/%s" :
+		   	(month == -1) ? "/cache/range/%s/%s/%i" :	
+			(day == -1) ?   "/cache/range/%s/%s/%i/%i" :
+					        "/cache/range/%s/%s/%i/%i/%i", site, product, year, month, day);
+	CURL* curl = create_curl_client("GET", url, priv->auth_token, &body);
+	g_free(url);
+	g_assert(curl);
+
+	if (go_curl(curl, error))
+		return NULL;
+
+	//parse json
+	JsonParser* parser = json_parser_new();
+	if (!json_parser_load_from_data(parser, body.data, body.len, error))
+	{
+		free(body.data);
+		g_object_unref(G_OBJECT(parser));
+		return NULL;
+	}
+
+	JsonNode* root = json_parser_get_root(parser);
+	JsonArray* array = json_node_get_array(root);
+	int len = json_array_get_length(array);
+	if (count)
+		*count = len;
+	gint* range = g_new(gint, len);
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		range[i] = json_array_get_int_element(array, i);
+	}
+
+	free(body.data);
+	g_object_unref(G_OBJECT(parser));
+	return range;
+}
+
+gint*
+darxen_restful_client_search_data_range	(	DarxenRestfulClient* self,
+											const gchar* site,
+											const gchar* product,
+											int year,
+											int month,
+											int day,
+											int* count,
+											GError** error)
+{
+	return search_range(self, site, product, year, month, day, count, error);
+}
+
 static size_t
 headers_search_data(char* ptr, size_t size, size_t nmemb, int* nums)
 {
