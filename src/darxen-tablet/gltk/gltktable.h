@@ -65,6 +65,9 @@ void			gltk_table_set_col_options	(	GltkTable* table, int i,
 void			gltk_table_set_row_options	(	GltkTable* table, int i,
 												GltkTableCellAlign align, gboolean expand, int padding);
 
+void			gltk_table_set_col_padding	(	GltkTable* table, int padding);
+void			gltk_table_set_row_padding	(	GltkTable* table, int padding);
+
 void			gltk_table_insert_widget	(GltkTable* table, GltkWidget* widget, int x, int y);
 void			gltk_table_remove_widget	(GltkTable* table, int x, int y);
 

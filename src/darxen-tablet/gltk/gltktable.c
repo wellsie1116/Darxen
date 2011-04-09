@@ -218,6 +218,33 @@ gltk_table_set_row_options(GltkTable* table, int i, GltkTableCellAlign align, gb
 }
 
 void
+gltk_table_set_col_padding(GltkTable* table, int padding)
+{
+	g_return_if_fail(GLTK_IS_TABLE(table));
+	USING_PRIVATE(table);
+	
+	int i;
+	for (i = 0; i < priv->width; i++)
+		priv->xOpts[i].padding = padding;
+
+	gltk_widget_layout(GLTK_WIDGET(table));
+}
+
+void
+gltk_table_set_row_padding(GltkTable* table, int padding)
+{
+	g_return_if_fail(GLTK_IS_TABLE(table));
+	USING_PRIVATE(table);
+	
+	int i;
+	for (i = 0; i < priv->height; i++)
+		priv->yOpts[i].padding = padding;
+
+	gltk_widget_layout(GLTK_WIDGET(table));
+}
+
+
+void
 gltk_table_insert_widget(GltkTable* table, GltkWidget* widget, int x, int y)
 {
 	g_return_if_fail(GLTK_IS_TABLE(table));
