@@ -25,7 +25,43 @@
 #include <string.h>
 #include <ctype.h>
 
-gchar *chrDateTime;
+gboolean
+id_to_datetime(const gchar* id, DateTime* res)
+{
+	g_return_val_if_fail(id, FALSE);
+	g_return_val_if_fail(res, FALSE);
+
+	int read;
+	read = sscanf(id,	"%4d%2d%2d%2d%2d",
+						&res->year,
+						&res->month,
+						&res->day, 
+						&res->hour, 
+						&res->minute);
+
+	g_return_val_if_fail(read == 5, FALSE);
+
+	return TRUE;
+}
+
+gchar*
+datetime_to_id(DateTime datetime)
+{
+	gchar* res = g_strdup_printf(	"%04d%02d%02d%02d%02d",	
+									datetime.year,
+									datetime.month, 
+									datetime.day, 
+									datetime.hour, 
+									datetime.minute);
+	if (strlen(res) != 12) 
+	{   
+		g_free(res);
+		return NULL;
+	}   
+	return res;
+}
+
+static gchar *chrDateTime;
 
 void
 conv_get_HMS(float coord, int *intHours, int *intMinutes, int *intSeconds)

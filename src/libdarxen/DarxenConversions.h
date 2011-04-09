@@ -23,11 +23,22 @@
 
 #include "libdarxenCommon.h"
 
-#include <glib/gdate.h>
+#include <glib.h>
 
 #include <stdio.h>
 
 G_BEGIN_DECLS
+
+typedef struct {
+	int year;
+	int month;
+	int day;
+	int hour;
+	int minute;
+} DateTime;
+
+G_EXPORT gboolean id_to_datetime(const gchar* id, DateTime* res);
+G_EXPORT gchar* datetime_to_id(DateTime datetime);
 
 G_EXPORT void conv_get_HMS(float coord, int *intHours, int *intMinutes, int *intSeconds);
 
