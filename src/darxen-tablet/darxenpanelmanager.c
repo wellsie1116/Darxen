@@ -329,6 +329,6 @@ config_viewUpdated(	DarxenConfig* config,
 					DarxenViewInfo* viewInfo,
 					DarxenPanelManager* manager)
 {
-	g_critical("TODO: Update view in general (not here?)");
+	//nothing useful to do here
 }
 

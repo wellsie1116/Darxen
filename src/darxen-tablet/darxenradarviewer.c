@@ -73,6 +73,12 @@ static void		darxen_radar_viewer_render(GltkWidget* widget);
 
 static gint compare_radar_data(RenderData* rd1, RenderData* rd2, gpointer user_data);
 
+static void set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo);
+static void	config_viewUpdated(	DarxenConfig* config,
+								const gchar* site,
+								const gchar* viewName,
+								DarxenViewInfo* viewInfo,
+								DarxenRadarViewer* viewer);
 static void
 darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 {
@@ -154,96 +160,12 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 	USING_PRIVATE(self);
 
 	priv->site = g_strdup(site);
-	priv->viewInfo = viewInfo;
-
-	priv->renderer = darxen_renderer_new(priv->site, priv->viewInfo->productCode, priv->viewInfo->shapefiles);
-	//priv->renderer->scale = 0.02;
 
 	priv->data = g_queue_new();
 
-	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
-	switch (viewInfo->sourceType)
-	{
-		case DARXEN_VIEW_SOURCE_ARCHIVE:
-		{
-			GError* error = NULL;
+	set_view_info(self, viewInfo);
 
-			//run the search
-			int searchId;
-			int searchCount;
-			if (!darxen_restful_client_search_data(	client, site, viewInfo->productCode, 
-													viewInfo->source.archive.startId, 
-													viewInfo->source.archive.endId, 
-													&searchId, &searchCount, &error))
-			{
-				g_error("Search failed for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
-			}
-
-			//get the search results
-			gchar** ids;
-			if (!(ids = darxen_restful_client_read_search(client, searchId, 0, searchCount, &error)))
-			{
-				g_error("Failed to retrieve search records for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
-			}
-
-			//read the search records
-			int i;
-			for (i = 0; i < searchCount; i++)
-			{
-				size_t len;
-				char* data = darxen_restful_client_read_data(client, site, viewInfo->productCode, ids[i], &len, &error);
-
-				if (!data)
-				{
-					g_warning("Failed to download data %s/%s with id %s", site, viewInfo->productCode, ids[i]);
-					continue;
-				}
-
-				FILE* f = tmpfile();
-				fwrite(data, 1, len, f);
-				fseek(f, 0, SEEK_SET);
-				ProductsLevel3Data* parsed;
-				if (!(parsed = parser_lvl3_parse_file(f)))
-				{
-					g_critical("Failed to parse level 3 data");
-					free(data);
-					continue;
-				}
-				fclose(f);
-				//printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
-				RenderData* renderData = g_new(RenderData, 1);
-				renderData->id = g_strdup(ids[i]);
-				renderData->data = parsed;
-
-				g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
-				
-				free(data);
-			}
-			g_strfreev(ids);
-
-			//free the search
-			if (!darxen_restful_client_free_search(client, searchId, &error))
-			{
-				g_error("Failed to free search for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
-			}
-
-			darxen_radar_viewer_frame_first(self);
-
-		} break;
-
-		case DARXEN_VIEW_SOURCE_LIVE:
-		{
-			GError* error = NULL;
-
-			//setup the poller
-			priv->poller = darxen_restful_client_add_poller(client, site, viewInfo->productCode, &error);
-			if (!priv->poller)
-			{
-				g_error("Failed to register poller for %s/%s in view %s", site, viewInfo->productCode, viewInfo->name);
-			}
-			g_signal_connect(priv->poller, "data-received", (GCallback)darxen_radar_viewer_data_received, self);
-		} break;
-	}
+	g_signal_connect(darxen_config_get_instance(), "view-updated", (GCallback)config_viewUpdated, self);
 
 	return (DarxenRadarViewer*)gobject;
 }
@@ -572,5 +494,139 @@ compare_radar_data(RenderData* rd1, RenderData* rd2, gpointer user_data)
 	if (d1->objHeader.intTime < d2->objHeader.intTime)
 		return -1;
 	return (d1->objHeader.intTime > d2->objHeader.intTime);
+}
+
+static void
+set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
+{
+	USING_PRIVATE(viewer);
+
+	//clean up an old mess
+	{
+		if (priv->poller)
+		{
+			g_object_unref(priv->poller);
+			priv->poller = NULL;
+		}
+
+		RenderData* renderData;
+		while ((renderData = (RenderData*)g_queue_pop_head(priv->data)))
+		{
+			g_free(renderData->id);
+			parser_lvl3_free(renderData->data);
+		}
+		priv->pData = NULL;
+
+		if (priv->renderer)
+		{
+			g_object_unref(priv->renderer);
+			priv->renderer = NULL;
+		}
+	}
+	
+	//make a new one
+	priv->viewInfo = viewInfo;
+
+	priv->renderer = darxen_renderer_new(priv->site, viewInfo->productCode, viewInfo->shapefiles);
+
+	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
+	switch (viewInfo->sourceType)
+	{
+		case DARXEN_VIEW_SOURCE_ARCHIVE:
+		{
+			GError* error = NULL;
+
+			//run the search
+			int searchId;
+			int searchCount;
+			if (!darxen_restful_client_search_data(	client, priv->site, viewInfo->productCode, 
+													viewInfo->source.archive.startId, 
+													viewInfo->source.archive.endId, 
+													&searchId, &searchCount, &error))
+			{
+				g_error("Search failed for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
+			}
+
+			//get the search results
+			gchar** ids;
+			if (!(ids = darxen_restful_client_read_search(client, searchId, 0, searchCount, &error)))
+			{
+				g_error("Failed to retrieve search records for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
+			}
+
+			//read the search records
+			int i;
+			for (i = 0; i < searchCount; i++)
+			{
+				size_t len;
+				char* data = darxen_restful_client_read_data(client, priv->site, viewInfo->productCode, ids[i], &len, &error);
+
+				if (!data)
+				{
+					g_warning("Failed to download data %s/%s with id %s", priv->site, viewInfo->productCode, ids[i]);
+					continue;
+				}
+
+				FILE* f = tmpfile();
+				fwrite(data, 1, len, f);
+				fseek(f, 0, SEEK_SET);
+				ProductsLevel3Data* parsed;
+				if (!(parsed = parser_lvl3_parse_file(f)))
+				{
+					g_critical("Failed to parse level 3 data");
+					free(data);
+					continue;
+				}
+				fclose(f);
+				//printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
+				RenderData* renderData = g_new(RenderData, 1);
+				renderData->id = g_strdup(ids[i]);
+				renderData->data = parsed;
+
+				g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
+				
+				free(data);
+			}
+			g_strfreev(ids);
+
+			//free the search
+			if (!darxen_restful_client_free_search(client, searchId, &error))
+			{
+				g_error("Failed to free search for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
+			}
+
+			darxen_radar_viewer_frame_first(viewer);
+
+		} break;
+
+		case DARXEN_VIEW_SOURCE_LIVE:
+		{
+			GError* error = NULL;
+
+			//setup the poller
+			priv->poller = darxen_restful_client_add_poller(client, priv->site, viewInfo->productCode, &error);
+			if (!priv->poller)
+			{
+				g_error("Failed to register poller for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
+			}
+			g_signal_connect(priv->poller, "data-received", (GCallback)darxen_radar_viewer_data_received, viewer);
+		} break;
+	}
+	
+}
+
+static void				
+config_viewUpdated(	DarxenConfig* config,
+					const gchar* site,
+					const gchar* viewName,
+					DarxenViewInfo* viewInfo,
+					DarxenRadarViewer* viewer)
+{
+	USING_PRIVATE(viewer);
+
+	if (g_strcmp0(site, priv->site) || g_strcmp0(viewName, priv->viewInfo->name))
+		return;
+
+	set_view_info(viewer, viewInfo);
 }
 
