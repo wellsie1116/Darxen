@@ -77,6 +77,7 @@ static void				config_viewNameChanged		(	DarxenConfig* config,
 
 static void				config_viewUpdated			(	DarxenConfig* config,
 														const gchar* site,
+														const gchar* viewName,
 														DarxenViewInfo* viewInfo,
 														DarxenPanelManager* manager);
 
@@ -324,6 +325,7 @@ config_viewNameChanged(	DarxenConfig* config,
 static void				
 config_viewUpdated(	DarxenConfig* config,
 					const gchar* site,
+					const gchar* viewName,
 					DarxenViewInfo* viewInfo,
 					DarxenPanelManager* manager)
 {

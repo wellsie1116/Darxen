@@ -102,6 +102,7 @@ struct _DarxenConfigClass
 
 	void (*view_updated)		(	DarxenConfig* config,
 									gchar* site,
+									gchar* viewName,
 									DarxenViewInfo* viewInfo);
 
 	/* virtual funcs */
@@ -125,11 +126,12 @@ DarxenRestfulClient*	darxen_config_get_client		(	DarxenConfig* config);
 
 gboolean				darxen_config_rename_view		(	DarxenConfig* config,
 															const gchar* site,
-															DarxenViewInfo* viewInfo,
+															const DarxenViewInfo* viewInfo,
 															const gchar* newName);
 
 void					darxen_config_view_updated		(	DarxenConfig* config,
 															const gchar* site,
+															const gchar* viewName,
 															DarxenViewInfo* viewInfo);
 															
 DarxenViewInfo*			darxen_view_info_copy			(	const DarxenViewInfo* viewInfo);

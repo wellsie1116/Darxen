@@ -41,7 +41,16 @@ extern void g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
                                                           gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__STRING_POINTER	g_cclosure_user_marshal_VOID__STRING_POINTER
 
-/* NONE:STRING,POINTER,STRING (gltkmarshal.list:6) */
+/* NONE:STRING,STRING,POINTER (gltkmarshal.list:6) */
+extern void g_cclosure_user_marshal_VOID__STRING_STRING_POINTER (GClosure     *closure,
+                                                                 GValue       *return_value,
+                                                                 guint         n_param_values,
+                                                                 const GValue *param_values,
+                                                                 gpointer      invocation_hint,
+                                                                 gpointer      marshal_data);
+#define g_cclosure_user_marshal_NONE__STRING_STRING_POINTER	g_cclosure_user_marshal_VOID__STRING_STRING_POINTER
+
+/* NONE:STRING,POINTER,STRING (gltkmarshal.list:7) */
 extern void g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
                                                                  GValue       *return_value,
                                                                  guint         n_param_values,
@@ -50,11 +59,11 @@ extern void g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *c
                                                                  gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__STRING_POINTER_STRING	g_cclosure_user_marshal_VOID__STRING_POINTER_STRING
 
-/* NONE:NONE (gltkmarshal.list:7) */
+/* NONE:NONE (gltkmarshal.list:8) */
 #define g_cclosure_user_marshal_VOID__VOID	g_cclosure_marshal_VOID__VOID
 #define g_cclosure_user_marshal_NONE__NONE	g_cclosure_user_marshal_VOID__VOID
 
-/* POINTER:INT,INT (gltkmarshal.list:8) */
+/* POINTER:INT,INT (gltkmarshal.list:9) */
 extern void g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                                       GValue       *return_value,
                                                       guint         n_param_values,

@@ -61,6 +61,7 @@ GType			gltk_entry_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_entry_new		(const char* text);
 
 const gchar*	gltk_entry_get_text	(GltkEntry* entry);
+void			gltk_entry_set_text	(GltkEntry* entry, const gchar* text);
 
 GQuark			gltk_entry_error_quark	();
 

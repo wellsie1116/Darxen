@@ -86,9 +86,9 @@ darxen_config_class_init(DarxenConfigClass* klass)
 						G_SIGNAL_RUN_LAST,
 						G_STRUCT_OFFSET(DarxenConfigClass, view_updated),
 						NULL, NULL,
-						g_cclosure_user_marshal_VOID__STRING_POINTER,
-						G_TYPE_NONE, 2,
-						G_TYPE_STRING, G_TYPE_POINTER);
+						g_cclosure_user_marshal_VOID__STRING_STRING_POINTER,
+						G_TYPE_NONE, 3,
+						G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER);
 
 	gobject_class->constructor = darxen_config_constructor;
 }
@@ -225,7 +225,7 @@ darxen_config_get_client(DarxenConfig* config)
 gboolean
 darxen_config_rename_view(	DarxenConfig* config,
 							const gchar* site,
-							DarxenViewInfo* viewInfo,
+							const DarxenViewInfo* viewInfo,
 							const gchar* newName)
 {
 	g_return_val_if_fail(DARXEN_IS_CONFIG(config), FALSE);
@@ -246,19 +246,32 @@ darxen_config_rename_view(	DarxenConfig* config,
 
 	//check for duplicates
 	GList* pViews = siteInfo->views;
+	DarxenViewInfo* view;
 	while (pViews)
 	{
-		DarxenViewInfo* view = (DarxenViewInfo*)pViews->data;
+		view = (DarxenViewInfo*)pViews->data;
 	
 		g_return_val_if_fail(g_strcmp0(view->name, newName), FALSE);
 	
 		pViews = pViews->next;
 	}
 
-	gchar* oldName = viewInfo->name;
-	viewInfo->name = g_strdup(newName);
+	//find our copy of the viewInfo
+	pViews = siteInfo->views;
+	while (pViews)
+	{
+		view = (DarxenViewInfo*)pViews->data;
+	
+		if (!g_strcmp0(view->name, viewInfo->name))
+			break;
+	
+		pViews = pViews->next;
+	}
+	g_assert(pViews && view);
 
-	g_signal_emit(config, signals[VIEW_NAME_CHANGED], 0, site, viewInfo, oldName);
+	gchar* oldName = view->name;
+	view->name = g_strdup(newName);
+	g_signal_emit(config, signals[VIEW_NAME_CHANGED], 0, site, view, oldName);
 	g_free(oldName);
 
 	return TRUE;
@@ -267,11 +280,44 @@ darxen_config_rename_view(	DarxenConfig* config,
 void
 darxen_config_view_updated(	DarxenConfig* config,
 							const gchar* site,
+							const gchar* viewName,
 							DarxenViewInfo* viewInfo)
 {
 	g_return_if_fail(DARXEN_IS_CONFIG(config));
 	
-	g_signal_emit(config, signals[VIEW_UPDATED], 0, site, viewInfo);
+	//find the site
+	GList* pSites = config->sites;
+	DarxenSiteInfo* siteInfo = NULL;
+	while (pSites && !siteInfo)
+	{
+		siteInfo = (DarxenSiteInfo*)pSites->data;
+				
+		if (g_strcmp0(siteInfo->name, site))
+			siteInfo = NULL;
+	
+		pSites = pSites->next;
+	}
+	g_assert(siteInfo);
+
+	//find the view info
+	DarxenViewInfo* view;
+	GList* pViews = siteInfo->views;
+	while (pViews)
+	{
+		view = (DarxenViewInfo*)pViews->data;
+	
+		if (!g_strcmp0(view->name, viewName))
+			break;
+	
+		pViews = pViews->next;
+	}
+	g_assert(pViews && view);
+
+	g_signal_emit(config, signals[VIEW_UPDATED], 0, site, viewName, viewInfo);
+
+	//all views should have swapped references, free the old one, copy the new one
+	darxen_view_info_free(view);
+	pViews->data = darxen_view_info_copy(viewInfo);
 }
 
 DarxenViewInfo*

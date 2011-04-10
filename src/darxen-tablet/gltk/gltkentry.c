@@ -132,7 +132,20 @@ gltk_entry_new(const char* text)
 const gchar*
 gltk_entry_get_text(GltkEntry* entry)
 {
+	g_return_val_if_fail(GLTK_IS_ENTRY(entry), NULL);
+
 	return GLTK_BUTTON(entry)->text;
+}
+
+void
+gltk_entry_set_text(GltkEntry* entry, const gchar* text)
+{
+	g_return_if_fail(GLTK_IS_ENTRY(entry));
+	g_return_if_fail(text);
+
+	g_free(GLTK_BUTTON(entry)->text);
+	GLTK_BUTTON(entry)->text = g_strdup(text);
+	gltk_widget_invalidate(GLTK_WIDGET(entry));
 }
 
 GQuark
