@@ -376,12 +376,11 @@ search_range	(	DarxenRestfulClient* self,
 	int len = json_array_get_length(array);
 	if (count)
 		*count = len;
-	gint* range = g_new(gint, len);
+	gint* range = g_new(gint, len+1);
 	int i;
 	for (i = 0; i < len; i++)
-	{
 		range[i] = json_array_get_int_element(array, i);
-	}
+	range[i] = 0;
 
 	free(body.data);
 	g_object_unref(G_OBJECT(parser));
