@@ -55,6 +55,9 @@ struct _DarxenViewConfigPrivate
 
 	GltkWidget* spinnerStart;
 	GltkWidget* spinnerEnd;
+
+	GltkSpinnerModel* modelStart;
+	GltkSpinnerModel* modelEnd;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -83,13 +86,23 @@ darxen_view_config_init(DarxenViewConfig* self)
 	USING_PRIVATE(self);
 
 	priv->site = NULL;
+	priv->origViewInfo = NULL;
 	priv->viewInfo = NULL;
+
+	priv->txtName = NULL;
+	priv->spinnerProduct = NULL;
+	priv->btnShapefiles = NULL;
+
+	priv->spinnerSource = NULL;
 
 	priv->binSourceConfig = NULL;
 	priv->sourceConfigArchived = NULL;
 
 	priv->spinnerStart = NULL;
 	priv->spinnerEnd = NULL;
+	
+	priv->modelStart = NULL;
+	priv->modelEnd = NULL;
 }
 
 static void
@@ -126,9 +139,6 @@ darxen_view_config_dispose(GObject* gobject)
 		g_object_unref(priv->spinnerSource);
 		priv->spinnerSource = NULL;
 	}
-
-
-
 
 	if (priv->binSourceConfig)
 	{
@@ -173,17 +183,8 @@ txtName_textChanged(GltkEntry* txtName, DarxenViewConfig* viewConfig)
 {
 	USING_PRIVATE(viewConfig);
 
-	//DarxenConfig* config = darxen_config_get_instance();
-	//gboolean res = darxen_config_rename_view(config, priv->site, priv->viewInfo, gltk_entry_get_text(txtName));
 	g_free(priv->viewInfo->name);
 	priv->viewInfo->name = g_strdup(gltk_entry_get_text(txtName));
-
-	//if (!res)
-	//{
-	//	//Change failed
-	//	//TODO inform user
-	//	gltk_button_set_text(GLTK_BUTTON(txtName), priv->viewInfo->name);
-	//}
 }
 
 static gboolean
@@ -216,12 +217,76 @@ btnShapefile_clicked(GltkToggleButton* btn, GltkEventClick* event, DarxenViewCon
 }
 
 static void
+reload_date_range(DarxenViewConfig* viewConfig)
+{
+	USING_PRIVATE(viewConfig);
+	
+	if (priv->viewInfo->sourceType != DARXEN_VIEW_SOURCE_ARCHIVE)
+		return;
+
+	DarxenConfig* config = darxen_config_get_instance();
+	
+	DarxenRestfulClient* client = darxen_config_get_client(config);
+	int count;
+	gint* years;
+	years = darxen_restful_client_search_data_range(client, priv->site, priv->viewInfo->productCode,
+													-1, -1, -1, &count, NULL);
+	g_assert(years);
+	gltk_spinner_model_clear_toplevel(priv->modelStart);
+	gltk_spinner_model_clear_toplevel(priv->modelEnd);
+	int i;
+	for (i = 0; i < count; i++)
+	{
+		gchar year[5];
+		sprintf(year, "%i", years[i]);
+		gltk_spinner_model_add_toplevel(priv->modelStart, year, year);
+		gltk_spinner_model_add_toplevel(priv->modelEnd, year, year);
+	}
+	g_free(years);
+	gltk_spinner_reload_base_items(GLTK_SPINNER(priv->spinnerStart));
+	gltk_spinner_reload_base_items(GLTK_SPINNER(priv->spinnerEnd));
+
+	if (!g_strcmp0(priv->viewInfo->productCode, priv->origViewInfo->productCode))
+	{
+		DateTime startTime;
+		DateTime endTime;
+		g_assert(id_to_datetime(priv->origViewInfo->source.archive.startId, &startTime));
+		g_assert(id_to_datetime(priv->origViewInfo->source.archive.endId, &endTime));
+
+		char id[7];
+		sprintf(id, "%i", startTime.year);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 0, id);
+		sprintf(id, "%i", startTime.month);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 1, id);
+		sprintf(id, "%i", startTime.day);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 2, id);
+		sprintf(id, "%i", startTime.hour * 100 + startTime.minute);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 3, id);
+
+		sprintf(id, "%i", endTime.year);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 0, id);
+		sprintf(id, "%i", endTime.month);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 1, id);
+		sprintf(id, "%i", endTime.day);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 2, id);
+		sprintf(id, "%i", endTime.hour * 100 + endTime.minute);
+		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 3, id);
+	}
+	else
+	{
+		for (i = 0; i < 4; i++)
+		{
+			gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerStart), i, 0);
+			gltk_spinner_set_selected_index(GLTK_SPINNER(priv->spinnerEnd), i, 0);
+		}
+	}
+}
+
+static void
 spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewConfig)
 {
 	USING_PRIVATE(viewConfig);
 
-	//DarxenConfig* config = darxen_config_get_instance();
-	
 	char productCode[4] = "Nxx";
 	const gchar* id;
 	id = gltk_spinner_get_selected_item(spinnerProduct, 0);
@@ -231,13 +296,14 @@ spinnerProduct_itemSelected(GltkSpinner* spinnerProduct, DarxenViewConfig* viewC
 	id = gltk_spinner_get_selected_item(spinnerProduct, 2);
 
 	g_assert(strlen(priv->viewInfo->productCode) == strlen(productCode));
+	gboolean reloadDates = g_strcmp0(priv->viewInfo->productCode, productCode) != 0;
 	g_strlcpy(priv->viewInfo->productCode, productCode, strlen(productCode)+1);
 
 	priv->viewInfo->smoothing = !g_strcmp0(id, "smooth");
 
+	if (reloadDates)
+		reload_date_range(viewConfig);
 	//g_debug("Product changed to %s %s", productCode, priv->viewInfo->smoothing ? "smooth" : "raw");
-
-	//darxen_config_view_updated(config, priv->site, priv->viewInfo);
 }
 
 static void
@@ -250,6 +316,7 @@ spinnerSource_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewCon
 	if (!strcmp(id, "archived"))
 	{
 		priv->viewInfo->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
+		reload_date_range(viewConfig);
 		gltk_bin_set_widget(GLTK_BIN(priv->binSourceConfig), priv->sourceConfigArchived);
 	}
 	else if (!strcmp(id, "live"))
@@ -261,8 +328,6 @@ spinnerSource_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewCon
 	{
 		g_assert_not_reached();
 	}
-
-	//darxen_config_view_updated(config, priv->site, priv->viewInfo);
 }
 
 static GList*
@@ -301,14 +366,24 @@ range_getItems(DarxenViewConfig* viewConfig, GltkSpinnerModel* model, GltkSpinne
 	int month = -1;
 	int day = -1;
 
+	const gchar* key;
 	switch (level)
 	{
 		case 2:
-			day = atoi(gltk_spinner_get_selected_item(spinner, 2));
+			key = gltk_spinner_get_selected_item(spinner, 2);
+			if (!key)
+				return NULL;
+			day = atoi(key);
 		case 1:
-			month = atoi(gltk_spinner_get_selected_item(spinner, 1));
+			key = gltk_spinner_get_selected_item(spinner, 1);
+			if (!key)
+				return NULL;
+			month = atoi(key);
 		case 0:
-			year = atoi(gltk_spinner_get_selected_item(spinner, 0));
+			key = gltk_spinner_get_selected_item(spinner, 0);
+			if (!key)
+				return NULL;
+			year = atoi(key);
 			break;
 		default:
 			g_assert_not_reached();
@@ -381,12 +456,32 @@ spinnerStart_itemSelected(GltkSpinner* spinnerStart, DarxenViewConfig* viewConfi
 	DateTime time;
 	const gchar* id;
 	id = gltk_spinner_get_selected_item(spinnerStart, 0);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.startId = g_strdup("");
+		return;
+	}
 	time.year = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerStart, 1);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.startId = g_strdup("");
+		return;
+	}
 	time.month = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerStart, 2);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.startId = g_strdup("");
+		return;
+	}
 	time.day = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerStart, 3);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.startId = g_strdup("");
+		return;
+	}
 	time.hour = atoi(id);
 	time.minute = time.hour % 100;
 	time.hour = time.hour / 100;
@@ -405,12 +500,32 @@ spinnerEnd_itemSelected(GltkSpinner* spinnerEnd, DarxenViewConfig* viewConfig)
 	DateTime time;
 	const gchar* id;
 	id = gltk_spinner_get_selected_item(spinnerEnd, 0);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.endId = g_strdup("");
+		return;
+	}
 	time.year = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerEnd, 1);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.endId = g_strdup("");
+		return;
+	}
 	time.month = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerEnd, 2);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.endId = g_strdup("");
+		return;
+	}
 	time.day = atoi(id);
 	id = gltk_spinner_get_selected_item(spinnerEnd, 3);
+	if (!id)
+	{
+		priv->viewInfo->source.archive.endId = g_strdup("");
+		return;
+	}
 	time.hour = atoi(id);
 	time.minute = time.hour % 100;
 	time.hour = time.hour / 100;
@@ -447,6 +562,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_label_set_font_size(GLTK_LABEL(lblName), 28);
 
 		GltkWidget* txtName = gltk_entry_new("");
+		g_object_ref(txtName);
 		priv->txtName = txtName;
 
 		g_signal_connect(txtName, "text-changed", (GCallback)txtName_textChanged, self);
@@ -464,6 +580,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		gltk_spinner_model_add_toplevel(model, "S", "Storm Velocity");
 
 		GltkWidget* spinnerProduct = gltk_spinner_new(model);
+		g_object_ref(spinnerProduct);
 		priv->spinnerProduct = spinnerProduct;
 		g_signal_connect(model, "get-items", (GCallback)model_getItems, spinnerProduct);
 
@@ -494,6 +611,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 		for (pItems = items; *pItems; pItems++)
 		{
 			GltkWidget* btn = gltk_toggle_button_new(*pItems);
+			g_object_ref(btn);
 			priv->btnShapefiles[i] = btn;
 
 			g_signal_connect_after(btn, "click-event", (GCallback)btnShapefile_clicked, self);
@@ -516,31 +634,18 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 				priv->sourceConfigArchived = gltk_table_new(2, 2);
 				g_object_ref(priv->sourceConfigArchived);
 
-				DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
-				int count;
-				gint* years;
-				//FIXME: move to set_view_info
-				years = darxen_restful_client_search_data_range(client, site, viewInfo->productCode,
-					   											-1, -1, -1, &count, NULL);
-				g_assert(years);
+				priv->modelStart = gltk_spinner_model_new(4);
+				g_object_ref(priv->modelStart);
+				priv->modelEnd = gltk_spinner_model_new(4);
+				g_object_ref(priv->modelEnd);
 
-				GltkSpinnerModel* modelStart = gltk_spinner_model_new(4);
-				GltkSpinnerModel* modelEnd = gltk_spinner_model_new(4);
-				int i;
-				for (i = 0; i < count; i++)
-				{
-					gchar year[5];
-					sprintf(year, "%i", years[i]);
-					gltk_spinner_model_add_toplevel(modelStart, year, year);
-					gltk_spinner_model_add_toplevel(modelEnd, year, year);
-				}
-				g_free(years);
-
-				priv->spinnerStart = gltk_spinner_new(modelStart);
-				priv->spinnerEnd = gltk_spinner_new(modelEnd);
+				priv->spinnerStart = gltk_spinner_new(priv->modelStart);
+				g_object_ref(priv->spinnerStart);
+				priv->spinnerEnd = gltk_spinner_new(priv->modelEnd);
+				g_object_ref(priv->spinnerEnd);
 				
-				g_signal_connect(modelStart, "get-items", (GCallback)modelStart_getItems, self);
-				g_signal_connect(modelEnd, "get-items", (GCallback)modelEnd_getItems, self);
+				g_signal_connect(priv->modelStart, "get-items", (GCallback)modelStart_getItems, self);
+				g_signal_connect(priv->modelEnd, "get-items", (GCallback)modelEnd_getItems, self);
 				g_signal_connect(priv->spinnerStart, "item-selected", (GCallback)spinnerStart_itemSelected, self);
 				g_signal_connect(priv->spinnerEnd, "item-selected", (GCallback)spinnerEnd_itemSelected, self);
 
@@ -566,6 +671,7 @@ darxen_view_config_new(gchar* site, DarxenViewInfo* viewInfo)
 			gltk_spinner_model_add_toplevel(model, "archived", "Archived");
 
 			GltkWidget* spinnerSource = gltk_spinner_new(model);
+			g_object_ref(spinnerSource);
 			priv->spinnerSource = spinnerSource;
 			g_object_set(G_OBJECT(spinnerSource), "visible-items", 3, NULL);
 
@@ -677,34 +783,7 @@ set_view_info(DarxenViewConfig* viewConfig, DarxenViewInfo* viewInfo)
 	//set view source
 	const char* source = viewInfo->sourceType == DARXEN_VIEW_SOURCE_LIVE ? "live" : "archived";
 	gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerSource), 0, source);
-
-	if (viewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE)
-	{
-		DateTime startTime;
-		DateTime endTime;
-		g_assert(id_to_datetime(viewInfo->source.archive.startId, &startTime));
-		g_assert(id_to_datetime(viewInfo->source.archive.endId, &endTime));
-
-		char id[7];
-		sprintf(id, "%i", startTime.year);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 0, id);
-		sprintf(id, "%i", startTime.month);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 1, id);
-		sprintf(id, "%i", startTime.day);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 2, id);
-		sprintf(id, "%i", startTime.hour * 100 + startTime.minute);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerStart), 3, id);
-
-		sprintf(id, "%i", endTime.year);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 0, id);
-		sprintf(id, "%i", endTime.month);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 1, id);
-		sprintf(id, "%i", endTime.day);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 2, id);
-		sprintf(id, "%i", endTime.hour * 100 + endTime.minute);
-		gltk_spinner_set_selected_item(GLTK_SPINNER(priv->spinnerEnd), 3, id);
-
-	}
+	reload_date_range(viewConfig);
 
 }
 

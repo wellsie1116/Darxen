@@ -128,6 +128,15 @@ gltk_spinner_model_item_free(GltkSpinnerModelItem* item)
 }
 
 void
+gltk_spinner_model_clear_toplevel(	GltkSpinnerModel* model)
+{
+	g_return_if_fail(GLTK_IS_SPINNER_MODEL(model));
+	
+	gltk_spinner_model_free_items(model, model->toplevel);
+	model->toplevel = NULL;
+}
+
+void
 gltk_spinner_model_add_toplevel	(	GltkSpinnerModel* model,
 									const gchar* id,
 									const gchar* text)

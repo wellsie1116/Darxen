@@ -254,6 +254,9 @@ gltk_spinner_get_selected_item(GltkSpinner* spinner, int level)
 	USING_PRIVATE(spinner);
 	g_return_val_if_fail(level >= 0 && level < priv->model->levels, NULL);
 
+	if (g_list_length(priv->wheels[level].items) == 0)
+		return NULL;
+
 	GltkSpinnerModelItem* item;
 	item = (GltkSpinnerModelItem*)g_list_nth_data(priv->wheels[level].items, priv->wheels[level].index);
 	g_assert(item);
@@ -267,7 +270,10 @@ gltk_spinner_set_selected_index(GltkSpinner* spinner, int level, int index)
 	g_return_if_fail(GLTK_IS_SPINNER(spinner));
 	USING_PRIVATE(spinner);
 	g_return_if_fail(level >= 0 && level < priv->model->levels);
-	g_return_if_fail(index >= 0 && index < g_list_length(priv->wheels[level].items));
+	int len = g_list_length(priv->wheels[level].items);
+	if (!len)
+		return;
+	g_return_if_fail(index >= 0 && index < len);
 
 	set_selected_index(spinner, level, index);
 	priv->wheels[level].index = index;
@@ -297,6 +303,16 @@ gltk_spinner_set_selected_item(GltkSpinner* spinner, int level, const gchar* id)
 	int index = g_list_position(priv->wheels[level].items, pItems);
 
 	gltk_spinner_set_selected_index(spinner, level, index);
+}
+
+void
+gltk_spinner_reload_base_items(GltkSpinner* spinner)
+{
+	g_return_if_fail(GLTK_IS_SPINNER(spinner));
+	USING_PRIVATE(spinner);
+
+	//load our toplevel items from the model 
+	load_items(spinner, 0, gltk_spinner_model_clone_items(priv->model, priv->model->toplevel)); 
 }
 
 GQuark
@@ -473,6 +489,8 @@ gltk_spinner_size_request(GltkWidget* widget, GltkSize* size)
 
 	//get the request from the hbox
 	GLTK_WIDGET_CLASS(gltk_spinner_parent_class)->size_request(widget, size);
+
+	size->width = MAX(size->width, 50 * priv->model->levels);
 
 	//persist
 	widget->requisition = *size;
