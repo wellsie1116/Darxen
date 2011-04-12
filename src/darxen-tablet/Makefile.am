@@ -21,7 +21,7 @@ darxen_tablet_SOURCES = darxen-tablet.c darxen-tablet.h \
 						darxensitelist.c darxensitelist.h \
 						../libdarxen/libdarxen.la gltk/libgltk.la
 
-darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(json_LIBS) $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(curl_CFLAGS) $(libxml_CFLAGS) -O0
+darxen_tablet_CFLAGS = -Wall -g -I../libdarxen $(json_CFLAGS) $(gtkglext_CFLAGS) $(libgrip_CFLAGS) $(curl_CFLAGS) $(libxml_CFLAGS) -O0
 darxen_tablet_LDADD = $(json_LIBS) $(gtkglext_LIBS) $(libgrip_LIBS) $(curl_LIBS) $(libxml_LIBS) ../libdarxen/libdarxen.la gltk/libgltk.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
 darxen_tablet_LDFLAGS = -g
 

@@ -203,6 +203,7 @@ darxen_renderer_finalize(GObject* gobject)
 	g_free(self->transform);
 
 	darxen_rendering_common_font_cache_free(priv->fonts);
+	//FIXME free things
 
 	/* Chain up to the parent class */
 	G_OBJECT_CLASS(darxen_renderer_parent_class)->finalize(gobject);

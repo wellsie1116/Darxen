@@ -116,6 +116,9 @@ typedef enum
 GType					darxen_config_get_type			(	) G_GNUC_CONST;
 DarxenConfig*			darxen_config_get_instance		(	);
 
+void					darxen_config_load_settings		(	DarxenConfig* config);
+void					darxen_config_save_settings		(	DarxenConfig* config);
+
 GList*					darxen_config_get_sites			(	DarxenConfig* config);
 
 void					darxen_config_set_client		(	DarxenConfig* config, 

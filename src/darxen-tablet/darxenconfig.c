@@ -21,7 +21,10 @@
 #include "darxenconfig.h"
 
 #include <libdarxenShapefiles.h>
+#include <libdarxenFileSupport.h>
 #include <gltk/gltkmarshal.h>
+
+#include <json-glib/json-glib.h>
 
 G_DEFINE_TYPE(DarxenConfig, darxen_config, G_TYPE_OBJECT)
 
@@ -39,7 +42,7 @@ enum
 typedef struct _DarxenConfigPrivate		DarxenConfigPrivate;
 struct _DarxenConfigPrivate
 {
-	int dummy;
+	gboolean settingsLoaded;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -96,10 +99,12 @@ darxen_config_class_init(DarxenConfigClass* klass)
 static void
 darxen_config_init(DarxenConfig* self)
 {
-	//USING_PRIVATE(self);
+	USING_PRIVATE(self);
 
 	self->client = NULL;
 	self->sites = NULL;
+	
+	priv->settingsLoaded = FALSE;
 }
 
 DarxenConfig*
@@ -113,15 +118,42 @@ darxen_config_get_instance()
 	return (DarxenConfig*)gobject;
 }
 
+const gchar* settings_path() G_GNUC_CONST;
+const gchar* settings_path()
+{
+	static gchar* path = NULL;
+	if (!path)
+		path = g_build_filename(darxen_file_support_get_app_path(), "settings.json", NULL);
+
+	return path;
+}
+
 #define ADD_SHAPEFILE(id) sf = darxen_shapefiles_load_by_id( id ); sf->visible=TRUE; view->shapefiles = g_slist_append(view->shapefiles, sf)
 
-GList*
-darxen_config_get_sites(DarxenConfig* config)
+void
+darxen_config_load_settings(DarxenConfig* config)
 {
-	g_return_val_if_fail(DARXEN_IS_CONFIG(config), NULL);
+	USING_PRIVATE(config);
 
-	if (!config->sites)
+	if (priv->settingsLoaded)
+		return;
+
+	FILE* fin = fopen(settings_path(), "r");
+	
+	//TODO remove
+	if (fin)
+		fclose(fin);
+	fin = NULL;
+	//END remove
+
+	if (fin)
 	{
+		g_error("TODO: load settings");
+		fclose(fin);
+	}
+	else
+	{
+		//load some test data
 		DarxenSiteInfo* site;
 		DarxenViewInfo* view;
 		DarxenShapefile* sf;
@@ -200,7 +232,111 @@ darxen_config_get_sites(DarxenConfig* config)
 		site->views = g_list_append(site->views, view);
 
 		config->sites = g_list_append(config->sites, site);
+
+		priv->settingsLoaded = TRUE;
+
+		darxen_config_save_settings(config);
 	}
+}
+
+void
+darxen_config_save_settings(DarxenConfig* config)
+{
+	GError* error = NULL;
+	JsonObject* root = json_object_new();
+
+	JsonArray* sites = json_array_new();
+	GList* pSites = config->sites;
+	while (pSites)
+	{
+		DarxenSiteInfo* siteInfo = (DarxenSiteInfo*)pSites->data;
+	
+		JsonObject* site = json_object_new();
+		{
+			json_object_set_string_member(site, "name", siteInfo->name);
+
+			JsonArray* views = json_array_new();
+			GList* pViews = siteInfo->views;
+			while (pViews)
+			{
+				DarxenViewInfo* viewInfo = (DarxenViewInfo*)pViews->data;
+			
+				JsonObject* view = json_object_new();
+				{
+					json_object_set_string_member(view, "name", viewInfo->name);
+					json_object_set_string_member(view, "productCode", viewInfo->productCode);
+					json_object_set_boolean_member(view, "smoothing", viewInfo->smoothing);
+					json_object_set_string_member(view, "sourceType",
+							viewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE ? "archive" : "live");
+					JsonObject* sourceParams = json_object_new();
+					if (viewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE)
+					{
+						json_object_set_string_member(sourceParams, "startId",
+								viewInfo->source.archive.startId);
+						json_object_set_string_member(sourceParams, "endId",
+								viewInfo->source.archive.endId);
+					}
+					else
+					{
+						//no settings
+					}
+					json_object_set_object_member(view, "sourceParams", sourceParams);
+
+					JsonArray* shapefiles = json_array_new();
+					GSList* pShapefiles = viewInfo->shapefiles;
+					while (pShapefiles)
+					{
+						DarxenShapefile* shapefileInfo = (DarxenShapefile*)pShapefiles->data;
+					
+						JsonObject* shapefile = json_object_new();
+						{
+							json_object_set_string_member(shapefile, "id", shapefileInfo->name);
+							json_object_set_boolean_member(shapefile, "visible", shapefileInfo->visible);
+						}
+						json_array_add_object_element(shapefiles, shapefile);
+					
+						pShapefiles = pShapefiles->next;
+					}
+					json_object_set_array_member(view, "shapefiles", shapefiles);
+				}
+
+				json_array_add_object_element(views, view);
+			
+				pViews = pViews->next;
+			}
+			json_object_set_array_member(site, "views", views);
+		}
+					
+		json_array_add_object_element(sites, site);
+	
+		pSites = pSites->next;
+	}
+
+	json_object_set_array_member(root, "sites", sites);
+
+	JsonNode* rootNode = json_node_new(JSON_NODE_OBJECT);
+	json_node_take_object(rootNode, root);
+
+	JsonGenerator* generator = json_generator_new();
+	g_object_set(generator, "pretty", TRUE, NULL);
+	json_generator_set_root(generator, rootNode);
+	json_node_free(rootNode);
+
+	gboolean res = json_generator_to_file(generator, settings_path(), &error);
+	g_object_unref(generator);
+
+	if (!res)
+		g_critical("Failed to save settings: %s", error->message);
+}
+
+
+
+GList*
+darxen_config_get_sites(DarxenConfig* config)
+{
+	g_return_val_if_fail(DARXEN_IS_CONFIG(config), NULL);
+
+	darxen_config_load_settings(config);
 
 	return config->sites;
 }
@@ -273,6 +409,8 @@ darxen_config_rename_view(	DarxenConfig* config,
 	view->name = g_strdup(newName);
 	g_signal_emit(config, signals[VIEW_NAME_CHANGED], 0, site, view, oldName);
 	g_free(oldName);
+	
+	darxen_config_save_settings(config);
 
 	return TRUE;
 }
@@ -318,6 +456,8 @@ darxen_config_view_updated(	DarxenConfig* config,
 	//all views should have swapped references, free the old one, copy the new one
 	darxen_view_info_free(view);
 	pViews->data = darxen_view_info_copy(viewInfo);
+
+	darxen_config_save_settings(config);
 }
 
 DarxenViewInfo*
