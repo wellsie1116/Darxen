@@ -133,26 +133,20 @@ const gchar* settings_path()
 void
 darxen_config_load_settings(DarxenConfig* config)
 {
+	GError* error = NULL;
 	USING_PRIVATE(config);
 
 	if (priv->settingsLoaded)
 		return;
 
-	FILE* fin = fopen(settings_path(), "r");
-	
-	//TODO remove
-	if (fin)
-		fclose(fin);
-	fin = NULL;
-	//END remove
+	JsonParser* parser = json_parser_new();
+	gboolean res = json_parser_load_from_file(parser, settings_path(), &error);
 
-	if (fin)
+	if (!res)
 	{
-		g_error("TODO: load settings");
-		fclose(fin);
-	}
-	else
-	{
+		g_object_unref(parser);
+		g_message("Failed to load configuration, loading defaults.  Details: %s", error->message);
+		
 		//load some test data
 		DarxenSiteInfo* site;
 		DarxenViewInfo* view;
@@ -236,6 +230,73 @@ darxen_config_load_settings(DarxenConfig* config)
 		priv->settingsLoaded = TRUE;
 
 		darxen_config_save_settings(config);
+		return;
+	}
+
+
+	JsonNode* rootNode = json_parser_get_root(parser);
+	JsonObject* root = json_node_get_object(rootNode);
+
+	JsonArray* sites = json_object_get_array_member(root, "sites");
+	int i;
+	for (i = 0; i < json_array_get_length(sites); i++)
+	{
+		JsonObject* site = json_array_get_object_element(sites, i);
+
+		DarxenSiteInfo* siteInfo = g_new(DarxenSiteInfo, 1);
+		siteInfo->name = g_strdup(json_object_get_string_member(site, "name"));
+		siteInfo->views = NULL;
+
+		JsonArray* views = json_object_get_array_member(site, "views");
+		int j;
+		for (j = 0; j < json_array_get_length(views); j++)
+		{
+			JsonObject* view = json_array_get_object_element(views, j);
+
+			DarxenViewInfo* viewInfo = g_new(DarxenViewInfo, 1);
+			viewInfo->name = g_strdup(json_object_get_string_member(view, "name"));
+			viewInfo->productCode = g_strdup(json_object_get_string_member(view, "productCode"));
+			viewInfo->smoothing = json_object_get_boolean_member(view, "smoothing");
+			const gchar* sourceType = json_object_get_string_member(view, "sourceType");
+			if (!g_strcmp0(sourceType, "archive"))
+				viewInfo->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
+			else if (!g_strcmp0(sourceType, "live"))
+				viewInfo->sourceType = DARXEN_VIEW_SOURCE_LIVE;
+			else
+				g_assert_not_reached();
+
+			JsonObject* sourceParams = json_object_get_object_member(view, "sourceParams");
+			if (viewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE)
+			{
+				viewInfo->source.archive.startId = g_strdup(json_object_get_string_member(sourceParams,
+							"startId"));
+				viewInfo->source.archive.endId = g_strdup(json_object_get_string_member(sourceParams,
+							"endId"));
+			}
+			else
+			{
+				//no settings
+			}
+
+			viewInfo->shapefiles = NULL;
+			JsonArray* shapefiles = json_object_get_array_member(view, "shapefiles");
+			int k;
+			for (k = 0; k < json_array_get_length(shapefiles); k++)
+			{
+				JsonObject* shapefile = json_array_get_object_element(shapefiles, k);
+
+				const gchar* id = json_object_get_string_member(shapefile, "id");
+				gboolean visible = json_object_get_boolean_member(shapefile, "visible");
+
+				DarxenShapefile* shapefileInfo = darxen_shapefiles_load_by_id(id);
+				shapefileInfo->visible = visible;
+				viewInfo->shapefiles = g_slist_append(viewInfo->shapefiles, shapefileInfo);
+			}
+			siteInfo->views = g_list_append(siteInfo->views, viewInfo);
+
+		}
+		config->sites = g_list_append(config->sites, siteInfo);
+
 	}
 }
 
