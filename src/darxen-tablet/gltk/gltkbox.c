@@ -153,6 +153,7 @@ gltk_box_remove_widget(GltkBox* box, GltkWidget* widget)
 			g_object_unref(G_OBJECT(child->widget));
 			g_free(child);
 			g_list_free(pChildren);
+			gltk_widget_layout(GLTK_WIDGET(box));
 			return;
 		}
 	
