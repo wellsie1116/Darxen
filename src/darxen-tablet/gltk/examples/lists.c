@@ -57,14 +57,26 @@ create_label_list()
 	return label_widget(list, "The three labels below are\ncontained in a list so that they\ncan be reordered dynamically.");
 }
 
+static void
+btn_clicked(GltkWidget* button, GltkEventClick* event, GltkListItem* item)
+{
+	gltk_list_remove_item(item->list, item);
+}
+
 GltkWidget* 
 create_button_list()
 {
 	GltkWidget* list = gltk_list_new();
 
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 1"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 2"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 3"), NULL);
+	const gchar* names[] = {"Button 1", "Button 2", "Button 3"};
+	int i;
+	for (i = 0; i < 3; i++)
+	{
+		GltkListItem* item;
+		GltkWidget* btn = gltk_button_new(names[i]);
+		item = gltk_list_add_item(GLTK_LIST(list), btn, (gpointer)names[i]);
+		g_signal_connect(G_OBJECT(btn), "click-event", (GCallback)btn_clicked, item);
+	}
 
 	return label_widget(list, "Buttons can be added to\nlists also.");
 }
