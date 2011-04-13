@@ -147,16 +147,6 @@ gltk_slide_button_render(GltkWidget* widget)
 	GltkSlideButton* slideButton = GLTK_SLIDE_BUTTON(widget);
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
-	
-	glBegin(GL_LINES);
-	{
-		glColor3fv(gltk_color_get_array(&slideButton->colorSlideLeft));
-		glVertex2i(0, 0);
-		glVertex2i(allocation.width, 0);
-		glVertex2i(0, allocation.height);
-		glVertex2i(allocation.width, allocation.height);
-	}
-	glEnd();
 
 	if (button->isDown)
 	{
@@ -265,6 +255,16 @@ gltk_slide_button_render(GltkWidget* widget)
 		glEnd();
 	}
 
+	glBegin(GL_LINES);
+	{
+		//glColor3f(1.0f, 0.6f, 0.03f);
+		glColor3f(0.78f, 0.78f, 0.78f);
+		glVertex2i(0, 1);
+		glVertex2i(allocation.width, 1);
+		glVertex2i(0, allocation.height);
+		glVertex2i(allocation.width, allocation.height);
+	}
+	glEnd();
 
 	glPushMatrix();
 	{

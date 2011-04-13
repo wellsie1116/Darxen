@@ -354,6 +354,16 @@ render_overlay(GltkWidget* widget, gboolean overlay)
 	}
 	glPopMatrix();
 
+	glBegin(GL_LINES);
+	{
+		glColor3fv(colorDark);
+		glVertex2i(0, 1);
+		glVertex2i(allocation.width, 1);
+		glVertex2i(0, allocation.height);
+		glVertex2i(allocation.width, allocation.height);
+	}
+	glEnd();
+
 }
 
 static void
@@ -366,24 +376,13 @@ gltk_config_button_render(GltkWidget* widget)
 	if (button->isDown || priv->animDrag || priv->isConfig)
 		GLTK_WIDGET_CLASS(gltk_config_button_parent_class)->render(widget);
 
-	GltkAllocation allocation = gltk_widget_get_allocation(widget);
-
 	//render our overlay on top
-	if (!button->isDown && !priv->animDrag && !priv->isConfig)
+	if ((!button->isDown && !priv->animDrag && !priv->isConfig)
+		   || (button->isDown && priv->slideOffset <= 0.01f))
 	{
 		render_overlay(widget, FALSE);
 	}
 	
-	glBegin(GL_LINES);
-	{
-		glColor3fv(colorDark);
-		glVertex2i(0, 0);
-		glVertex2i(allocation.width, 0);
-		glVertex2i(0, allocation.height);
-		glVertex2i(allocation.width, allocation.height);
-	}
-	glEnd();
-
 	//if (button->isDown)
 	//{
 	//	glBegin(GL_QUADS);
@@ -473,7 +472,7 @@ gltk_config_button_render_overlay(GltkScreen* screen, GltkWidget* widget)
 	USING_PRIVATE(widget);
 	GltkButton* button = GLTK_BUTTON(widget);
 
-	if ((!button->isDown && !priv->animDrag) || priv->isConfig)
+	if ((!button->isDown && !priv->animDrag) || priv->isConfig || priv->slideOffset < 0.01f)
 		return;
 
 	GltkAllocation allocation = gltk_widget_get_global_allocation(widget);
@@ -601,9 +600,8 @@ gltk_config_button_click_event(GltkWidget* widget, GltkEventClick* event)
 {
 	USING_PRIVATE(widget);
 
-	//TODO: save changes
-
 	priv->isConfig = FALSE;
+	priv->slideOffset = 0.0f;
 	g_object_notify_by_pspec(G_OBJECT(widget), properties[PROP_CONFIG_MODE]);
 
 	return FALSE;
@@ -614,16 +612,8 @@ gltk_config_button_slide_event(GltkSlideButton* widget, gboolean dirRight)
 {
 	USING_PRIVATE(widget);
 
-	if (dirRight)
-	{
-		//TODO: save changes (or not)
-	}
-	else
-	{
-		//TODO: revert changes
-	}
-
 	priv->isConfig = FALSE;
+	priv->slideOffset = 0.0f;
 	g_object_notify_by_pspec(G_OBJECT(widget), properties[PROP_CONFIG_MODE]);
 
 }
