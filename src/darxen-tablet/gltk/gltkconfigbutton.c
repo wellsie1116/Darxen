@@ -304,8 +304,11 @@ render_overlay(GltkWidget* widget, gboolean overlay)
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 
 	//render background
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRectf(0, 0, allocation.width, allocation.height);
+	if (overlay)
+	{
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glRectf(0, 0, allocation.width, allocation.height);
+	}
 	
 	//render arrow
 	glColor4f(1.0f, 1.0f, 1.0f, 0.3f);
@@ -373,7 +376,7 @@ gltk_config_button_render(GltkWidget* widget)
 	GltkButton* button = GLTK_BUTTON(widget);
 
 	//render the main part
-	if (button->isDown || priv->animDrag || priv->isConfig)
+	if ((button->isDown && priv->slideOffset > 0.01f) || priv->animDrag || priv->isConfig)
 		GLTK_WIDGET_CLASS(gltk_config_button_parent_class)->render(widget);
 
 	//render our overlay on top
@@ -382,88 +385,6 @@ gltk_config_button_render(GltkWidget* widget)
 	{
 		render_overlay(widget, FALSE);
 	}
-	
-	//if (button->isDown)
-	//{
-	//	glBegin(GL_QUADS);
-	//	{
-	//		float offset = priv->slideOffset;
-
-	//		if (offset < 0.1f && offset > -0.1f)
-	//		{
-	//			//left gradient
-	//			glColor3fv(colorDark);
-	//			glVertex2i(0, 0);
-	//			glVertex2i(0, allocation.height);
-	//			glColor3fv(colorHighlightBright);
-	//			glVertex2i(allocation.width * (offset+0.1), allocation.height);
-	//			glVertex2i(allocation.width * (offset+0.1), 0);
-
-	//			//slide part
-	//			glVertex2i(allocation.width * (offset+0.1), 0);
-	//			glVertex2i(allocation.width * (offset+0.1), allocation.height);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
-
-	//			//right gradient
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
-	//			glColor3fv(colorDark);
-	//			glVertex2i(allocation.width, allocation.height);
-	//			glVertex2i(allocation.width, 0);
-	//		}
-	//		else if (offset >= 0.1f)
-	//		{
-	//			//render slide part
-	//			glColor3fv(colorDark);
-	//			glVertex2i(0, allocation.height);
-	//			glVertex2i(0, 0);
-	//			glVertex2i(allocation.width * (offset-0.1), 0);
-	//			glVertex2i(allocation.width * (offset-0.1), allocation.height);
-	//			
-	//			//render slide gradient
-	//			glVertex2i(allocation.width * (offset-0.1), 0);
-	//			glVertex2i(allocation.width * (offset-0.1), allocation.height);
-	//			glColor3fv(colorHighlightBright);
-	//			glVertex2i(allocation.width * (offset+0.1), allocation.height);
-	//			glVertex2i(allocation.width * (offset+0.1), 0);
-
-	//			//render selection
-	//			glVertex2i(allocation.width, 0);
-	//			glVertex2i(allocation.width * (offset+0.1), 0);
-	//			glColor3fv(colorHighlightBright);
-	//			glVertex2i(allocation.width * (offset+0.1), allocation.height);
-	//			glVertex2i(allocation.width, allocation.height);
-
-	//		}
-	//		else // (offset <= -0.1f)
-	//		{
-	//			//render slide part
-	//			glColor3fv(colorDark);
-	//			glVertex2i(allocation.width, allocation.height);
-	//			glVertex2i(allocation.width, 0);
-	//			glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
-	//			glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
-	//				
-	//			//render slide gradient
-	//			glVertex2i(allocation.width + allocation.width * (offset+0.1), 0);
-	//			glVertex2i(allocation.width + allocation.width * (offset+0.1), allocation.height);
-	//			glColor3fv(colorHighlightBright);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
-
-	//			//render selection
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), 0);
-	//			glVertex2i(0, 0);
-	//			glColor3fv(colorHighlightBright);
-	//			glVertex2i(0, allocation.height);
-	//			glVertex2i(allocation.width + allocation.width * (offset-0.1), allocation.height);
-	//		}
-	//	}
-	//	glEnd();
-
-	//}
-
 }
 
 static void
