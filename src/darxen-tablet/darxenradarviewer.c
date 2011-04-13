@@ -178,6 +178,9 @@ darxen_radar_viewer_frame_first(DarxenRadarViewer* radarViewer)
 
 	priv->pData = priv->data->head;
 
+	if (!priv->pData)
+		return;
+
 	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
 	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
 }
@@ -190,6 +193,9 @@ darxen_radar_viewer_frame_last(DarxenRadarViewer* radarViewer)
 
 	priv->pData = priv->data->tail;
 
+	if (!priv->pData)
+		return;
+
 	darxen_renderer_set_data(priv->renderer, ((RenderData*)priv->pData->data)->data);
 	gltk_widget_invalidate(GLTK_WIDGET(radarViewer));
 }
@@ -200,7 +206,7 @@ darxen_radar_viewer_frame_next(DarxenRadarViewer* radarViewer)
 	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
 	USING_PRIVATE(radarViewer);
 
-	if (!priv->pData->next)
+	if (!priv->pData || !priv->pData->next)
 		return;
 
 	priv->pData = priv->pData->next;
@@ -215,7 +221,7 @@ darxen_radar_viewer_frame_prev(DarxenRadarViewer* radarViewer)
 	g_return_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer));
 	USING_PRIVATE(radarViewer);
 
-	if (!priv->pData->prev)
+	if (!priv->pData || !priv->pData->prev)
 		return;
 
 	priv->pData = priv->pData->prev;
@@ -230,7 +236,7 @@ darxen_radar_viewer_has_frame_next(DarxenRadarViewer* radarViewer)
 	g_return_val_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer), FALSE);
 	USING_PRIVATE(radarViewer);
 
-	return !!priv->pData->next;
+	return priv->pData && !!priv->pData->next;
 }
 
 gboolean
@@ -239,7 +245,7 @@ darxen_radar_viewer_has_frame_prev(DarxenRadarViewer* radarViewer)
 	g_return_val_if_fail(DARXEN_IS_RADAR_VIEWER(radarViewer), FALSE);
 	USING_PRIVATE(radarViewer);
 
-	return !!priv->pData->prev;
+	return priv->pData && !!priv->pData->prev;
 }
 
 GQuark
