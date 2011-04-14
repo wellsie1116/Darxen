@@ -48,6 +48,7 @@ static void gltk_box_finalize(GObject* gobject);
 static void gltk_box_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_box_render(GltkWidget* widget);
 static gboolean gltk_box_event(GltkWidget* widget, GltkEvent* event);
+static GltkWidget* gltk_box_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 
 static void
 gltk_box_class_init(GltkBoxClass* klass)
@@ -63,6 +64,7 @@ gltk_box_class_init(GltkBoxClass* klass)
 	gltkwidget_class->set_screen = gltk_box_set_screen;
 	gltkwidget_class->render = gltk_box_render;
 	gltkwidget_class->event = gltk_box_event;
+	gltkwidget_class->find_drop_target = gltk_box_find_drop_target;
 }
 
 static void
@@ -289,5 +291,33 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	}
 
 	return returnValue;
+}
+
+static GltkWidget*
+gltk_box_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	GltkWidget* res = NULL;
+	GList* pChildren = GLTK_BOX(widget)->children;
+	while (pChildren)
+	{
+		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+		GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
+
+		if (gltk_rectangle_intersects(bounds, (GltkRectangle*)&childAllocation))
+		{
+			GltkRectangle* childBounds = gltk_rectangle_copy(bounds);
+			childBounds->x -= childAllocation.x;
+			childBounds->y -= childAllocation.y;
+			res = gltk_widget_find_drop_target(child->widget, type, childBounds);
+			gltk_rectangle_free(childBounds);
+		}
+		if (res)
+			return res;
+
+		pChildren = pChildren->next;
+	}
+	//TODO add to everyone else that forwards events (table)
+
+	return GLTK_WIDGET_CLASS(gltk_box_parent_class)->find_drop_target(widget, type, bounds);
 }
 

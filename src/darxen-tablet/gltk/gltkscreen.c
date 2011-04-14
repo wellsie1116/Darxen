@@ -239,6 +239,16 @@ gltk_screen_set_widget_unpressed(GltkScreen* screen, GltkWidget* widget)
 	gltk_window_set_widget_unpressed(priv->window, widget);
 }
 
+GltkWidget*
+gltk_screen_find_drop_target(GltkScreen* screen, const gchar* type, GltkRectangle* bounds)
+{
+	g_return_val_if_fail(GLTK_IS_SCREEN(screen), NULL);
+	USING_PRIVATE(screen);
+	g_return_val_if_fail(priv->widget, NULL);
+
+	return gltk_widget_find_drop_target(priv->widget, type, bounds);
+}
+
 
 GQuark
 gltk_screen_error_quark()
@@ -335,5 +345,4 @@ gltk_screen_get_root(GltkScreen* screen)
 
 	return priv->widget;
 }
-
 

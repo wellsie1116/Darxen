@@ -49,6 +49,7 @@ static void gltk_scrollable_finalize(GObject* gobject);
 static void gltk_scrollable_size_request(GltkWidget* widget, GltkSize* size);
 static void gltk_scrollable_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean gltk_scrollable_event(GltkWidget* widget, GltkEvent* event);
+static GltkWidget* gltk_scrollable_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 static void gltk_scrollable_render(GltkWidget* widget);
 static void gltk_scrollable_set_screen(GltkWidget* widget, GltkScreen* screen);
 static gboolean gltk_scrollable_touch_event(GltkWidget* widget, GltkEventTouch* event);
@@ -68,6 +69,7 @@ gltk_scrollable_class_init(GltkScrollableClass* klass)
 	gltkwidget_class->size_request = gltk_scrollable_size_request;
 	gltkwidget_class->size_allocate = gltk_scrollable_size_allocate;
 	gltkwidget_class->event = gltk_scrollable_event;
+	gltkwidget_class->find_drop_target = gltk_scrollable_find_drop_target;
 	gltkwidget_class->render = gltk_scrollable_render;
 	gltkwidget_class->set_screen = gltk_scrollable_set_screen;
 	gltkwidget_class->touch_event = gltk_scrollable_touch_event;
@@ -218,6 +220,21 @@ gltk_scrollable_event(GltkWidget* widget, GltkEvent* event)
 	}
 
 	return returnValue;
+}
+
+static GltkWidget*
+gltk_scrollable_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	USING_PRIVATE(widget);
+
+	if (priv->widget)
+	{
+		GltkWidget* target = gltk_widget_find_drop_target(priv->widget, type, bounds);
+		if (target)
+			return target;
+	}
+
+	return GLTK_WIDGET_CLASS(gltk_scrollable_parent_class)->find_drop_target(widget, type, bounds);
 }
 
 static void

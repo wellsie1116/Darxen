@@ -41,7 +41,17 @@ enum
 	PINCH_EVENT,
 	ROTATE_EVENT,
 	CLICK_EVENT,
+	FIND_DROP_TARGET,
+
    	LAST_SIGNAL
+};
+
+enum
+{
+	PROP_0,
+	PROP_TARGET_TYPE,
+
+	N_PROPERTIES
 };
 
 typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
@@ -49,17 +59,23 @@ struct _GltkWidgetPrivate
 {
 	GltkAllocation allocation;
 
+	gchar* targetType;
 	gboolean isVisible;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
 
 static void gltk_widget_dispose(GObject* gobject);
 static void gltk_widget_finalize(GObject* gobject);
 
+static void	gltk_widget_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_widget_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
+
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
+static GltkWidget* gltk_widget_real_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 
 static void	gltk_widget_set_screen_default(GltkWidget* widget, GltkScreen* screen);
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -171,8 +187,20 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_BOOLEAN, 1,
 						G_TYPE_POINTER);
 
+	signals[FIND_DROP_TARGET] = 
+		g_signal_new(	"find-drop-target",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, find_drop_target),
+						gltk_accum_find_widget, NULL,
+						g_cclosure_user_marshal_POINTER__STRING_BOXED,
+						G_TYPE_POINTER, 2,
+						G_TYPE_STRING, GLTK_TYPE_RECTANGLE);
+	
 	gobject_class->dispose = gltk_widget_dispose;
 	gobject_class->finalize = gltk_widget_finalize;
+	gobject_class->set_property = gltk_widget_set_property;
+	gobject_class->get_property = gltk_widget_get_property;
 
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
@@ -184,9 +212,17 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->pinch_event = NULL;
 	klass->rotate_event = NULL;
 	klass->click_event = NULL;
+	klass->find_drop_target = gltk_widget_real_find_drop_target;
 
 	klass->set_screen = gltk_widget_set_screen_default;
 	klass->render = gltk_widget_render_default;
+	
+	properties[PROP_TARGET_TYPE] = 
+		g_param_spec_string(	"target-type", "Target Type",
+								"A string representing the type of drop target this widget supports",
+								NULL, G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 
@@ -203,6 +239,7 @@ gltk_widget_init(GltkWidget* self)
 	self->sizeRequest.height = -1;
 
 	priv->allocation = initialAllocation;
+	priv->targetType = NULL;
 	priv->isVisible = TRUE;
 }
 
@@ -372,6 +409,18 @@ gltk_widget_layout(GltkWidget* widget)
 		gltk_screen_layout(widget->screen);
 }
 
+GltkWidget*
+gltk_widget_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
+
+	GltkWidget* res = NULL;
+	g_object_ref(widget);
+	g_signal_emit(widget, signals[FIND_DROP_TARGET], 0, type, bounds, &res);
+	g_object_unref(widget);
+	return res;
+}
+
 void
 gltk_widget_render(GltkWidget* widget)
 {
@@ -398,6 +447,40 @@ gltk_widget_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_widget_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkWidget* self = GLTK_WIDGET(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_TARGET_TYPE:
+			if (priv->targetType)
+				g_free(priv->targetType);
+			priv->targetType = g_value_dup_string(value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_widget_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkWidget* self = GLTK_WIDGET(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_TARGET_TYPE:
+			g_value_set_string(value, priv->targetType);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 
 static void
 gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size)
@@ -468,6 +551,18 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 	}
 
 	return returnValue;
+}
+
+static GltkWidget*
+gltk_widget_real_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	USING_PRIVATE(widget);
+
+	//g_debug("My targetType: %s", priv->targetType);
+
+	if (priv->targetType && !g_strcmp0(type, priv->targetType))
+		return widget;
+	return NULL;
 }
 
 static void

@@ -73,6 +73,8 @@ struct _GltkListItemPrivate
 static guint signals[LAST_SIGNAL] = {0,};
 static GParamSpec* properties[N_PROPERTIES] = {0,};
 
+gboolean gltk_screen_drop_list_item(GltkScreen* screen, GltkListItem* item);
+
 static void gltk_list_dispose(GObject* gobject);
 static void gltk_list_finalize(GObject* gobject);
 
@@ -452,27 +454,55 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		pItems = pItems->next;
 	}
 
-	//TODO deletable condition
-	if (item->priv->removed || (priv->deletable && abs(item->priv->offset.x) > allocation.width))
+	if (item->priv->removed || abs(item->priv->offset.x) > allocation.width)
 	{
 		g_assert((pChildren && pItems) || (!pChildren && !pItems));
 
-		if (!item->priv->removed)
+		if (priv->deletable && !item->priv->removed)
 		{
-			//begin drag 
+			//begin deletion (or maybe drop)
 			priv->items = g_list_remove(priv->items, item);
 			gltk_box_remove_widget(GLTK_BOX(item->list), item->priv->bin);
 			gltk_widget_set_parent(item->priv->bin, GLTK_WIDGET(item->list));
 			gltk_widget_set_screen(item->priv->bin, GLTK_WIDGET(item->list)->screen);
-			//TODO reparent
-			//g_object_unref(item->priv->bin);
-			//item->priv->bin = NULL;
 			item->priv->removed = TRUE;
 		}
 		else
 		{
 			//continue drag
-			//TODO fire event
+			gchar* targetType;
+			g_object_get(item->list, "target-type", &targetType, NULL);
+			GltkAllocation globalAllocation = gltk_widget_get_global_allocation(priv->drag->widget);
+			GltkRectangle* bounds = gltk_rectangle_new(	globalAllocation.x + item->priv->offset.x,
+														globalAllocation.y + item->priv->offset.y,
+														globalAllocation.width, globalAllocation.height);
+			GltkWidget* target = gltk_screen_find_drop_target(widget->screen, targetType, bounds);
+			gltk_rectangle_free(bounds);
+			g_free(targetType);
+
+			if (target == GLTK_WIDGET(item->list))
+			{
+				g_debug("An item has returned to us");
+				//brought item back onto our list
+				GltkAllocation allocBefore = gltk_widget_get_global_allocation(item->priv->bin);
+				gltk_widget_unparent(item->priv->bin);
+				gltk_widget_set_screen(item->priv->bin, NULL);
+
+				//TODO: readd in the correct location (not two append calls)
+				priv->items = g_list_append(priv->items, item);
+				gltk_box_append_widget(GLTK_BOX(item->list), item->priv->bin, FALSE, FALSE);
+				gltk_widget_layout(GLTK_WIDGET(item->list));
+				GltkAllocation allocAfter = gltk_widget_get_global_allocation(item->priv->bin);
+				item->priv->offset.x -= allocAfter.x - allocBefore.x;
+				item->priv->offset.y -= allocAfter.y - allocBefore.y;
+				item->priv->removed = FALSE;
+
+			}
+			else if (target)
+			{
+				//drop on another widget
+				g_critical("TODO drop list item");
+			}
 		}
 	}
 	else
