@@ -35,7 +35,17 @@ G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_VBOX)
 
 enum
 {
+	ITEM_DELETED,
+
 	LAST_SIGNAL
+};
+
+enum
+{
+	PROP_0,
+	PROP_DELETABLE,
+
+	N_PROPERTIES
 };
 
 typedef struct _GltkListPrivate		GltkListPrivate;
@@ -43,6 +53,7 @@ typedef struct _GltkListPrivate		GltkListPrivate;
 struct _GltkListPrivate
 {
 	GList* items; //GltkListItem
+	gboolean deletable;
 
 	GltkListItem* drag;
 
@@ -56,12 +67,17 @@ struct _GltkListItemPrivate
 		int y;
 	} offset;
 	gboolean removed;
+	GltkWidget* bin;
 };
 
-//static guint signals[LAST_SIGNAL] = {0,};
+static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
 
 static void gltk_list_dispose(GObject* gobject);
 static void gltk_list_finalize(GObject* gobject);
+
+static void	gltk_list_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_list_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
 
 static void gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_list_render(GltkWidget* widget);
@@ -78,11 +94,30 @@ gltk_list_class_init(GltkListClass* klass)
 
 	g_type_class_add_private(klass, sizeof(GltkListPrivate));
 	
+	signals[ITEM_DELETED] = 
+		g_signal_new(	"item-deleted",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkListClass, item_deleted),
+						NULL, NULL,
+						g_cclosure_marshal_VOID__POINTER,
+						G_TYPE_NONE, 1,
+						G_TYPE_POINTER);
+	
+	gobject_class->set_property = gltk_list_set_property;
+	gobject_class->get_property = gltk_list_get_property;
 	gobject_class->dispose = gltk_list_dispose;
 	gobject_class->finalize = gltk_list_finalize;
 
 	gltkwidget_class->set_screen = gltk_list_set_screen;
 	gltkwidget_class->render = gltk_list_render;
+	
+	properties[PROP_DELETABLE] = 
+		g_param_spec_boolean(	"deletable", "Deletable",
+								"Allow items to be removed by dragging them away from the list",
+								TRUE, G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 static void
@@ -92,6 +127,7 @@ gltk_list_init(GltkList* self)
 
 	priv->items = NULL;
 	priv->drag = NULL;
+	priv->deletable = FALSE;
 
 	priv->renderOverlayId = 0;
 }
@@ -131,9 +167,7 @@ gltk_list_finalize(GObject* gobject)
 GltkWidget*
 gltk_list_new()
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_LIST, NULL);
-
-	return (GltkWidget*)gobject;
+	return (GltkWidget*)g_object_new(GLTK_TYPE_LIST, NULL);
 }
 
 GltkListItem*
@@ -152,6 +186,9 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	item->widget = widget;
 	item->data = data;
 	item->priv = g_new(GltkListItemPrivate, 1);
+	item->priv->bin = bin;
+	item->priv->removed = FALSE;
+	g_object_ref(item->priv->bin);
 
 	priv->items = g_list_append(priv->items, item);
 	
@@ -173,7 +210,10 @@ gltk_list_remove_item(GltkList* list, GltkListItem* item)
 
 	priv->items = g_list_remove(priv->items, item);
 
-	g_object_unref(G_OBJECT(item->widget));
+	gltk_box_remove_widget(GLTK_BOX(list), item->priv->bin);
+	g_object_unref(item->priv->bin);
+
+	g_object_unref(item->widget);
 
 	g_free(item->priv);
 	g_free(item);
@@ -190,25 +230,44 @@ gltk_list_error_quark()
  *********************/
 
 static void
+gltk_list_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkList* self = GLTK_LIST(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_DELETABLE:
+			priv->deletable = g_value_get_boolean(value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_list_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkList* self = GLTK_LIST(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_DELETABLE:
+			g_value_set_boolean(value, priv->deletable);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
 gltk_list_render_overlay(GltkScreen* screen, GltkWidget* widget)
 {
 	USING_PRIVATE(widget);
 
 	if (priv->drag)
 	{
-		GList* pChildren = GLTK_BOX(widget)->children;
-		GList* pItems = priv->items;
-		GltkBoxChild* child = NULL;
-		while (pChildren && pItems)
-		{
-			child = (GltkBoxChild*)pChildren->data;
-			if (priv->drag == (GltkListItem*)pItems->data)
-				break;
-			pChildren = pChildren->next;
-			pItems = pItems->next;
-		}
-		g_assert(child);
-
 		static float colorHighlightDark[] = {1.0f, 0.65f, 0.16f, 0.5f};
 		int offsetX = priv->drag->priv->offset.x;
 		int offsetY = priv->drag->priv->offset.y;
@@ -220,22 +279,28 @@ gltk_list_render_overlay(GltkScreen* screen, GltkWidget* widget)
 			//GltkAllocation myAllocation = gltk_widget_get_allocation(widget);
 			//g_message("Allocation: %i %i", myAllocation.x, myAllocation.y);
 			//glTranslatef(myAllocation.x, myAllocation.y, 0.0f);
+			GltkAllocation allocation = gltk_widget_get_global_allocation(priv->drag->widget);
 
-			//overlay a rectangle on top of the widget in the list
-			GltkAllocation allocation = gltk_widget_get_global_allocation(child->widget);
-			glColor4fv(colorHighlightDark);
-			glRectf(allocation.x, allocation.y, allocation.x + allocation.width, allocation.y + allocation.height);
-
-			//draw a line between stuff
-			glColor3fv(colorHighlightDark);
-			glBegin(GL_LINES);
+			if (!priv->drag->priv->removed)
 			{
-				int x = allocation.x + allocation.width / 2;
-				int y = allocation.y + allocation.height / 2;
-				glVertex2f(x, y);
-				glVertex2f(x + offsetX, y + offsetY);
+				//overlay a rectangle on top of the widget in the list
+				glColor4fv(colorHighlightDark);
+				glRectf(	allocation.x,
+							allocation.y,
+							allocation.x + allocation.width, 
+							allocation.y + allocation.height);
+
+				//draw a line between stuff
+				glColor3fv(colorHighlightDark);
+				glBegin(GL_LINES);
+				{
+					int x = allocation.x + allocation.width / 2;
+					int y = allocation.y + allocation.height / 2;
+					glVertex2f(x, y);
+					glVertex2f(x + offsetX, y + offsetY);
+				}
+				glEnd();
 			}
-			glEnd();
 
 			//draw a rectangle behind our floating widget
 			glColor4fv(colorHighlightDark);
@@ -289,6 +354,18 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 			gltk_screen_set_widget_unpressed(widget->screen, widget);
 			if (priv->drag && priv->drag == item)
 			{
+				if (priv->drag->priv->removed)
+				{
+					//delete item
+					g_object_ref(item->list);
+					g_signal_emit(G_OBJECT(item->list), signals[ITEM_DELETED], 0, item);
+					g_object_unref(item->list);
+
+					g_object_unref(item->widget);
+					g_object_unref(item->priv->bin);
+					g_free(item->priv);
+					g_free(item);
+				}
 				priv->drag = NULL;
 				gltk_screen_invalidate(widget->screen);
 			}
@@ -362,6 +439,8 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	item->priv->offset.x += event->dx;
 	item->priv->offset.y += event->dy;
 	
+	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
+
 	//find our child and item in our lists
 	GList* pChildren = GLTK_BOX(item->list)->children;
 	GList* pItems = priv->items;
@@ -372,34 +451,60 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		pChildren = pChildren->next;
 		pItems = pItems->next;
 	}
-	g_assert(pChildren && pItems);
 
-	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
-
-	if (item->priv->offset.y > allocation.height)
+	//TODO deletable condition
+	if (item->priv->removed || (priv->deletable && abs(item->priv->offset.x) > allocation.width))
 	{
-		//move item further down in out items list
-		//ditto for our vbox's widgets
-		if (pItems->next)
+		g_assert((pChildren && pItems) || (!pChildren && !pItems));
+
+		if (!item->priv->removed)
 		{
-			item->priv->offset.y -= gltk_widget_get_allocation(((GltkListItem*)pItems->next->data)->widget).height;
-
-			GLTK_BOX(item->list)->children = move_node_forward(GLTK_BOX(item->list)->children, pChildren);
-			priv->items = move_node_forward(priv->items, pItems);
-
-			gltk_screen_layout(widget->screen);
+			//begin drag 
+			priv->items = g_list_remove(priv->items, item);
+			gltk_box_remove_widget(GLTK_BOX(item->list), item->priv->bin);
+			gltk_widget_set_parent(item->priv->bin, GLTK_WIDGET(item->list));
+			gltk_widget_set_screen(item->priv->bin, GLTK_WIDGET(item->list)->screen);
+			//TODO reparent
+			//g_object_unref(item->priv->bin);
+			//item->priv->bin = NULL;
+			item->priv->removed = TRUE;
+		}
+		else
+		{
+			//continue drag
+			//TODO fire event
 		}
 	}
-	else if (item->priv->offset.y < -allocation.height)
+	else
 	{
-		if (pItems->prev)
+	
+		g_assert(pChildren && pItems);
+
+		if (item->priv->offset.y > allocation.height)
 		{
-			item->priv->offset.y += gltk_widget_get_allocation(((GltkListItem*)pItems->prev->data)->widget).height;
+			//move item further down in out items list
+			//ditto for our vbox's widgets
+			if (pItems->next)
+			{
+				item->priv->offset.y -= gltk_widget_get_allocation(((GltkListItem*)pItems->next->data)->widget).height;
 
-			GLTK_BOX(item->list)->children = move_node_back(GLTK_BOX(item->list)->children, pChildren);
-			priv->items = move_node_back(priv->items, pItems);
+				GLTK_BOX(item->list)->children = move_node_forward(GLTK_BOX(item->list)->children, pChildren);
+				priv->items = move_node_forward(priv->items, pItems);
 
-			gltk_screen_layout(widget->screen);
+				gltk_screen_layout(widget->screen);
+			}
+		}
+		else if (item->priv->offset.y < -allocation.height)
+		{
+			if (pItems->prev)
+			{
+				item->priv->offset.y += gltk_widget_get_allocation(((GltkListItem*)pItems->prev->data)->widget).height;
+
+				GLTK_BOX(item->list)->children = move_node_back(GLTK_BOX(item->list)->children, pChildren);
+				priv->items = move_node_back(priv->items, pItems);
+
+				gltk_screen_layout(widget->screen);
+			}
 		}
 	}
 

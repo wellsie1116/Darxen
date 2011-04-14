@@ -57,6 +57,9 @@ struct _GltkListClass
 	GltkVBoxClass parent_class;
 	
 	/* signals */
+	void	(*item_deleted)	(	GltkList* list,
+								GltkListItem* item);
+
 	/* virtual funcs */
 };
 
