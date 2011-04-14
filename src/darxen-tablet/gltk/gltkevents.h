@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "gltkstructs.h"
+
 typedef enum   _GltkEventType			GltkEventType;
 
 typedef struct _GltkEventAny			GltkEventAny;
@@ -169,6 +171,10 @@ gboolean	gltk_accum_event				(	GSignalInvocationHint* ihint,
 												const GValue* handler_return,
 												gpointer data);
 
+gboolean	gltk_accum_find_widget			(	GSignalInvocationHint* ihint,
+												GValue* return_accu,
+												const GValue* handler_return,
+												gpointer data);
 
 #endif
 

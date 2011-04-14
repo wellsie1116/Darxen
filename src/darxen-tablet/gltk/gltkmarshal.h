@@ -71,6 +71,30 @@ extern void g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                                       gpointer      invocation_hint,
                                                       gpointer      marshal_data);
 
+/* POINTER:STRING (gltkmarshal.list:10) */
+extern void g_cclosure_user_marshal_POINTER__STRING (GClosure     *closure,
+                                                     GValue       *return_value,
+                                                     guint         n_param_values,
+                                                     const GValue *param_values,
+                                                     gpointer      invocation_hint,
+                                                     gpointer      marshal_data);
+
+/* POINTER:STRING,POINTER (gltkmarshal.list:11) */
+extern void g_cclosure_user_marshal_POINTER__STRING_POINTER (GClosure     *closure,
+                                                             GValue       *return_value,
+                                                             guint         n_param_values,
+                                                             const GValue *param_values,
+                                                             gpointer      invocation_hint,
+                                                             gpointer      marshal_data);
+
+/* POINTER:STRING,BOXED (gltkmarshal.list:12) */
+extern void g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure,
+                                                           GValue       *return_value,
+                                                           guint         n_param_values,
+                                                           const GValue *param_values,
+                                                           gpointer      invocation_hint,
+                                                           gpointer      marshal_data);
+
 G_END_DECLS
 
 #endif /* __g_cclosure_user_marshal_MARSHAL_H__ */

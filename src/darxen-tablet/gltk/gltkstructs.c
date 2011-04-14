@@ -34,3 +34,65 @@ gltk_color_get_array(GltkColor* color)
 	return (const float*)color;
 }
 
+GltkRectangle*
+gltk_rectangle_new(int x, int y, int width, int height)
+{
+	GltkRectangle* res = g_slice_new(GltkRectangle);
+	res->x = x;
+	res->y = y;
+	res->width = width;
+	res->height = height;
+	return res;
+}
+
+GltkRectangle*
+gltk_rectangle_copy(const GltkRectangle* rect)
+{
+	GltkRectangle* res = g_slice_new(GltkRectangle);
+	*res = *rect;
+	return res;
+}
+
+void
+gltk_rectangle_free(GltkRectangle* rect)
+{
+	g_slice_free(GltkRectangle, rect);
+}
+
+gboolean
+gltk_rectangle_intersects_inner(const GltkRectangle* r1, const GltkRectangle* r2)
+{
+	return
+		((r1->x >= r2->x && r1->x <= r2->x + r2->width)
+		 || (r1->x + r1->width >= r2->x && r1->x + r1->width <= r2->x + r2->width))
+	 && ((r1->y >= r2->y && r1->y <= r2->y + r2->height) 
+		 || (r1->y + r1->height >= r2->y && r1->y + r1->height <= r2->y + r2->height));
+}
+
+gboolean
+gltk_rectangle_intersects(const GltkRectangle* r1, const GltkRectangle* r2)
+{
+	gboolean res = gltk_rectangle_intersects_inner(r1, r2) || gltk_rectangle_intersects_inner(r2, r1);
+
+	//g_debug("Rectangle (%3i %3i %3i %3i) %s\nRectangle (%3i %3i %3i %3i)",
+	//		r1->x, r1->y, r1->x + r1->width, r1->y + r1->height,
+	//		res ? "intersects" : "does not intersect",
+	//		r2->x, r2->y, r2->x + r2->width, r2->y + r2->height);
+
+	return res; 
+}
+
+
+GType
+gltk_rectangle_get_type()
+{
+	static GType type = 0;
+
+	if (!type)
+		type = g_boxed_type_register_static(g_intern_static_string("GltkRectangle"),
+				(GBoxedCopyFunc)gltk_rectangle_copy,
+				(GBoxedFreeFunc)gltk_rectangle_free);
+
+	return type;
+}
+

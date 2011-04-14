@@ -21,7 +21,12 @@
 #ifndef GLTKSTRUCTS_H_WZ7RM0GE
 #define GLTKSTRUCTS_H_WZ7RM0GE
 
+#include <glib-object.h>
+
+#define GLTK_TYPE_RECTANGLE					(gltk_rectangle_get_type())
+
 typedef struct _GltkColor		GltkColor;
+typedef struct _GltkRectangle	GltkRectangle;
 
 struct _GltkColor
 {
@@ -30,8 +35,23 @@ struct _GltkColor
 	float b;
 };
 
-void			gltk_color_init			(GltkColor* color, float r, float g, float b);
-const float*	gltk_color_get_array	(GltkColor* color);
+struct _GltkRectangle
+{
+	int x;
+	int y;
+	int width;
+	int height;
+};
+
+void			gltk_color_init				(GltkColor* color, float r, float g, float b);
+const float*	gltk_color_get_array		(GltkColor* color);
+
+GType			gltk_rectangle_get_type		() G_GNUC_CONST;
+GltkRectangle*	gltk_rectangle_new			(int x, int y, int width, int height);
+GltkRectangle*	gltk_rectangle_copy			(const GltkRectangle* rect);
+void			gltk_rectangle_free			(GltkRectangle* rect);
+
+gboolean		gltk_rectangle_intersects	(const GltkRectangle* r1, const GltkRectangle* r2);
 
 #endif
 

@@ -100,7 +100,7 @@ gltk_event_free(GltkEvent* event)
 }
 
 gboolean
-	gltk_accum_event(	GSignalInvocationHint* ihint,
+gltk_accum_event(	GSignalInvocationHint* ihint,
 					GValue* return_accu,
 					const GValue* handler_return,
 					gpointer data)
@@ -108,5 +108,16 @@ gboolean
 	gboolean handlerReturn = g_value_get_boolean(handler_return);
 	g_value_set_boolean(return_accu, handlerReturn);
 	return !handlerReturn;
+}
+
+gboolean
+gltk_accum_find_widget(	GSignalInvocationHint* ihint,
+						GValue* return_accu,
+						const GValue* handler_return,
+						gpointer data)
+{
+	gpointer val = g_value_get_pointer(handler_return);
+	g_value_set_pointer(return_accu, val);
+	return !val;
 }
 
