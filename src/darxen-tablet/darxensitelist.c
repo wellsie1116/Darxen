@@ -75,6 +75,9 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
 
+static void darxen_site_list_site_deleted(GltkList* list, GltkListItem* item);
+static void darxen_site_list_view_deleted(GltkList* viewList, GltkListItem* item, DarxenSiteList* siteList);
+
 static void		config_viewNameChanged		(	DarxenConfig* config,
 												const gchar* site,
 												DarxenViewInfo* viewInfo,
@@ -85,6 +88,7 @@ static void
 darxen_site_list_class_init(DarxenSiteListClass* klass)
 {
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+	GltkListClass* gltklist_class = GLTK_LIST_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(DarxenSiteListPrivate));
 
@@ -127,9 +131,11 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						g_cclosure_user_marshal_VOID__POINTER_POINTER,
 						G_TYPE_NONE, 2,
 						G_TYPE_POINTER, G_TYPE_POINTER);
-	
+
 	gobject_class->dispose = darxen_site_list_dispose;
 	gobject_class->finalize = darxen_site_list_finalize;
+
+	gltklist_class->item_deleted = darxen_site_list_site_deleted;
 }
 
 static void
@@ -188,7 +194,7 @@ darxen_site_list_finalize(GObject* gobject)
 GltkWidget*
 darxen_site_list_new()
 {
-	GObject *gobject = g_object_new(DARXEN_TYPE_SITE_LIST, NULL);
+	GObject *gobject = g_object_new(DARXEN_TYPE_SITE_LIST, "deletable", TRUE, NULL);
 	DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
 
 	USING_PRIVATE(self);
@@ -221,6 +227,8 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 	siteInfo->name = g_strdup(site);
 	siteInfo->siteBox = gltk_vbox_new(0);
 	siteInfo->views = gltk_list_new();
+	g_object_set(siteInfo->views, "deletable", TRUE, NULL);
+	g_signal_connect(siteInfo->views, "item-deleted", G_CALLBACK(darxen_site_list_view_deleted), list);
 	siteInfo->viewMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_view_list_item);
 	g_object_ref(G_OBJECT(siteInfo->siteBox));
 	g_object_ref(G_OBJECT(siteInfo->views));
@@ -329,6 +337,18 @@ darxen_site_list_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+darxen_site_list_site_deleted(GltkList* list, GltkListItem* item)
+{
+	g_critical("TODO delete site (and all associated views)");
+}
+
+static void
+darxen_site_list_view_deleted(GltkList* viewList, GltkListItem* item, DarxenSiteList* siteList)
+{
+	g_critical("TODO delete view");
+}
 
 static void				
 config_viewNameChanged(	DarxenConfig* config,
