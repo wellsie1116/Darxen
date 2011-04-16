@@ -276,6 +276,19 @@ darxen_renderer_is_dirty(DarxenRenderer* renderer)
 
 /* Set */
 void
+darxen_renderer_set_smoothing(DarxenRenderer* renderer, gboolean smoothing)
+{
+	g_return_if_fail(DARXEN_IS_RENDERER(renderer));
+
+	USING_PRIVATE(renderer);
+
+	if (smoothing != priv->product.smoothing)
+		priv->hasDataChanged = TRUE;
+
+	priv->product.smoothing = smoothing;
+}
+
+void
 darxen_renderer_set_data(DarxenRenderer *renderer, ProductsLevel3Data *objData)
 {
 	g_return_if_fail(DARXEN_IS_RENDERER(renderer));

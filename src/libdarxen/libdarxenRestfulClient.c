@@ -231,6 +231,7 @@ darxen_restful_client_add_poller(DarxenRestfulClient* self, const gchar* site, c
 	DarxenPoller* poller = g_hash_table_lookup(priv->pollers, &pair);
 	if (poller)
 	{
+		//TODO: retransmit old data
 		g_object_ref(G_OBJECT(poller));
 		return poller;
 	}

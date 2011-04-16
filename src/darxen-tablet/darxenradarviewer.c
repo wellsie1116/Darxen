@@ -534,6 +534,7 @@ set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
 	priv->viewInfo = viewInfo;
 
 	priv->renderer = darxen_renderer_new(priv->site, viewInfo->productCode, viewInfo->shapefiles);
+	darxen_renderer_set_smoothing(priv->renderer, viewInfo->smoothing);
 
 	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
 	switch (viewInfo->sourceType)
