@@ -373,7 +373,16 @@ gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
 	GltkWidget* newWidget = NULL;
 	g_signal_emit(G_OBJECT(widget), signals[CONVERT_DROPPED_ITEM], 0, type, item, &newWidget);
 	if (newWidget)
+	{
+		GltkSize size;
+	   	gltk_widget_size_request(newWidget, &size);
+		GltkAllocation allocation = gltk_widget_get_allocation(newWidget);
+		allocation.width = size.width;
+		allocation.height = size.height;
+		gltk_widget_size_allocate(newWidget, allocation);
+
 		item->widget = newWidget;
+	}
 
 	//initialize list item
 	g_object_ref_sink(item->widget);
@@ -422,6 +431,8 @@ gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListIte
 				if (priv->drag->priv->removed)
 				{
 					//delete item
+					gltk_bin_set_widget(GLTK_BIN(item->priv->bin), NULL);
+
 					g_object_ref(item->list);
 					g_signal_emit(G_OBJECT(item->list), signals[ITEM_DELETED], 0, item);
 					g_object_unref(item->list);
