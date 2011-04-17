@@ -134,6 +134,8 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 	gltk_widget_set_parent(widget, GLTK_WIDGET(box));
 	if (GLTK_WIDGET(box)->screen)
 		gltk_widget_set_screen(widget, GLTK_WIDGET(box)->screen);
+
+	gltk_widget_layout(GLTK_WIDGET(box));
 }
 
 void
