@@ -230,6 +230,16 @@ gltk_screen_set_widget_pressed(GltkScreen* screen, GltkWidget* widget)
 }
 
 void
+gltk_screen_swap_widget_pressed(GltkScreen* screen, GltkWidget* before, GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->window);
+
+	gltk_window_swap_widget_pressed(priv->window, before, widget);
+}
+
+void
 gltk_screen_set_widget_unpressed(GltkScreen* screen, GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
