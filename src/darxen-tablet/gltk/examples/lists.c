@@ -104,6 +104,13 @@ create_composite_list()
 	return label_widget(list, "Any widget can be added to a list.\nThis includes composite widgets and\neven additional lists.");
 }
 
+void
+list_drop_item(GltkWidget* widget, const gchar* type, const GltkListItem* item)
+{
+	g_assert(!g_strcmp0(type, "DndDemo"));
+	g_debug("An item was dropped");
+}
+
 GltkWidget*
 create_dnd_list(const gchar* prefix, gboolean deletable, const gchar* lbl)
 {
@@ -120,6 +127,8 @@ create_dnd_list(const gchar* prefix, gboolean deletable, const gchar* lbl)
 
 	GltkWidget* hbox = gltk_hbox_new(0);
 	gltk_box_append_widget(GLTK_BOX(hbox), list, FALSE, FALSE);
+
+	g_signal_connect(G_OBJECT(list), "drop-item", G_CALLBACK(list_drop_item), NULL);
 
 	return label_widget(hbox, lbl);
 }
