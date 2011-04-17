@@ -95,6 +95,8 @@ extern void g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure
                                                            gpointer      invocation_hint,
                                                            gpointer      marshal_data);
 
+/* NONE:STRING,POINTER (gltkmarshal.list:13) */
+
 G_END_DECLS
 
 #endif /* __g_cclosure_user_marshal_MARSHAL_H__ */

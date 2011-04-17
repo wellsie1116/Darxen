@@ -408,3 +408,5 @@ g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure,
   g_value_set_pointer (return_value, v_return);
 }
 
+/* NONE:STRING,POINTER (gltkmarshal.list:13) */
+
