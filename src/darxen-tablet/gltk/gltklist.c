@@ -20,6 +20,7 @@
 
 #include "gltklist.h"
 
+#include "gltkmarshal.h"
 #include "gltkvbox.h"
 #include "gltkbin.h"
 #include "gltklabel.h"
@@ -36,6 +37,7 @@ G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_VBOX)
 enum
 {
 	ITEM_DELETED,
+	CONVERT_DROPPED_ITEM,
 
 	LAST_SIGNAL
 };
@@ -83,6 +85,7 @@ static void	gltk_list_get_property	(GObject* object, guint property_id, GValue* 
 
 static void gltk_list_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_list_render(GltkWidget* widget);
+static void gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data);
 
 static gboolean gltk_list_bin_touch_event(GltkWidget* widget, GltkEventTouch* event, GltkListItem* item);
 static gboolean gltk_list_bin_long_touch_event(GltkWidget* widget, GltkEventClick* event, GltkListItem* item);
@@ -106,6 +109,16 @@ gltk_list_class_init(GltkListClass* klass)
 						G_TYPE_NONE, 1,
 						G_TYPE_POINTER);
 	
+	signals[CONVERT_DROPPED_ITEM] = 
+		g_signal_new(	"convert-dropped-item",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkListClass, convert_dropped_item),
+						NULL, NULL,
+						g_cclosure_user_marshal_POINTER__STRING_POINTER,
+						G_TYPE_POINTER, 2,
+						G_TYPE_STRING, G_TYPE_POINTER);
+	
 	gobject_class->set_property = gltk_list_set_property;
 	gobject_class->get_property = gltk_list_get_property;
 	gobject_class->dispose = gltk_list_dispose;
@@ -113,6 +126,7 @@ gltk_list_class_init(GltkListClass* klass)
 
 	gltkwidget_class->set_screen = gltk_list_set_screen;
 	gltkwidget_class->render = gltk_list_render;
+	gltkwidget_class->drop_item = gltk_list_drop_item;
 	
 	properties[PROP_DELETABLE] = 
 		g_param_spec_boolean(	"deletable", "Deletable",
@@ -179,8 +193,9 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
 	USING_PRIVATE(list);
 
-	g_object_ref_sink(G_OBJECT(widget));
+	g_object_ref_sink(widget);
 	GltkWidget* bin = gltk_bin_new(widget);
+	g_object_ref_sink(bin);
 	gltk_box_append_widget(GLTK_BOX(list), bin, FALSE, FALSE);
 
 	GltkListItem* item = g_new(GltkListItem, 1);
@@ -190,7 +205,6 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	item->priv = g_new(GltkListItemPrivate, 1);
 	item->priv->bin = bin;
 	item->priv->removed = FALSE;
-	g_object_ref(item->priv->bin);
 
 	priv->items = g_list_append(priv->items, item);
 	
@@ -340,6 +354,55 @@ gltk_list_render(GltkWidget* widget)
 	//USING_PRIVATE(widget);
 
 	GLTK_WIDGET_CLASS(gltk_list_parent_class)->render(widget);
+}
+
+static void
+gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
+{
+	USING_PRIVATE(widget);
+
+	const GltkListItem* oldItem = (const GltkListItem*)data;
+
+	GltkListItem* item = g_new(GltkListItem, 1);
+	*item = *(const GltkListItem*)data;
+	item->priv = g_new(GltkListItemPrivate, 1);
+	*item->priv = *((const GltkListItem*)data)->priv;
+	
+
+	//allow for a list to override how an item is transfered
+	GltkWidget* newWidget = NULL;
+	g_signal_emit(G_OBJECT(widget), signals[CONVERT_DROPPED_ITEM], 0, type, item, &newWidget);
+	if (newWidget)
+		item->widget = newWidget;
+
+	//initialize list item
+	g_object_ref_sink(item->widget);
+	item->priv->bin = gltk_bin_new(item->widget);
+	g_object_ref_sink(item->priv->bin);
+	gltk_bin_set_widget(GLTK_BIN(item->priv->bin), item->widget);
+	item->list = GLTK_LIST(widget);
+	item->priv->removed = FALSE;
+	gltk_screen_swap_widget_pressed(widget->screen, oldItem->priv->bin, item->priv->bin);
+
+	//add the item to our items and vbox
+	gltk_box_append_widget(GLTK_BOX(widget), item->priv->bin, FALSE, FALSE);
+	priv->items = g_list_append(priv->items, item);
+	
+	//set offset
+	{
+		GltkAllocation before = gltk_widget_get_global_allocation(oldItem->priv->bin);
+		GltkAllocation after = gltk_widget_get_global_allocation(item->priv->bin);
+
+		item->priv->offset.x += before.x - after.x;
+		item->priv->offset.y += before.y - after.y;
+	}
+	
+	g_signal_connect(item->priv->bin, "touch-event", (GCallback)gltk_list_bin_touch_event, item);
+	g_signal_connect(item->priv->bin, "long-touch-event", (GCallback)gltk_list_bin_long_touch_event, item);
+	g_signal_connect(item->priv->bin, "drag-event", (GCallback)gltk_list_bin_drag_event, item);
+
+	//set item to the current dragging item
+	priv->drag = item;
 }
 
 static gboolean
@@ -500,8 +563,29 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			}
 			else if (target)
 			{
+				//remove if it hadn't been removed yet
+				if (!priv->deletable)
+				{
+					priv->items = g_list_remove(priv->items, item);
+					gltk_box_remove_widget(GLTK_BOX(item->list), item->priv->bin);
+					gltk_widget_set_parent(item->priv->bin, GLTK_WIDGET(item->list));
+					gltk_widget_set_screen(item->priv->bin, GLTK_WIDGET(item->list)->screen);
+					item->priv->removed = TRUE;
+				}
+				gltk_bin_set_widget(GLTK_BIN(item->priv->bin), NULL);
 				//drop on another widget
-				g_critical("TODO drop list item");
+				//g_critical("TODO drop list item");
+				g_object_get(item->list, "target-type", &targetType, NULL);
+				gltk_widget_drop_item(target, targetType, item);
+				g_free(targetType);
+				GltkList* list = item->list;
+				g_object_unref(item->priv->bin);
+				g_object_unref(item->widget);
+				g_free(item->priv);
+				g_free(item);
+				priv->drag = NULL;
+				gltk_widget_invalidate(GLTK_WIDGET(list));
+				return TRUE;
 			}
 		}
 	}

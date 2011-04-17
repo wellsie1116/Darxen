@@ -42,6 +42,7 @@ enum
 	ROTATE_EVENT,
 	CLICK_EVENT,
 	FIND_DROP_TARGET,
+	DROP_ITEM,
 
    	LAST_SIGNAL
 };
@@ -197,6 +198,16 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						G_TYPE_POINTER, 2,
 						G_TYPE_STRING, GLTK_TYPE_RECTANGLE);
 	
+	signals[DROP_ITEM] = 
+		g_signal_new(	"drop-item",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, drop_item),
+						NULL, NULL,
+						g_cclosure_user_marshal_NONE__STRING_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_STRING, G_TYPE_POINTER);
+	
 	gobject_class->dispose = gltk_widget_dispose;
 	gobject_class->finalize = gltk_widget_finalize;
 	gobject_class->set_property = gltk_widget_set_property;
@@ -213,6 +224,7 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->rotate_event = NULL;
 	klass->click_event = NULL;
 	klass->find_drop_target = gltk_widget_real_find_drop_target;
+	klass->drop_item = NULL;
 
 	klass->set_screen = gltk_widget_set_screen_default;
 	klass->render = gltk_widget_render_default;
@@ -413,12 +425,24 @@ GltkWidget*
 gltk_widget_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
 {
 	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
+	g_return_val_if_fail(type, NULL);
 
 	GltkWidget* res = NULL;
 	g_object_ref(widget);
 	g_signal_emit(widget, signals[FIND_DROP_TARGET], 0, type, bounds, &res);
 	g_object_unref(widget);
 	return res;
+}
+
+void
+gltk_widget_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(type);
+
+	g_object_ref(widget);
+	g_signal_emit(widget, signals[DROP_ITEM], 0, type, data);
+	g_object_unref(widget);
 }
 
 void

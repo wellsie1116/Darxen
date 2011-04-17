@@ -57,8 +57,12 @@ struct _GltkListClass
 	GltkVBoxClass parent_class;
 	
 	/* signals */
-	void	(*item_deleted)	(	GltkList* list,
-								GltkListItem* item);
+	void		(*item_deleted)			(	GltkList* list,
+											GltkListItem* item);
+	
+	GltkWidget*	(*convert_dropped_item)	(	GltkList* list,
+											const gchar* type,
+											GltkListItem* item);
 
 	/* virtual funcs */
 };
@@ -71,8 +75,8 @@ typedef enum
 GType			gltk_list_get_type	() G_GNUC_CONST;
 GltkWidget*		gltk_list_new		();
 
-GltkListItem*	gltk_list_add_item		(GltkList* list, GltkWidget* widget, gpointer data);
-void			gltk_list_remove_item	(GltkList* list, GltkListItem* item);
+GltkListItem*	gltk_list_add_item				(GltkList* list, GltkWidget* widget, gpointer data);
+void			gltk_list_remove_item			(GltkList* list, GltkListItem* item);
 
 GQuark			gltk_list_error_quark	();
 
