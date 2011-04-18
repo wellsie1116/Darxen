@@ -298,6 +298,8 @@ darxen_config_load_settings(DarxenConfig* config)
 		config->sites = g_list_append(config->sites, siteInfo);
 
 	}
+	priv->settingsLoaded = TRUE;
+
 }
 
 void
