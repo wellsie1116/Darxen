@@ -19,19 +19,69 @@
  */
 
 #include "darxenmainview.h"
+#include "darxenconfig.h"
+
+#include <libdarxenRadarSites.h>
+
+#include <glib.h>
 
 static GltkWidget* root = NULL;
+
+static gboolean
+check_site_list(const gchar* id)
+{
+	GList* pSites = darxen_config_get_sites(darxen_config_get_instance());
+	while (pSites)
+	{
+		DarxenSiteInfo* siteInfo = (DarxenSiteInfo*)pSites->data;
+	
+		if (!g_ascii_strcasecmp(id, siteInfo->name))
+			return TRUE;
+	
+		pSites = pSites->next;
+	}
+	return FALSE;
+}
 
 GltkWidget*
 darxen_main_view_get_root()
 {
-	if (!root)
-	{
-		root = gltk_vbox_new(0);
-		g_object_ref(G_OBJECT(root));
+	if (root)
+		return root;
 
-		gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), TRUE, TRUE);
+	root = gltk_vbox_new(0);
+	g_object_ref_sink(G_OBJECT(root));
+
+	GltkWidget* sitesScrollable = gltk_scrollable_new();
+	{
+		GltkWidget* sites = gltk_list_new();
+		g_object_set(sites, "target-type", "SiteList", NULL);
+
+		GSList* lstSites = darxen_radar_sites_get_site_list();
+		GSList* plstSites = lstSites;
+		while (plstSites)
+		{
+			DarxenRadarSiteInfo* siteInfo = (DarxenRadarSiteInfo*)plstSites->data;
+
+			if (check_site_list(siteInfo->chrID))
+			{
+				plstSites = plstSites->next;
+				continue;
+			}
+
+			gchar* display = g_strdup_printf("%s, %s", siteInfo->chrCity, siteInfo->chrState);
+			GltkWidget* lblSite = gltk_label_new(display);
+			g_free(display);
+		
+			gltk_list_add_item(GLTK_LIST(sites), lblSite, siteInfo);
+		
+			plstSites = plstSites->next;
+		}
+		gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), sites);
 	}
+
+	gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(root), sitesScrollable, TRUE, TRUE);
 
 	return root;
 }
