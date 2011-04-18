@@ -127,7 +127,7 @@ darxen_view_config_dispose(GObject* gobject)
 		GltkWidget** pbtnShapefiles = priv->btnShapefiles;
 		while (*pbtnShapefiles)
 		{
-			g_free(*pbtnShapefiles);
+			g_object_unref(*pbtnShapefiles);
 			pbtnShapefiles++;
 		}
 		g_free(priv->btnShapefiles);
