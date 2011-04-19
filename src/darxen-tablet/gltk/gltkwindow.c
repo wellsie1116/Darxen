@@ -516,14 +516,11 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 }
 
 void
-gltk_window_swap_widget_pressed(GltkWindow* window, GltkWidget* before, GltkWidget* widget)
+gltk_window_swap_widget_pressed(GltkWindow* window, GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WINDOW(window));
-	g_return_if_fail(GLTK_IS_WIDGET(before));
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 	USING_PRIVATE(window);
-
-	g_return_if_fail(before == priv->pressed);
 
 	g_object_remove_weak_pointer(G_OBJECT(priv->pressed), (gpointer*)&priv->pressed);
 	priv->pressed = widget;
