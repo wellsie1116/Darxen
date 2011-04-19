@@ -257,6 +257,17 @@ gltk_list_remove_item(GltkList* list, GltkListItem* item)
 	g_free(item);
 }
 
+gint
+gltk_list_get_index(GltkList* list, GltkListItem* item)
+{
+	g_return_val_if_fail(GLTK_IS_LIST(list), -1);
+	g_return_val_if_fail(item, -1);
+	g_return_val_if_fail(item->list == list, -1);
+	USING_PRIVATE(list);
+
+	return g_list_index(priv->items, item);
+}
+
 GQuark
 gltk_list_error_quark()
 {

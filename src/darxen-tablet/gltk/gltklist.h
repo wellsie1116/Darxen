@@ -85,6 +85,7 @@ GltkWidget*		gltk_list_new		();
 
 GltkListItem*	gltk_list_add_item				(GltkList* list, GltkWidget* widget, gpointer data);
 void			gltk_list_remove_item			(GltkList* list, GltkListItem* item);
+gint			gltk_list_get_index				(GltkList* list, GltkListItem* item);
 
 GQuark			gltk_list_error_quark	();
 
