@@ -31,6 +31,8 @@ G_DEFINE_TYPE(DarxenConfig, darxen_config, G_TYPE_OBJECT)
 #define USING_PRIVATE(obj) DarxenConfigPrivate* priv = DARXEN_CONFIG_GET_PRIVATE(obj)
 #define DARXEN_CONFIG_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DARXEN_TYPE_CONFIG, DarxenConfigPrivate))
 
+#define ENSURE_CONFIG if (!config) config = darxen_config_get_instance()
+
 enum
 {
 	VIEW_NAME_CHANGED,
@@ -133,6 +135,7 @@ const gchar* settings_path()
 void
 darxen_config_load_settings(DarxenConfig* config)
 {
+	ENSURE_CONFIG;
 	GError* error = NULL;
 	USING_PRIVATE(config);
 
@@ -305,6 +308,7 @@ darxen_config_load_settings(DarxenConfig* config)
 void
 darxen_config_save_settings(DarxenConfig* config)
 {
+	ENSURE_CONFIG;
 	GError* error = NULL;
 	JsonObject* root = json_object_new();
 
@@ -397,6 +401,7 @@ darxen_config_save_settings(DarxenConfig* config)
 GList*
 darxen_config_get_sites(DarxenConfig* config)
 {
+	ENSURE_CONFIG;
 	g_return_val_if_fail(DARXEN_IS_CONFIG(config), NULL);
 
 	darxen_config_load_settings(config);
@@ -407,6 +412,7 @@ darxen_config_get_sites(DarxenConfig* config)
 void
 darxen_config_set_client(DarxenConfig* config, DarxenRestfulClient* newClient)
 {
+	ENSURE_CONFIG;
 	g_return_if_fail(DARXEN_IS_CONFIG(config));
 	g_return_if_fail(DARXEN_IS_RESTFUL_CLIENT(newClient));
 
@@ -416,6 +422,7 @@ darxen_config_set_client(DarxenConfig* config, DarxenRestfulClient* newClient)
 DarxenRestfulClient*
 darxen_config_get_client(DarxenConfig* config)
 {
+	ENSURE_CONFIG;
 	g_return_val_if_fail(DARXEN_IS_CONFIG(config), NULL);
 
 	return config->client;
@@ -427,6 +434,7 @@ darxen_config_rename_view(	DarxenConfig* config,
 							const DarxenViewInfo* viewInfo,
 							const gchar* newName)
 {
+	ENSURE_CONFIG;
 	g_return_val_if_fail(DARXEN_IS_CONFIG(config), FALSE);
 
 	//find the site
@@ -484,6 +492,7 @@ darxen_config_view_updated(	DarxenConfig* config,
 							const gchar* viewName,
 							DarxenViewInfo* viewInfo)
 {
+	ENSURE_CONFIG;
 	g_return_if_fail(DARXEN_IS_CONFIG(config));
 	
 	//find the site
