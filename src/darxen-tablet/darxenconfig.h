@@ -95,6 +95,17 @@ struct _DarxenConfigClass
 	GObjectClass parent_class;
 	
 	/* signals */
+	void (*site_added)			(	DarxenConfig* config,
+									const gchar* site,
+									int index);
+
+	void (*site_deleted)		(	DarxenConfig* config,
+									const gchar* site);
+
+	void (*view_deleted)		(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view);
+
 	void (*view_name_changed)	(	DarxenConfig* config,
 									gchar* site,
 									DarxenViewInfo* viewInfo,
@@ -126,6 +137,17 @@ void					darxen_config_set_client		(	DarxenConfig* config,
 
 DarxenRestfulClient*	darxen_config_get_client		(	DarxenConfig* config);
 
+void					darxen_config_add_site			(	DarxenConfig* config,
+															const gchar* site,
+															int index);
+
+void					darxen_config_move_site			(	DarxenConfig* config,
+															const gchar* site,
+															int oldIndex,
+															int newIndex);
+
+void					darxen_config_delete_site		(	DarxenConfig* config,
+															const gchar* site);
 
 gboolean				darxen_config_rename_view		(	DarxenConfig* config,
 															const gchar* site,

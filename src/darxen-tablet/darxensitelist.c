@@ -20,6 +20,7 @@
 
 #include "darxensitelist.h"
 #include "darxenconfig.h"
+#include "darxenmainview.h"
 
 #include <libdarxenRadarSites.h>
 
@@ -75,8 +76,20 @@ static guint signals[LAST_SIGNAL] = {0,};
 static void darxen_site_list_dispose(GObject* gobject);
 static void darxen_site_list_finalize(GObject* gobject);
 
+static void darxen_site_list_site_inserted(GltkList* list, GltkListItem* item, int index);
+static void darxen_site_list_site_moved(GltkList* list, GltkListItem* item, int oldIndex);
 static void darxen_site_list_site_deleted(GltkList* list, GltkListItem* item);
+static GltkWidget*	darxen_site_list_site_convert_dropped_item(GltkList* list, const gchar* targetType, GltkListItem* item);
 static void darxen_site_list_view_deleted(GltkList* viewList, GltkListItem* item, DarxenSiteList* siteList);
+
+static void		config_siteDeleted			(	DarxenConfig* config,
+												const gchar* site,
+												DarxenSiteList* list);
+
+static void		config_viewDeleted			(	DarxenConfig* config,
+												const gchar* site,
+												const gchar* view,
+												DarxenSiteList* list);
 
 static void		config_viewNameChanged		(	DarxenConfig* config,
 												const gchar* site,
@@ -135,18 +148,23 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 	gobject_class->dispose = darxen_site_list_dispose;
 	gobject_class->finalize = darxen_site_list_finalize;
 
+	gltklist_class->item_inserted = darxen_site_list_site_inserted;
+	gltklist_class->item_moved = darxen_site_list_site_moved;
 	gltklist_class->item_deleted = darxen_site_list_site_deleted;
+	gltklist_class->convert_dropped_item = darxen_site_list_site_convert_dropped_item;
 }
 
 static void
 delete_site_list_item(GltkListItem* listItem)
 {
-	gltk_list_remove_item(listItem->list, listItem);
+	//gltk_list_remove_item(listItem->list, listItem);
 
 	Site* site = (Site*)listItem->data;
+	g_hash_table_destroy(site->viewMap);
 	g_free(site->name);
 	g_object_unref(G_OBJECT(site->views));
 	g_object_unref(G_OBJECT(site->siteBox));
+	g_free(site);
 }
 
 static void
@@ -163,6 +181,8 @@ static void
 darxen_site_list_init(DarxenSiteList* self)
 {
 	USING_PRIVATE(self);
+
+	g_object_set(self, "target-type", "SiteList", NULL);
 
 	priv->siteMap = NULL;
 
@@ -196,12 +216,15 @@ darxen_site_list_new()
 {
 	GObject *gobject = g_object_new(DARXEN_TYPE_SITE_LIST, "deletable", TRUE, NULL);
 	DarxenSiteList* self = DARXEN_SITE_LIST(gobject);
+	DarxenConfig* config = darxen_config_get_instance();
 
 	USING_PRIVATE(self);
 
 	priv->siteMap = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)delete_site_list_item);
 
-	g_signal_connect(darxen_config_get_instance(), "view-name-changed", (GCallback)config_viewNameChanged, self);
+	g_signal_connect(config, "view-name-changed", (GCallback)config_viewNameChanged, self);
+	g_signal_connect(config, "view-deleted", (GCallback)config_viewDeleted, self);
+	g_signal_connect(config, "site-deleted", (GCallback)config_siteDeleted, self);
 
 	return (GltkWidget*)gobject;
 }
@@ -214,12 +237,9 @@ site_clicked(GltkButton* button, GltkEventClick* event, Site* siteInfo)
 	return TRUE;
 }
 
-void
-darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
+static Site*
+create_site(DarxenSiteList* list, const gchar* site)
 {
-	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
-	USING_PRIVATE(list);
-
 	DarxenRadarSiteInfo* radarSiteInfo = darxen_radar_sites_get_site_info(site);
 	
 	Site* siteInfo = g_new(Site, 1);
@@ -245,6 +265,17 @@ darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
 
 	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), siteButton, FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(siteInfo->siteBox), hbox, TRUE, TRUE);
+
+	return siteInfo;
+}
+
+void
+darxen_site_list_add_site(DarxenSiteList* list, const gchar* site)
+{
+	g_return_if_fail(DARXEN_IS_SITE_LIST(list));
+	USING_PRIVATE(list);
+
+	Site* siteInfo = create_site(list, site);
 
 	GltkListItem* listItem = gltk_list_add_item(GLTK_LIST(list), siteInfo->siteBox, siteInfo);
 
@@ -327,6 +358,15 @@ darxen_site_list_add_view(DarxenSiteList* list, const gchar* site, const gchar* 
 	g_hash_table_insert(siteInfo->viewMap, g_strdup(view), viewListItem);
 }
 
+gchar*
+darxen_site_list_free_site_data(gpointer data)
+{
+	Site* siteInfo = (Site*)data;
+	gchar* name = g_strdup(siteInfo->name);
+
+	darxen_config_delete_site(NULL, siteInfo->name);
+	return name;
+}
 
 GQuark
 darxen_site_list_error_quark()
@@ -339,15 +379,99 @@ darxen_site_list_error_quark()
  *********************/
 
 static void
+darxen_site_list_site_inserted(GltkList* list, GltkListItem* item, int index)
+{
+	USING_PRIVATE(list);
+
+	Site* siteInfo = (Site*)item->data;
+
+	g_hash_table_insert(priv->siteMap, g_strdup(siteInfo->name), item);
+
+	darxen_config_add_site(NULL, siteInfo->name, index);
+}
+
+static void
+darxen_site_list_site_moved(GltkList* list, GltkListItem* item, int oldIndex)
+{
+	Site* site = (Site*)item->data;
+
+	int newIndex = gltk_list_get_index(list, item);
+	g_debug("Moving %s from %i to %i", site->name, oldIndex, newIndex);
+
+	darxen_config_move_site(NULL, site->name, oldIndex, newIndex);
+}
+
+static void
 darxen_site_list_site_deleted(GltkList* list, GltkListItem* item)
 {
-	g_critical("TODO delete site (and all associated views)");
+	Site* site = (Site*)item->data;
+
+	gchar* name = g_strdup(site->name);
+	darxen_config_delete_site(NULL, name);
+	darxen_main_view_readd_site(name);
+	g_free(name);
+}
+
+static GltkWidget*
+darxen_site_list_site_convert_dropped_item(GltkList* list, const gchar* targetType, GltkListItem* item)
+{
+	DarxenRadarSiteInfo* radarSiteInfo = (DarxenRadarSiteInfo*)item->data;
+
+	gchar* name = g_ascii_strdown(radarSiteInfo->chrID, -1);
+	Site* siteInfo = create_site(DARXEN_SITE_LIST(list), name);
+	g_free(name);
+	item->data = siteInfo;
+
+	return siteInfo->siteBox;
 }
 
 static void
 darxen_site_list_view_deleted(GltkList* viewList, GltkListItem* item, DarxenSiteList* siteList)
 {
 	g_critical("TODO delete view");
+	//darxen_config_save_settings(NULL);
+}
+
+static void
+config_siteDeleted			(	DarxenConfig* config,
+								const gchar* site,
+								DarxenSiteList* list)
+{
+	USING_PRIVATE(list);
+
+	g_debug("Deleting site %s", site);
+
+	//GltkListItem* itemSite = (GltkListItem*)g_hash_table_lookup(priv->siteMap, site);
+	//g_return_if_fail(itemSite);
+	//Site* siteInfo = (Site*)itemSite->data;
+
+	g_hash_table_remove(priv->siteMap, site);
+	//g_hash_table_destroy(siteInfo->viewMap);
+	//g_free(siteInfo->name);
+	//g_object_unref(siteInfo->siteBox);
+	//g_object_unref(siteInfo->views);
+	//g_free(siteInfo);
+}
+
+static void
+config_viewDeleted			(	DarxenConfig* config,
+								const gchar* site,
+								const gchar* view,
+								DarxenSiteList* list)
+{
+	USING_PRIVATE(list);
+
+	g_debug("Deleting view %s/%s", site, view);
+
+	GltkListItem* itemSite = (GltkListItem*)g_hash_table_lookup(priv->siteMap, site);
+	g_return_if_fail(itemSite);
+	Site* siteInfo = (Site*)itemSite->data;
+
+	GltkListItem* itemView = (GltkListItem*)g_hash_table_lookup(siteInfo->viewMap, view);
+	g_return_if_fail(itemView);
+	//View* viewInfo = (View*)itemView->data;
+
+	g_hash_table_remove(siteInfo->viewMap, view);
 }
 
 static void				

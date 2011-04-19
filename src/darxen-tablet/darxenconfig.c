@@ -35,6 +35,9 @@ G_DEFINE_TYPE(DarxenConfig, darxen_config, G_TYPE_OBJECT)
 
 enum
 {
+	SITE_ADDED,
+	SITE_DELETED,
+	VIEW_DELETED,
 	VIEW_NAME_CHANGED,
 	VIEW_UPDATED,
 
@@ -74,6 +77,36 @@ darxen_config_class_init(DarxenConfigClass* klass)
 	GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(DarxenConfigPrivate));
+
+	signals[SITE_ADDED] = 
+		g_signal_new(	"site-added",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(DarxenConfigClass, site_added),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__STRING,
+						G_TYPE_NONE, 2,
+						G_TYPE_STRING, G_TYPE_INT);
+
+	signals[SITE_DELETED] = 
+		g_signal_new(	"site-deleted",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(DarxenConfigClass, site_deleted),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__STRING,
+						G_TYPE_NONE, 1,
+						G_TYPE_STRING);
+
+	signals[VIEW_DELETED] = 
+		g_signal_new(	"view-deleted",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(DarxenConfigClass, view_deleted),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
+						G_TYPE_NONE, 2,
+						G_TYPE_STRING, G_TYPE_STRING);
 
 	signals[VIEW_NAME_CHANGED] = 
 		g_signal_new(	"view-name-changed",
@@ -157,7 +190,7 @@ darxen_config_load_settings(DarxenConfig* config)
 
 		//KLOT
 		site = g_new(DarxenSiteInfo, 1);
-		site->name = "klot";
+		site->name = g_strdup("klot");
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
@@ -189,7 +222,7 @@ darxen_config_load_settings(DarxenConfig* config)
 
 		//KIND
 		site = g_new(DarxenSiteInfo, 1);
-		site->name = "kind";
+		site->name = g_strdup("kind");
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
@@ -426,6 +459,121 @@ darxen_config_get_client(DarxenConfig* config)
 	g_return_val_if_fail(DARXEN_IS_CONFIG(config), NULL);
 
 	return config->client;
+}
+
+void
+darxen_config_add_site			(	DarxenConfig* config,
+									const gchar* site,
+									int index)
+{
+	ENSURE_CONFIG;
+	g_return_if_fail(DARXEN_IS_CONFIG(config));
+	g_return_if_fail(index >= 0 && index <= g_list_length(config->sites));
+
+	//ensure the site does not yet exist
+	GList* pSites;
+	for (pSites = config->sites; pSites; pSites = pSites->next)
+	{
+		DarxenSiteInfo* siteInfo = (DarxenSiteInfo*)pSites->data;
+		g_assert(g_strcmp0(siteInfo->name, site));
+	}
+
+	DarxenSiteInfo* siteInfo = g_new(DarxenSiteInfo, 1);
+
+	siteInfo->name = g_strdup(site);
+	siteInfo->views = NULL;
+
+	config->sites = g_list_insert(config->sites, siteInfo, index);
+
+	g_signal_emit(config, signals[SITE_ADDED], 0, site, index);
+
+	darxen_config_save_settings(config);
+}
+
+void
+darxen_config_move_site			(	DarxenConfig* config,
+									const gchar* site,
+									int oldIndex,
+									int newIndex)
+{
+	ENSURE_CONFIG;
+	g_return_if_fail(DARXEN_IS_CONFIG(config));
+	g_return_if_fail(oldIndex != newIndex);
+	g_return_if_fail(newIndex >= 0 && newIndex <= g_list_length(config->sites));
+
+	GList* pSites = g_list_nth(config->sites, oldIndex);
+	gpointer data = pSites->data;
+	config->sites = g_list_delete_link(config->sites, pSites);
+	config->sites = g_list_insert(config->sites, data, newIndex);
+
+	darxen_config_save_settings(config);
+}
+
+void
+darxen_config_delete_site		(	DarxenConfig* config,
+									const gchar* site)
+{
+	ENSURE_CONFIG;
+	g_return_if_fail(DARXEN_IS_CONFIG(config));
+	
+	//find the site
+	GList* pSites = config->sites;
+	DarxenSiteInfo* siteInfo = NULL;
+	while (pSites && !siteInfo)
+	{
+		siteInfo = (DarxenSiteInfo*)pSites->data;
+				
+		if (g_strcmp0(siteInfo->name, site))
+			siteInfo = NULL;
+	
+		pSites = pSites->next;
+	}
+	g_assert(siteInfo);
+
+	//remove all of the views
+	GList* pViews = siteInfo->views;
+	while (pViews)
+	{
+		DarxenViewInfo* view = (DarxenViewInfo*)pViews->data;
+	
+		g_signal_emit(config, signals[VIEW_DELETED], 0, site, view->name);
+
+		g_free(view->name);
+		g_free(view->productCode);
+		switch (view->sourceType)
+		{
+			case DARXEN_VIEW_SOURCE_ARCHIVE:
+				g_free(view->source.archive.startId);
+				g_free(view->source.archive.endId);
+				break;
+			case DARXEN_VIEW_SOURCE_LIVE:
+				break;
+		}
+		GSList* pShapefiles = view->shapefiles;
+		while (pShapefiles)
+		{
+			DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
+		
+			darxen_shapefiles_free_shapefile(shapefile);
+		
+			pShapefiles = pShapefiles->next;
+		}
+		g_slist_free(view->shapefiles);
+		g_free(view);
+	
+		pViews = pViews->next;
+	}
+	
+	//delete the site
+	g_signal_emit(config, signals[SITE_DELETED], 0, site);
+
+	g_list_free(siteInfo->views);
+	g_free(siteInfo->name);
+	g_free(siteInfo);
+
+	config->sites = g_list_remove(config->sites, siteInfo);
+
+	darxen_config_save_settings(config);
 }
 
 gboolean

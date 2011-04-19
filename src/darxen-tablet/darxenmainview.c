@@ -19,6 +19,7 @@
  */
 
 #include "darxenmainview.h"
+#include "darxensitelist.h"
 #include "darxenconfig.h"
 
 #include <libdarxenRadarSites.h>
@@ -26,6 +27,36 @@
 #include <glib.h>
 
 static GltkWidget* root = NULL;
+static GltkWidget* sites;
+
+void
+darxen_main_view_readd_site(const gchar* name)
+{
+	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(name);
+
+	gchar* display = g_strdup_printf("%s, %s", siteInfo->chrCity, siteInfo->chrState);
+	GltkWidget* lblSite = gltk_label_new(display);
+	g_free(display);
+
+	gltk_list_add_item(GLTK_LIST(sites), lblSite, siteInfo);
+}
+
+static GltkWidget*
+sites_convert_dropped_item(GltkList* list, const gchar* targetType, GltkListItem* item, gpointer user_data)
+{
+	gchar* name = darxen_site_list_free_site_data(item->data);
+
+	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(name);
+	g_free(name);
+
+	gchar* display = g_strdup_printf("%s, %s", siteInfo->chrCity, siteInfo->chrState);
+	GltkWidget* lblSite = gltk_label_new(display);
+	g_free(display);
+
+	item->data = siteInfo;
+
+	return lblSite;
+}
 
 static gboolean
 check_site_list(const gchar* id)
@@ -54,7 +85,7 @@ darxen_main_view_get_root()
 
 	GltkWidget* sitesScrollable = gltk_scrollable_new();
 	{
-		GltkWidget* sites = gltk_list_new();
+		sites = gltk_list_new();
 		g_object_set(sites, "target-type", "SiteList", NULL);
 
 		GSList* lstSites = darxen_radar_sites_get_site_list();
@@ -77,6 +108,7 @@ darxen_main_view_get_root()
 		
 			plstSites = plstSites->next;
 		}
+		g_signal_connect(G_OBJECT(sites), "convert-dropped-item", G_CALLBACK(sites_convert_dropped_item), NULL);
 		gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), sites);
 	}
 

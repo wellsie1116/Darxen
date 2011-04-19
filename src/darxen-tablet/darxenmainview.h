@@ -25,5 +25,7 @@
 
 GltkWidget*		darxen_main_view_get_root();
 
+void			darxen_main_view_readd_site(const gchar* name);
+
 #endif
 
