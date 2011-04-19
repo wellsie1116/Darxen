@@ -36,6 +36,8 @@ G_DEFINE_TYPE(GltkList, gltk_list, GLTK_TYPE_VBOX)
 
 enum
 {
+	ITEM_INSERTED,
+	ITEM_MOVED,
 	ITEM_DELETED,
 	CONVERT_DROPPED_ITEM,
 
@@ -98,6 +100,26 @@ gltk_list_class_init(GltkListClass* klass)
 	GltkWidgetClass* gltkwidget_class = GLTK_WIDGET_CLASS(klass);
 
 	g_type_class_add_private(klass, sizeof(GltkListPrivate));
+	
+	signals[ITEM_INSERTED] = 
+		g_signal_new(	"item-inserted",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkListClass, item_inserted),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_INT,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_INT);
+	
+	signals[ITEM_MOVED] = 
+		g_signal_new(	"item-moved",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkListClass, item_moved),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__POINTER_INT,
+						G_TYPE_NONE, 2,
+						G_TYPE_POINTER, G_TYPE_INT);
 	
 	signals[ITEM_DELETED] = 
 		g_signal_new(	"item-deleted",
@@ -391,7 +413,7 @@ gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
 	gltk_bin_set_widget(GLTK_BIN(item->priv->bin), item->widget);
 	item->list = GLTK_LIST(widget);
 	item->priv->removed = FALSE;
-	gltk_screen_swap_widget_pressed(widget->screen, oldItem->priv->bin, item->priv->bin);
+	gltk_screen_swap_widget_pressed(widget->screen, item->priv->bin);
 
 	//add the item to our items and vbox
 	gltk_box_append_widget(GLTK_BOX(widget), item->priv->bin, FALSE, FALSE);
@@ -412,6 +434,8 @@ gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
 
 	//set item to the current dragging item
 	priv->drag = item;
+
+	g_signal_emit(G_OBJECT(widget), signals[ITEM_INSERTED], 0, item, g_list_length(priv->items)-1);
 }
 
 static gboolean
@@ -518,6 +542,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 	GltkAllocation allocation = gltk_widget_get_allocation(priv->drag->widget);
 
 	//find our child and item in our lists
+	int i = 0;
 	GList* pChildren = GLTK_BOX(item->list)->children;
 	GList* pItems = priv->items;
 	while (pChildren && pItems)
@@ -526,6 +551,7 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 			break;
 		pChildren = pChildren->next;
 		pItems = pItems->next;
+		i++;
 	}
 
 	if (item->priv->removed || abs(item->priv->offset.x) > allocation.width)
@@ -616,6 +642,8 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 				GLTK_BOX(item->list)->children = move_node_forward(GLTK_BOX(item->list)->children, pChildren);
 				priv->items = move_node_forward(priv->items, pItems);
 
+				g_signal_emit(G_OBJECT(item->list), signals[ITEM_MOVED], 0, item, i);
+
 				gltk_screen_layout(widget->screen);
 			}
 		}
@@ -627,6 +655,8 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 
 				GLTK_BOX(item->list)->children = move_node_back(GLTK_BOX(item->list)->children, pChildren);
 				priv->items = move_node_back(priv->items, pItems);
+
+				g_signal_emit(G_OBJECT(item->list), signals[ITEM_MOVED], 0, item, i);
 
 				gltk_screen_layout(widget->screen);
 			}

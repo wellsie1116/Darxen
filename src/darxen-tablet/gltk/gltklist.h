@@ -57,6 +57,14 @@ struct _GltkListClass
 	GltkVBoxClass parent_class;
 	
 	/* signals */
+	void		(*item_inserted)		(	GltkList* list,
+											GltkListItem* item,
+											int index);
+
+	void		(*item_moved)			(	GltkList* list,
+											GltkListItem* item,
+											int oldIndex);
+
 	void		(*item_deleted)			(	GltkList* list,
 											GltkListItem* item);
 	
