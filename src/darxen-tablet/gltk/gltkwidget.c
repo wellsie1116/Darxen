@@ -351,7 +351,17 @@ gltk_widget_set_size_request(GltkWidget* widget, GltkSize size)
 void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
-	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+	USING_PRIVATE(widget);
+
+	if (!priv->isVisible)
+	{
+		size->width = 0;
+		size->height = 0;
+	}
+	else
+	{
+		g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+	}
 	
 	if (widget->sizeRequest.width > -1)
 		size->width = widget->sizeRequest.width;
@@ -449,8 +459,10 @@ void
 gltk_widget_render(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	USING_PRIVATE(widget);
 
-	GLTK_WIDGET_GET_CLASS(widget)->render(widget);
+	if (priv->isVisible)
+		GLTK_WIDGET_GET_CLASS(widget)->render(widget);
 }
 
 gboolean
