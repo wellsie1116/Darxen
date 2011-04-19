@@ -41,7 +41,20 @@ extern void g_cclosure_user_marshal_VOID__POINTER_INT (GClosure     *closure,
                                                        gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__POINTER_INT	g_cclosure_user_marshal_VOID__POINTER_INT
 
-/* NONE:STRING,POINTER (gltkmarshal.list:6) */
+/* NONE:STRING (gltkmarshal.list:6) */
+#define g_cclosure_user_marshal_VOID__STRING	g_cclosure_marshal_VOID__STRING
+#define g_cclosure_user_marshal_NONE__STRING	g_cclosure_user_marshal_VOID__STRING
+
+/* NONE:STRING,STRING (gltkmarshal.list:7) */
+extern void g_cclosure_user_marshal_VOID__STRING_STRING (GClosure     *closure,
+                                                         GValue       *return_value,
+                                                         guint         n_param_values,
+                                                         const GValue *param_values,
+                                                         gpointer      invocation_hint,
+                                                         gpointer      marshal_data);
+#define g_cclosure_user_marshal_NONE__STRING_STRING	g_cclosure_user_marshal_VOID__STRING_STRING
+
+/* NONE:STRING,POINTER (gltkmarshal.list:8) */
 extern void g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
                                                           GValue       *return_value,
                                                           guint         n_param_values,
@@ -50,7 +63,7 @@ extern void g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
                                                           gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__STRING_POINTER	g_cclosure_user_marshal_VOID__STRING_POINTER
 
-/* NONE:STRING,STRING,POINTER (gltkmarshal.list:7) */
+/* NONE:STRING,STRING,POINTER (gltkmarshal.list:9) */
 extern void g_cclosure_user_marshal_VOID__STRING_STRING_POINTER (GClosure     *closure,
                                                                  GValue       *return_value,
                                                                  guint         n_param_values,
@@ -59,7 +72,7 @@ extern void g_cclosure_user_marshal_VOID__STRING_STRING_POINTER (GClosure     *c
                                                                  gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__STRING_STRING_POINTER	g_cclosure_user_marshal_VOID__STRING_STRING_POINTER
 
-/* NONE:STRING,POINTER,STRING (gltkmarshal.list:8) */
+/* NONE:STRING,POINTER,STRING (gltkmarshal.list:10) */
 extern void g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
                                                                  GValue       *return_value,
                                                                  guint         n_param_values,
@@ -68,11 +81,11 @@ extern void g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *c
                                                                  gpointer      marshal_data);
 #define g_cclosure_user_marshal_NONE__STRING_POINTER_STRING	g_cclosure_user_marshal_VOID__STRING_POINTER_STRING
 
-/* NONE:NONE (gltkmarshal.list:9) */
+/* NONE:NONE (gltkmarshal.list:11) */
 #define g_cclosure_user_marshal_VOID__VOID	g_cclosure_marshal_VOID__VOID
 #define g_cclosure_user_marshal_NONE__NONE	g_cclosure_user_marshal_VOID__VOID
 
-/* POINTER:INT,INT (gltkmarshal.list:10) */
+/* POINTER:INT,INT (gltkmarshal.list:12) */
 extern void g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                                       GValue       *return_value,
                                                       guint         n_param_values,
@@ -80,7 +93,7 @@ extern void g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                                       gpointer      invocation_hint,
                                                       gpointer      marshal_data);
 
-/* POINTER:STRING (gltkmarshal.list:11) */
+/* POINTER:STRING (gltkmarshal.list:13) */
 extern void g_cclosure_user_marshal_POINTER__STRING (GClosure     *closure,
                                                      GValue       *return_value,
                                                      guint         n_param_values,
@@ -88,7 +101,7 @@ extern void g_cclosure_user_marshal_POINTER__STRING (GClosure     *closure,
                                                      gpointer      invocation_hint,
                                                      gpointer      marshal_data);
 
-/* POINTER:STRING,POINTER (gltkmarshal.list:12) */
+/* POINTER:STRING,POINTER (gltkmarshal.list:14) */
 extern void g_cclosure_user_marshal_POINTER__STRING_POINTER (GClosure     *closure,
                                                              GValue       *return_value,
                                                              guint         n_param_values,
@@ -96,7 +109,7 @@ extern void g_cclosure_user_marshal_POINTER__STRING_POINTER (GClosure     *closu
                                                              gpointer      invocation_hint,
                                                              gpointer      marshal_data);
 
-/* POINTER:STRING,BOXED (gltkmarshal.list:13) */
+/* POINTER:STRING,BOXED (gltkmarshal.list:15) */
 extern void g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure,
                                                            GValue       *return_value,
                                                            guint         n_param_values,
@@ -104,7 +117,7 @@ extern void g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure
                                                            gpointer      invocation_hint,
                                                            gpointer      marshal_data);
 
-/* NONE:STRING,POINTER (gltkmarshal.list:14) */
+/* NONE:STRING,POINTER (gltkmarshal.list:16) */
 
 G_END_DECLS
 

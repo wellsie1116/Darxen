@@ -166,7 +166,46 @@ g_cclosure_user_marshal_VOID__POINTER_INT (GClosure     *closure,
             data2);
 }
 
-/* NONE:STRING,POINTER (gltkmarshal.list:6) */
+/* NONE:STRING (gltkmarshal.list:6) */
+
+/* NONE:STRING,STRING (gltkmarshal.list:7) */
+void
+g_cclosure_user_marshal_VOID__STRING_STRING (GClosure     *closure,
+                                             GValue       *return_value G_GNUC_UNUSED,
+                                             guint         n_param_values,
+                                             const GValue *param_values,
+                                             gpointer      invocation_hint G_GNUC_UNUSED,
+                                             gpointer      marshal_data)
+{
+  typedef void (*GMarshalFunc_VOID__STRING_STRING) (gpointer     data1,
+                                                    gpointer     arg_1,
+                                                    gpointer     arg_2,
+                                                    gpointer     data2);
+  register GMarshalFunc_VOID__STRING_STRING callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 3);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_VOID__STRING_STRING) (marshal_data ? marshal_data : cc->callback);
+
+  callback (data1,
+            g_marshal_value_peek_string (param_values + 1),
+            g_marshal_value_peek_string (param_values + 2),
+            data2);
+}
+
+/* NONE:STRING,POINTER (gltkmarshal.list:8) */
 void
 g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
                                               GValue       *return_value G_GNUC_UNUSED,
@@ -203,7 +242,7 @@ g_cclosure_user_marshal_VOID__STRING_POINTER (GClosure     *closure,
             data2);
 }
 
-/* NONE:STRING,STRING,POINTER (gltkmarshal.list:7) */
+/* NONE:STRING,STRING,POINTER (gltkmarshal.list:9) */
 void
 g_cclosure_user_marshal_VOID__STRING_STRING_POINTER (GClosure     *closure,
                                                      GValue       *return_value G_GNUC_UNUSED,
@@ -242,7 +281,7 @@ g_cclosure_user_marshal_VOID__STRING_STRING_POINTER (GClosure     *closure,
             data2);
 }
 
-/* NONE:STRING,POINTER,STRING (gltkmarshal.list:8) */
+/* NONE:STRING,POINTER,STRING (gltkmarshal.list:10) */
 void
 g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
                                                      GValue       *return_value G_GNUC_UNUSED,
@@ -281,9 +320,9 @@ g_cclosure_user_marshal_VOID__STRING_POINTER_STRING (GClosure     *closure,
             data2);
 }
 
-/* NONE:NONE (gltkmarshal.list:9) */
+/* NONE:NONE (gltkmarshal.list:11) */
 
-/* POINTER:INT,INT (gltkmarshal.list:10) */
+/* POINTER:INT,INT (gltkmarshal.list:12) */
 void
 g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
                                           GValue       *return_value G_GNUC_UNUSED,
@@ -324,7 +363,7 @@ g_cclosure_user_marshal_POINTER__INT_INT (GClosure     *closure,
   g_value_set_pointer (return_value, v_return);
 }
 
-/* POINTER:STRING (gltkmarshal.list:11) */
+/* POINTER:STRING (gltkmarshal.list:13) */
 void
 g_cclosure_user_marshal_POINTER__STRING (GClosure     *closure,
                                          GValue       *return_value G_GNUC_UNUSED,
@@ -363,7 +402,7 @@ g_cclosure_user_marshal_POINTER__STRING (GClosure     *closure,
   g_value_set_pointer (return_value, v_return);
 }
 
-/* POINTER:STRING,POINTER (gltkmarshal.list:12) */
+/* POINTER:STRING,POINTER (gltkmarshal.list:14) */
 void
 g_cclosure_user_marshal_POINTER__STRING_POINTER (GClosure     *closure,
                                                  GValue       *return_value G_GNUC_UNUSED,
@@ -404,7 +443,7 @@ g_cclosure_user_marshal_POINTER__STRING_POINTER (GClosure     *closure,
   g_value_set_pointer (return_value, v_return);
 }
 
-/* POINTER:STRING,BOXED (gltkmarshal.list:13) */
+/* POINTER:STRING,BOXED (gltkmarshal.list:15) */
 void
 g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure,
                                                GValue       *return_value G_GNUC_UNUSED,
@@ -445,5 +484,5 @@ g_cclosure_user_marshal_POINTER__STRING_BOXED (GClosure     *closure,
   g_value_set_pointer (return_value, v_return);
 }
 
-/* NONE:STRING,POINTER (gltkmarshal.list:14) */
+/* NONE:STRING,POINTER (gltkmarshal.list:16) */
 
