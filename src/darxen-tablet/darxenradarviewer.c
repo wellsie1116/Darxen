@@ -48,6 +48,8 @@ struct _DarxenRadarViewerPrivate
 	GLubyte* buffer;
 	GQueue* data; //RenderData
 	GList* pData; //RenderData
+
+	gulong sigViewUpdated;
 };
 
 struct _RenderData
@@ -113,6 +115,8 @@ darxen_radar_viewer_init(DarxenRadarViewer* self)
 	priv->buffer = NULL;
 	priv->data = NULL;
 	priv->pData = NULL;
+
+	priv->sigViewUpdated = 0;
 }
 
 static void
@@ -147,6 +151,7 @@ darxen_radar_viewer_finalize(GObject* gobject)
 	USING_PRIVATE(self);
 
 	g_free(priv->site);
+	g_signal_handler_disconnect(darxen_config_get_instance(), priv->sigViewUpdated);
 
 	G_OBJECT_CLASS(darxen_radar_viewer_parent_class)->finalize(gobject);
 }
@@ -165,7 +170,7 @@ darxen_radar_viewer_new(const gchar* site, DarxenViewInfo* viewInfo)
 
 	set_view_info(self, viewInfo);
 
-	g_signal_connect(darxen_config_get_instance(), "view-updated", (GCallback)config_viewUpdated, self);
+	priv->sigViewUpdated = g_signal_connect(darxen_config_get_instance(), "view-updated", (GCallback)config_viewUpdated, self);
 
 	return (DarxenRadarViewer*)gobject;
 }

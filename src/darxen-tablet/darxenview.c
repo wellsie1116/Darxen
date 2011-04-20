@@ -103,6 +103,8 @@ darxen_view_dispose(GObject* gobject)
 	DarxenView* self = DARXEN_VIEW(gobject);
 	USING_PRIVATE(self);
 
+	g_debug("view disposing");
+
 	if (priv->label)
 	{
 		g_object_unref(priv->label);

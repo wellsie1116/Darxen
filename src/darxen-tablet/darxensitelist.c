@@ -35,11 +35,11 @@ enum
 {
 	//sites reordered
 	//views reordered
-	//view deleted
 	VIEW_SELECTED,
 	VIEW_CONFIG,
 	SAVE_VIEW_CONFIG,
 	REVERT_VIEW_CONFIG,
+	VIEW_DESTROYED,
 
 	LAST_SIGNAL
 };
@@ -111,9 +111,9 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, view_selected),
 						NULL, NULL,
-						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
 						G_TYPE_NONE, 2,
-						G_TYPE_POINTER, G_TYPE_POINTER);
+						G_TYPE_STRING, G_TYPE_STRING);
 	
 	signals[VIEW_CONFIG] = 
 		g_signal_new(	"view-config",
@@ -121,9 +121,9 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, view_config),
 						NULL, NULL,
-						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
 						G_TYPE_NONE, 2,
-						G_TYPE_POINTER, G_TYPE_POINTER);
+						G_TYPE_STRING, G_TYPE_STRING);
 	
 	signals[SAVE_VIEW_CONFIG] = 
 		g_signal_new(	"save-view-config",
@@ -131,9 +131,9 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, save_view_config),
 						NULL, NULL,
-						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
 						G_TYPE_NONE, 2,
-						G_TYPE_POINTER, G_TYPE_POINTER);
+						G_TYPE_STRING, G_TYPE_STRING);
 	
 	signals[REVERT_VIEW_CONFIG] = 
 		g_signal_new(	"revert-view-config",
@@ -141,9 +141,19 @@ darxen_site_list_class_init(DarxenSiteListClass* klass)
 						G_SIGNAL_RUN_FIRST,
 						G_STRUCT_OFFSET(DarxenSiteListClass, revert_view_config),
 						NULL, NULL,
-						g_cclosure_user_marshal_VOID__POINTER_POINTER,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
 						G_TYPE_NONE, 2,
-						G_TYPE_POINTER, G_TYPE_POINTER);
+						G_TYPE_STRING, G_TYPE_STRING);
+	
+	signals[VIEW_DESTROYED] = 
+		g_signal_new(	"view-destroyed",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_FIRST,
+						G_STRUCT_OFFSET(DarxenSiteListClass, view_destroyed),
+						NULL, NULL,
+						g_cclosure_user_marshal_VOID__STRING_STRING,
+						G_TYPE_NONE, 2,
+						G_TYPE_STRING, G_TYPE_STRING);
 
 	gobject_class->dispose = darxen_site_list_dispose;
 	gobject_class->finalize = darxen_site_list_finalize;
@@ -173,6 +183,9 @@ delete_view_list_item(GltkListItem* listItem)
 	gltk_list_remove_item(listItem->list, listItem);
 	
 	View* view = (View*)listItem->data;
+	g_signal_emit(	G_OBJECT(view->site->list), signals[VIEW_DESTROYED], 0,
+					view->site->name, view->name);
+	
 	g_free(view->name);
 	g_object_unref(view->button);
 }

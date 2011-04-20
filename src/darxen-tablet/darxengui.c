@@ -332,29 +332,36 @@ btnQuit_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 static void
 view_selected(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
 {
-	g_message("%s/%s selected", site, view);
+	g_debug("%s/%s selected", site, view);
 	darxen_panel_manager_view_view(panelManager, site, view);
 }
 
 static void
 view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
 {
-	g_message("%s/%s configuring", site, view);
+	g_debug("%s/%s configuring", site, view);
 	darxen_panel_manager_view_view_config(panelManager, site, view);
 }
 
 static void
 save_view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
 {
-	g_message("%s/%s saving config", site, view);
+	g_debug("%s/%s saving config", site, view);
 	darxen_panel_manager_save_view_config(panelManager, site, view);
 }
 
 static void
 revert_view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
 {
-	g_message("%s/%s reverting config", site, view);
+	g_debug("%s/%s reverting config", site, view);
 	darxen_panel_manager_revert_view_config(panelManager, site, view);
+}
+
+static void
+view_destroyed(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
+{
+	g_debug("%s/%s destroyed", site, view);
+	darxen_panel_manager_destroy_view(panelManager, site, view);
 }
 
 //END GLTK Events
@@ -415,6 +422,7 @@ create_screen()
 	g_signal_connect(G_OBJECT(siteList), "view-config", G_CALLBACK(view_config), panelManager);
 	g_signal_connect(G_OBJECT(siteList), "save-view-config", G_CALLBACK(save_view_config), panelManager);
 	g_signal_connect(G_OBJECT(siteList), "revert-view-config", G_CALLBACK(revert_view_config), panelManager);
+	g_signal_connect(G_OBJECT(siteList), "view-destroyed", G_CALLBACK(view_destroyed), panelManager);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_sidebar(siteList), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), (GltkWidget*)panelManager, TRUE, TRUE);

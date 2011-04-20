@@ -65,12 +65,14 @@ typedef struct
 static ProductCode products[] =
 {
 	//Base Reflectivity
+	//FIXME: changed to product 94
 	{"N0R", "DS.p19r0"},
 	{"N1R", "DS.p19r1"},
 	{"N2R", "DS.p19r2"},
 	{"N3R", "DS.p19r3"},
 
 	//Base Radial Velocity
+	//FIXME: product changed also
 	{"N0S", "DS.p27v0"},
 	{"N1S", "DS.p27v1"},
 	{"N2S", "DS.p27v2"},

@@ -263,6 +263,7 @@ gltk_table_insert_widget(GltkTable* table, GltkWidget* widget, int x, int y)
 	gltk_widget_set_parent(widget, GLTK_WIDGET(table));
 	if (GLTK_WIDGET(table)->screen)
 		gltk_widget_set_screen(widget, GLTK_WIDGET(table)->screen);
+	g_object_ref(widget);
 	priv->widgets[y*priv->width+x] = widget;
 
 	gltk_widget_layout(GLTK_WIDGET(table));

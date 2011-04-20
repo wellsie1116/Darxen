@@ -214,6 +214,13 @@ static void darxen_poller_removed(ClassData* data, DarxenPoller* deadObject)
 
 	USING_PRIVATE(client);
 
+	gchar* url = g_strdup_printf("/pollers/%s/%s", poller->site, poller->product);
+	CURL* curl = create_curl_client("DELETE", url, priv->auth_token, NULL);
+	g_free(url);
+	g_assert(curl);
+
+	go_curl(curl, NULL);
+
 	g_hash_table_remove(priv->pollers, poller);
 	radar_poller_free(poller);
 

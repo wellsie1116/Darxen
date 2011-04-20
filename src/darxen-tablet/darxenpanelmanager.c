@@ -163,6 +163,19 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 }
 
 void
+darxen_panel_manager_destroy_view(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	g_hash_table_remove(priv->viewMap, &siteViewPair);
+}
+
+void
 darxen_panel_manager_view_main(DarxenPanelManager* manager)
 {
 	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
