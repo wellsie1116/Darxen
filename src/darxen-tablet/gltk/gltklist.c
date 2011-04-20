@@ -209,16 +209,17 @@ gltk_list_new()
 }
 
 GltkListItem*
-gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
+gltk_list_insert_item(GltkList* list, GltkWidget* widget, int index, gpointer data)
 {
 	g_return_val_if_fail(GLTK_IS_LIST(list), NULL);
 	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
 	USING_PRIVATE(list);
+	g_return_val_if_fail(index >= 0 && index <= g_list_length(priv->items), NULL);
 
 	g_object_ref_sink(widget);
 	GltkWidget* bin = gltk_bin_new(widget);
 	g_object_ref_sink(bin);
-	gltk_box_append_widget(GLTK_BOX(list), bin, FALSE, FALSE);
+	gltk_box_insert_widget(GLTK_BOX(list), bin, index, FALSE, FALSE);
 
 	GltkListItem* item = g_new(GltkListItem, 1);
 	item->list = list;
@@ -228,7 +229,7 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 	item->priv->bin = bin;
 	item->priv->removed = FALSE;
 
-	priv->items = g_list_append(priv->items, item);
+	priv->items = g_list_insert(priv->items, item, index);
 	
 	g_signal_connect(bin, "touch-event", (GCallback)gltk_list_bin_touch_event, item);
 	g_signal_connect(bin, "long-touch-event", (GCallback)gltk_list_bin_long_touch_event, item);
@@ -236,6 +237,17 @@ gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
 
 	gltk_widget_layout(GLTK_WIDGET(list));
 	return item;
+}
+
+GltkListItem*
+gltk_list_add_item(GltkList* list, GltkWidget* widget, gpointer data)
+{
+	g_return_val_if_fail(GLTK_IS_LIST(list), NULL);
+	USING_PRIVATE(list);
+
+	int index = g_list_length(priv->items);
+
+	return gltk_list_insert_item(list, widget, index, data);
 }
 
 void
@@ -581,15 +593,19 @@ gltk_list_bin_drag_event(GltkWidget* widget, GltkEventDrag* event, GltkListItem*
 		else
 		{
 			//continue drag
+			GltkWidget* target = NULL;
 			gchar* targetType;
 			g_object_get(item->list, "target-type", &targetType, NULL);
-			GltkAllocation globalAllocation = gltk_widget_get_global_allocation(priv->drag->widget);
-			GltkRectangle* bounds = gltk_rectangle_new(	globalAllocation.x + item->priv->offset.x,
-														globalAllocation.y + item->priv->offset.y,
-														globalAllocation.width, globalAllocation.height);
-			GltkWidget* target = gltk_screen_find_drop_target(widget->screen, targetType, bounds);
-			gltk_rectangle_free(bounds);
-			g_free(targetType);
+			if (targetType)
+			{
+				GltkAllocation globalAllocation = gltk_widget_get_global_allocation(priv->drag->widget);
+				GltkRectangle* bounds = gltk_rectangle_new(	globalAllocation.x + item->priv->offset.x,
+															globalAllocation.y + item->priv->offset.y,
+															globalAllocation.width, globalAllocation.height);
+				target = gltk_screen_find_drop_target(widget->screen, targetType, bounds);
+				gltk_rectangle_free(bounds);
+				g_free(targetType);
+			}
 
 			if (target == GLTK_WIDGET(item->list))
 			{

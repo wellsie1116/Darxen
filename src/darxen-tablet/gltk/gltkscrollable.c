@@ -269,6 +269,16 @@ gltk_scrollable_render(GltkWidget* widget)
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	int offsetX = allocation.x;
 	int offsetY = size.height - allocation.height - allocation.y;
+	//FIXME: why does the toplevel allocation cause an issue?
+	{
+		GltkWidget* toplevel = widget;
+		GltkWidget* temp;
+		while ((temp = gltk_widget_get_parent(toplevel)))
+			toplevel = temp;
+		GltkAllocation topAllocation = gltk_widget_get_allocation(toplevel);
+		offsetX -= topAllocation.x;
+		offsetY += topAllocation.y;
+	}
 	glViewport(offsetX, offsetY, allocation.width, allocation.height);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();

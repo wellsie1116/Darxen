@@ -101,6 +101,11 @@ struct _DarxenConfigClass
 
 	void (*site_deleted)		(	DarxenConfig* config,
 									const gchar* site);
+	
+	void (*view_added)			(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view,
+									int index);
 
 	void (*view_deleted)		(	DarxenConfig* config,
 									const gchar* site,
@@ -148,6 +153,10 @@ void					darxen_config_move_site			(	DarxenConfig* config,
 
 void					darxen_config_delete_site		(	DarxenConfig* config,
 															const gchar* site);
+
+DarxenViewInfo*			darxen_config_get_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view);
 
 void					darxen_config_add_view			(	DarxenConfig* config,
 															const gchar* site,

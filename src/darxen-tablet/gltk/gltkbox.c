@@ -117,8 +117,12 @@ gltk_box_new()
 }
 
 void
-gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill)
+gltk_box_insert_widget(GltkBox* box, GltkWidget* widget, int index, gboolean expand, gboolean fill)
 {
+	g_return_if_fail(GLTK_IS_BOX(box));
+	g_return_if_fail(GLTK_IS_WIDGET(box));
+	g_return_if_fail(index >= 0 && index <= g_list_length(box->children));
+
 	GltkBoxChild* child = g_new(GltkBoxChild, 1);
 	child->widget = widget;
 	child->expand = expand;
@@ -129,13 +133,23 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 		box->expandCount++;
 	box->childrenCount++;
 
-	box->children = g_list_append(box->children, child);
+	box->children = g_list_insert(box->children, child, index);
 
 	gltk_widget_set_parent(widget, GLTK_WIDGET(box));
 	if (GLTK_WIDGET(box)->screen)
 		gltk_widget_set_screen(widget, GLTK_WIDGET(box)->screen);
 
 	gltk_widget_layout(GLTK_WIDGET(box));
+}
+
+void
+gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill)
+{
+	g_return_if_fail(GLTK_IS_BOX(box));
+
+	int index = g_list_length(box->children);
+
+	gltk_box_insert_widget(box, widget, index, expand, fill);
 }
 
 void

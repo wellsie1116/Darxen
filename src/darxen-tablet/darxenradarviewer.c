@@ -50,6 +50,7 @@ struct _DarxenRadarViewerPrivate
 	GList* pData; //RenderData
 
 	gulong sigViewUpdated;
+	gulong sigDataReceived;
 };
 
 struct _RenderData
@@ -117,6 +118,7 @@ darxen_radar_viewer_init(DarxenRadarViewer* self)
 	priv->pData = NULL;
 
 	priv->sigViewUpdated = 0;
+	priv->sigDataReceived = 0;
 }
 
 static void
@@ -135,6 +137,7 @@ darxen_radar_viewer_dispose(GObject* gobject)
 
 	if (priv->poller)
 	{
+		g_signal_handler_disconnect(priv->poller, priv->sigDataReceived);
 		g_object_unref(G_OBJECT(priv->poller));
 		priv->poller = NULL;
 	}
@@ -621,7 +624,7 @@ set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
 			{
 				g_error("Failed to register poller for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
 			}
-			g_signal_connect(priv->poller, "data-received", (GCallback)darxen_radar_viewer_data_received, viewer);
+			priv->sigDataReceived = g_signal_connect(priv->poller, "data-received", (GCallback)darxen_radar_viewer_data_received, viewer);
 		} break;
 	}
 	

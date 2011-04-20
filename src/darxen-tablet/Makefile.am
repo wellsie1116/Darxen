@@ -13,6 +13,7 @@ bin_PROGRAMS=darxen-tablet
 darxen_tablet_SOURCES = darxen-tablet.c darxen-tablet.h \
 						darxengui.c \
 						darxenconfig.c darxenconfig.h \
+						darxenaddviewdialog.c darxenaddviewdialog.h \
 						darxenmainview.c darxenmainview.h \
 						darxenradarviewer.c darxenradarviewer.h \
 						darxenview.c darxenview.h \

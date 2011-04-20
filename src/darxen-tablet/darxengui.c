@@ -27,6 +27,7 @@
 #include <GL/glu.h>
 
 #include "darxenconfig.h"
+#include "darxenaddviewdialog.h"
 #include "darxensitelist.h"
 #include "darxenpanelmanager.h"
 
@@ -318,6 +319,12 @@ request_render(GltkWindow* window, gpointer user_data)
 }
 
 static void
+btnAddView_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
+{
+	darxen_add_view_dialog_show(widget->screen);
+}
+
+static void
 btnMain_clicked(GltkWidget* widget, GltkEventClick* event, gpointer user_data)
 {
 	darxen_panel_manager_view_main(panelManager);
@@ -358,6 +365,14 @@ revert_view_config(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPan
 }
 
 static void
+view_added(DarxenSiteList* siteList, gchar* site, gchar* view, int index, DarxenPanelManager* panelManager)
+{
+	g_debug("%s/%s added", site, view);
+	DarxenViewInfo* viewInfo = darxen_config_get_view(NULL, site, view);
+	darxen_panel_manager_create_view(panelManager, site, viewInfo);
+}
+
+static void
 view_destroyed(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelManager* panelManager)
 {
 	g_debug("%s/%s destroyed", site, view);
@@ -369,27 +384,39 @@ view_destroyed(DarxenSiteList* siteList, gchar* site, gchar* view, DarxenPanelMa
 static GltkWidget*
 create_sidebar(GltkWidget* siteList)
 {
-	GltkWidget* vbox = gltk_vbox_new(0);
+	GltkWidget* root = gltk_vbox_new(0);
 
 	//wrap the siteList in a scrollable
 	GltkWidget* scrollable = gltk_scrollable_new();
 	gltk_scrollable_set_widget(GLTK_SCROLLABLE(scrollable), siteList);
 
 	//create some buttons on the bottom 
-	GltkWidget* hbox = gltk_hbox_new(0);
+	GltkWidget* vbox = gltk_vbox_new(2);
 	{
-		GltkWidget* btnMain = gltk_button_new("Main");
-		GltkWidget* btnQuit = gltk_button_new("Quit");
-		g_signal_connect(G_OBJECT(btnMain), "click-event", (GCallback)btnMain_clicked, NULL);
-		g_signal_connect(G_OBJECT(btnQuit), "click-event", (GCallback)btnQuit_clicked, NULL);
-		gltk_box_append_widget(GLTK_BOX(hbox), btnMain, TRUE, FALSE);
-		gltk_box_append_widget(GLTK_BOX(hbox), btnQuit, TRUE, FALSE);
+		GltkWidget* btnAddView = gltk_button_new("Add View");
+		GLTK_BUTTON(btnAddView)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
+		g_signal_connect(G_OBJECT(btnAddView), "click-event", (GCallback)btnAddView_clicked, NULL);
+
+		GltkWidget* hbox = gltk_hbox_new(2);
+		{
+			GltkWidget* btnMain = gltk_button_new("Main");
+			GltkWidget* btnQuit = gltk_button_new("Quit");
+			GLTK_BUTTON(btnMain)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
+			GLTK_BUTTON(btnQuit)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
+			g_signal_connect(G_OBJECT(btnMain), "click-event", (GCallback)btnMain_clicked, NULL);
+			g_signal_connect(G_OBJECT(btnQuit), "click-event", (GCallback)btnQuit_clicked, NULL);
+			gltk_box_append_widget(GLTK_BOX(hbox), btnMain, TRUE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hbox), btnQuit, TRUE, FALSE);
+		}
+
+		gltk_box_append_widget(GLTK_BOX(vbox), btnAddView, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(vbox), hbox, FALSE, FALSE);
 	}
 
-	gltk_box_append_widget(GLTK_BOX(vbox), scrollable, TRUE, TRUE);
-	gltk_box_append_widget(GLTK_BOX(vbox), hbox, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(root), scrollable, TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(root), vbox, FALSE, FALSE);
 
-	return vbox;
+	return root;
 }
 
 static GltkScreen*
@@ -423,6 +450,8 @@ create_screen()
 	g_signal_connect(G_OBJECT(siteList), "save-view-config", G_CALLBACK(save_view_config), panelManager);
 	g_signal_connect(G_OBJECT(siteList), "revert-view-config", G_CALLBACK(revert_view_config), panelManager);
 	g_signal_connect(G_OBJECT(siteList), "view-destroyed", G_CALLBACK(view_destroyed), panelManager);
+
+	g_signal_connect(darxen_config_get_instance(), "view-added", G_CALLBACK(view_added), panelManager);
 
 	gltk_box_append_widget(GLTK_BOX(hbox), create_sidebar(siteList), FALSE, FALSE);
 	gltk_box_append_widget(GLTK_BOX(hbox), (GltkWidget*)panelManager, TRUE, TRUE);
