@@ -590,13 +590,14 @@ polling_thread_notify_data_ready(ThreadNotifyData* notifyData)
 
 	GHashTableIter iter;
 	g_hash_table_iter_init(&iter, priv->pollers);
+	//TODO: Threading locks
 
 	RadarPoller* pair;
 	DarxenPoller* poller;
 	while (g_hash_table_iter_next(&iter, (gpointer*)&pair, (gpointer*)&poller))
 	{
-		if (!g_strcmp0(pair->site, poller->site)
-				&& !g_strcmp0(pair->product, poller->product))
+		if (!g_strcmp0(notifyData->data->site, poller->site)
+				&& !g_strcmp0(notifyData->data->product, poller->product))
 		{
 			darxen_poller_notify_data(poller, notifyData->data);
 		}
