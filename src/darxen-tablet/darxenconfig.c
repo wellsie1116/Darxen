@@ -576,6 +576,94 @@ darxen_config_delete_site		(	DarxenConfig* config,
 	darxen_config_save_settings(config);
 }
 
+void
+darxen_config_add_view			(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view,
+									int index)
+{
+	g_critical("TODO implement");
+}
+
+void
+darxen_config_move_view			(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view,
+									int oldIndex,
+									int newIndex)
+{
+	g_critical("TODO implement");
+}
+
+void
+darxen_config_delete_view		(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view)
+{
+	ENSURE_CONFIG;
+	g_return_if_fail(DARXEN_IS_CONFIG(config));
+	
+	//find the site
+	GList* pSites = config->sites;
+	DarxenSiteInfo* siteInfo;
+	while (pSites)
+	{
+		siteInfo = (DarxenSiteInfo*)pSites->data;
+				
+		if (!g_strcmp0(siteInfo->name, site))
+			break;
+	
+		pSites = pSites->next;
+	}
+	g_assert(pSites && siteInfo);
+
+	//find the view
+	GList* pViews = siteInfo->views;
+	DarxenViewInfo* viewInfo;
+	while (pViews)
+	{
+		viewInfo = (DarxenViewInfo*)pViews->data;
+	
+		if (!g_strcmp0(view, viewInfo->name))
+			break;
+	
+		pViews = pViews->next;
+	}
+	g_assert(pViews && viewInfo);
+
+	//destroy the view
+	g_signal_emit(config, signals[VIEW_DELETED], 0, site, viewInfo->name);
+
+	g_free(viewInfo->name);
+	g_free(viewInfo->productCode);
+	switch (viewInfo->sourceType)
+	{
+		case DARXEN_VIEW_SOURCE_ARCHIVE:
+			g_free(viewInfo->source.archive.startId);
+			g_free(viewInfo->source.archive.endId);
+			break;
+		case DARXEN_VIEW_SOURCE_LIVE:
+			break;
+	}
+	GSList* pShapefiles = viewInfo->shapefiles;
+	while (pShapefiles)
+	{
+		DarxenShapefile* shapefile = (DarxenShapefile*)pShapefiles->data;
+	
+		darxen_shapefiles_free_shapefile(shapefile);
+	
+		pShapefiles = pShapefiles->next;
+	}
+	g_slist_free(viewInfo->shapefiles);
+	g_free(viewInfo);
+
+	//remove the view from the site's list of views
+	siteInfo->views = g_list_delete_link(siteInfo->views, pViews);
+
+	//remember what we did
+	darxen_config_save_settings(config);
+}
+
 gboolean
 darxen_config_rename_view(	DarxenConfig* config,
 							const gchar* site,

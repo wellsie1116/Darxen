@@ -442,7 +442,12 @@ static void
 darxen_site_list_view_deleted(GltkList* viewList, GltkListItem* item, DarxenSiteList* siteList)
 {
 	g_critical("TODO delete view");
-	//darxen_config_save_settings(NULL);
+	View* view  = (View*)item->data;
+	gchar* siteName = g_strdup(view->site->name);
+	gchar* viewName = g_strdup(view->name);
+	darxen_config_delete_view(NULL, siteName, viewName);
+	g_free(siteName);
+	g_free(viewName);
 }
 
 static void

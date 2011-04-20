@@ -149,6 +149,21 @@ void					darxen_config_move_site			(	DarxenConfig* config,
 void					darxen_config_delete_site		(	DarxenConfig* config,
 															const gchar* site);
 
+void					darxen_config_add_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view,
+															int index);
+
+void					darxen_config_move_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view,
+															int oldIndex,
+															int newIndex);
+
+void					darxen_config_delete_view		(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view);
+
 gboolean				darxen_config_rename_view		(	DarxenConfig* config,
 															const gchar* site,
 															const DarxenViewInfo* viewInfo,
