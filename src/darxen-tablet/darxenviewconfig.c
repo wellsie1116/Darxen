@@ -419,7 +419,7 @@ range_getItems(DarxenViewConfig* viewConfig, GltkSpinnerModel* model, GltkSpinne
 		{
 			case 0:
 				//month, convert to string
-				display = g_strdup(chrMonths[ids[i]]);
+				display = g_strdup(chrMonths[ids[i]-1]);
 				break;
 			case 1:
 				//day, no change
