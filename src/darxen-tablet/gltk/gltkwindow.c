@@ -57,6 +57,7 @@ struct _GltkWindowPrivate
 	GltkTouchPosition pressedPosition;
 	guint longPressPending;
 	gboolean longPressed;
+	gboolean pressedClickable;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
 
@@ -355,6 +356,7 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 			e->drag.dx = dx;
 			e->drag.dy = dy;
 			e->drag.longTouched = priv->longPressed;
+			priv->pressedClickable = FALSE;
 			priv->pressedPosition = *(event->touch.positions);
 
 			returnValue = gltk_widget_send_event(priv->pressed, e);
@@ -486,6 +488,7 @@ check_long_press(GltkWindow* window)
 
 	priv->longPressPending = 0;
 	priv->longPressed = TRUE;
+	priv->pressedClickable = FALSE;
 
 	//spawn long press event
 	GltkEvent* event = gltk_event_new(GLTK_LONG_TOUCH);
@@ -506,6 +509,7 @@ gltk_window_set_widget_pressed(GltkWindow* window, GltkWidget* widget)
 		return FALSE;
 
 	priv->pressed = widget;
+	priv->pressedClickable = TRUE;
 	g_object_add_weak_pointer(G_OBJECT(widget), (gpointer*)&priv->pressed);
 	priv->longPressed = FALSE;
 
@@ -567,14 +571,14 @@ gltk_window_press_complete(GltkWindow* window)
 		priv->longPressPending = 0;
 	}
 	
-	if (priv->pressed && (priv->pressed == priv->unpressed))
+	if (priv->pressed && (priv->pressed == priv->unpressed) && priv->pressedClickable)
 	{
 		//spawn a clicked event
 		GltkEvent* event = gltk_event_new(GLTK_CLICK);
 		
 		gltk_widget_send_event(priv->pressed, event);
 	}
-	else if (priv->pressed)
+	else if (priv->pressed && (priv->pressed != priv->unpressed))
 	{
 		//inject the lost TOUCH_END event
 		GltkEvent* event = gltk_event_new(GLTK_TOUCH);
