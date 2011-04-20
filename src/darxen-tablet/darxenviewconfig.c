@@ -246,7 +246,8 @@ reload_date_range(DarxenViewConfig* viewConfig)
 	gltk_spinner_reload_base_items(GLTK_SPINNER(priv->spinnerStart));
 	gltk_spinner_reload_base_items(GLTK_SPINNER(priv->spinnerEnd));
 
-	if (!g_strcmp0(priv->viewInfo->productCode, priv->origViewInfo->productCode))
+	if (!g_strcmp0(priv->viewInfo->productCode, priv->origViewInfo->productCode)
+			&& priv->origViewInfo->sourceType == DARXEN_VIEW_SOURCE_ARCHIVE)
 	{
 		DateTime startTime;
 		DateTime endTime;
@@ -313,9 +314,21 @@ spinnerSource_itemSelected(GltkSpinner* spinnerSource, DarxenViewConfig* viewCon
 
 	const gchar* id = gltk_spinner_get_selected_item(spinnerSource, 0);
 
+	switch (priv->viewInfo->sourceType)
+	{
+		case DARXEN_VIEW_SOURCE_ARCHIVE:
+			g_free(priv->viewInfo->source.archive.startId);
+			g_free(priv->viewInfo->source.archive.endId);
+			break;
+		case DARXEN_VIEW_SOURCE_LIVE:
+			break;
+	}
+
 	if (!strcmp(id, "archived"))
 	{
 		priv->viewInfo->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
+		priv->viewInfo->source.archive.startId = NULL;
+		priv->viewInfo->source.archive.endId = NULL;
 		reload_date_range(viewConfig);
 		gltk_bin_set_widget(GLTK_BIN(priv->binSourceConfig), priv->sourceConfigArchived);
 	}
