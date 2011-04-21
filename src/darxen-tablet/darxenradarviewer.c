@@ -403,6 +403,8 @@ darxen_radar_viewer_rotate_event(GltkWidget* widget, GltkEventRotate* event)
 	USING_PRIVATE(widget);
 
 	//TODO: this method works, but it assumes the center of the event is unchanging, which is not always true
+	if (!darxen_config_get_instance()->allowRotation)
+		return FALSE;
 
 	GltkAllocation allocation = gltk_widget_get_allocation(widget);
 	//g_message("Pinch (%i %i) %f - %f", (int)event->center.x, (int)event->center.y, event->radius, event->dradius);

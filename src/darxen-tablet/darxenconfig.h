@@ -88,6 +88,8 @@ struct _DarxenConfig
 
 	DarxenRestfulClient* client;
 	GList* sites;
+
+	gboolean allowRotation;
 };
 
 struct _DarxenConfigClass
