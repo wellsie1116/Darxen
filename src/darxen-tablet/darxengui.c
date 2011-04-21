@@ -405,8 +405,8 @@ create_sidebar(GltkWidget* siteList)
 			GLTK_BUTTON(btnQuit)->renderStyle = GLTK_BUTTON_RENDER_OUTLINE;
 			g_signal_connect(G_OBJECT(btnMain), "click-event", (GCallback)btnMain_clicked, NULL);
 			g_signal_connect(G_OBJECT(btnQuit), "click-event", (GCallback)btnQuit_clicked, NULL);
-			gltk_box_append_widget(GLTK_BOX(hbox), btnMain, TRUE, FALSE);
-			gltk_box_append_widget(GLTK_BOX(hbox), btnQuit, TRUE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hbox), btnMain, TRUE, TRUE);
+			gltk_box_append_widget(GLTK_BOX(hbox), btnQuit, TRUE, TRUE);
 		}
 
 		gltk_box_append_widget(GLTK_BOX(vbox), btnAddView, FALSE, FALSE);

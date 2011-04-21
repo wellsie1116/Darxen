@@ -83,39 +83,51 @@ darxen_main_view_get_root()
 	root = gltk_vbox_new(0);
 	g_object_ref_sink(G_OBJECT(root));
 
-	GltkWidget* sitesScrollable = gltk_scrollable_new();
+	GltkWidget* lblWelcome = gltk_label_new("Welcome to Darxen Tablet Edition");
+	gltk_label_set_font_size(GLTK_LABEL(lblWelcome), 32);
+
+	GltkWidget* boxSites = gltk_vbox_new(0);
 	{
-		sites = gltk_list_new();
-		g_object_set(sites, "target-type", "SiteList", NULL);
+		GltkWidget* lblAvailableSites = gltk_label_new("Available Sites: ");
+		gltk_label_set_font_size(GLTK_LABEL(lblAvailableSites), 28);
 
-		GSList* lstSites = darxen_radar_sites_get_site_list();
-		GSList* plstSites = lstSites;
-		while (plstSites)
+		GltkWidget* sitesScrollable = gltk_scrollable_new();
 		{
-			DarxenRadarSiteInfo* siteInfo = (DarxenRadarSiteInfo*)plstSites->data;
+			sites = gltk_list_new();
+			g_object_set(sites, "target-type", "SiteList", NULL);
 
-			if (check_site_list(siteInfo->chrID))
+			GSList* lstSites = darxen_radar_sites_get_site_list();
+			GSList* plstSites = lstSites;
+			while (plstSites)
 			{
-				plstSites = plstSites->next;
-				continue;
-			}
+				DarxenRadarSiteInfo* siteInfo = (DarxenRadarSiteInfo*)plstSites->data;
 
-			gchar* display = g_strdup_printf("%s, %s", siteInfo->chrCity, siteInfo->chrState);
-			GltkWidget* lblSite = gltk_label_new(display);
-			g_free(display);
-		
-			gltk_list_add_item(GLTK_LIST(sites), lblSite, siteInfo);
-		
-			plstSites = plstSites->next;
+				if (check_site_list(siteInfo->chrID))
+				{
+					plstSites = plstSites->next;
+					continue;
+				}
+
+				gchar* display = g_strdup_printf("%s, %s", siteInfo->chrCity, siteInfo->chrState);
+				GltkWidget* lblSite = gltk_label_new(display);
+				g_free(display);
+			
+				gltk_list_add_item(GLTK_LIST(sites), lblSite, siteInfo);
+			
+				plstSites = plstSites->next;
+			}
+			g_signal_connect(G_OBJECT(sites), "convert-dropped-item", G_CALLBACK(sites_convert_dropped_item), NULL);
+			GltkWidget* hboxSites = gltk_hbox_new(0);
+			gltk_box_append_widget(GLTK_BOX(hboxSites), sites, FALSE, FALSE);
+			gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), hboxSites);
 		}
-		g_signal_connect(G_OBJECT(sites), "convert-dropped-item", G_CALLBACK(sites_convert_dropped_item), NULL);
-		GltkWidget* hboxSites = gltk_hbox_new(0);
-		gltk_box_append_widget(GLTK_BOX(hboxSites), sites, FALSE, FALSE);
-		gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), hboxSites);
+		gltk_box_append_widget(GLTK_BOX(boxSites), lblAvailableSites, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(boxSites), sitesScrollable, TRUE, TRUE);
 	}
 
-	gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), FALSE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(root), sitesScrollable, TRUE, TRUE);
+	gltk_box_append_widget(GLTK_BOX(root), lblWelcome, FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(root), gltk_spacer_new(0, 50), FALSE, FALSE);
+	gltk_box_append_widget(GLTK_BOX(root), boxSites, TRUE, TRUE);
 
 	return root;
 }
