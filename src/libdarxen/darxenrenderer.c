@@ -423,6 +423,24 @@ darxen_renderer_render(DarxenRenderer *renderer)
  * Private Functions *
  *********************/
 
+static const char*
+get_palette_path(ProductsLevel3Data* data)
+{
+	switch (data->chrWmoHeader[23])
+	{
+		case 'R':
+			if (data->objDescription.intProdCode == 2)
+				return "palettes/reflectivity.palette";
+			else
+				return "palettes/reflectivity_cleanair.palette";
+		case 'V':
+			return "palettes/velocity.palette";
+		default:
+			g_critical("No palette for data type");
+			return NULL;
+	}
+}
+
 static void darxen_renderer_resize(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
@@ -806,7 +824,7 @@ darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 	char *chrMessage = (char*)malloc(sizeof(char) * 25);
 	DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, "courier new 12");
 
-	palette = darxen_palette_get_from_file("palettes/reflectivity.palette");
+	palette = darxen_palette_get_from_file(get_palette_path(priv->objData));
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -1204,7 +1222,6 @@ tessCombine(GLdouble coords[3], GLdouble *vertex_data[4], GLfloat weight[4], GLd
    *(GSList**)user_data = g_slist_prepend(*(GSList**)user_data, vertex);
 }
 
-
 static void
 darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3RadialDataPacket *objData)
 {
@@ -1223,7 +1240,7 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 
 	USING_PRIVATE(renderer);
 
-	palette = darxen_palette_get_from_file("palettes/reflectivity.palette");
+	palette = darxen_palette_get_from_file(get_palette_path(priv->objData));
 	g_assert(palette);
 
 	glPushMatrix();
