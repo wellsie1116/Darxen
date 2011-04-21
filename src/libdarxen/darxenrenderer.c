@@ -823,7 +823,10 @@ darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 	for (i = 0; i < 16; i++)
 	{
 		glColor4fv((float*)(palette->colors+i));
-		glRectf((float)(i * intBoxSize + intBorderWidth), (float)intBorderWidth, (float)((i + 1) * intBoxSize + intBorderWidth), (float)(intBoxSize + intBorderWidth));
+		glRectf((float)(i * intBoxSize + intBorderWidth),
+				(float)intBorderWidth,
+				(float)(16 * intBoxSize + intBorderWidth),
+				(float)(intBoxSize + intBorderWidth));
 	}
 
 	sprintf(chrMessage, "VCP %i\nMX: %idBZ",	priv->objData->objDescription.intVolCovPat,
