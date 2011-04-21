@@ -109,7 +109,9 @@ darxen_main_view_get_root()
 			plstSites = plstSites->next;
 		}
 		g_signal_connect(G_OBJECT(sites), "convert-dropped-item", G_CALLBACK(sites_convert_dropped_item), NULL);
-		gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), sites);
+		GltkWidget* hboxSites = gltk_hbox_new(0);
+		gltk_box_append_widget(GLTK_BOX(hboxSites), sites, FALSE, FALSE);
+		gltk_scrollable_set_widget(GLTK_SCROLLABLE(sitesScrollable), hboxSites);
 	}
 
 	gltk_box_append_widget(GLTK_BOX(root), gltk_label_new("Welcome to Darxen Tablet Edition"), FALSE, FALSE);
