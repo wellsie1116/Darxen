@@ -39,6 +39,7 @@ void cleanup_client()
 
 int main(int argc, char *argv[])
 {
+	g_set_prgname("darxen-tablet");
 	g_type_init();
 	DarxenRestfulClient* client = darxen_restful_client_new();
 	int id = darxen_restful_client_connect(client, NULL);
