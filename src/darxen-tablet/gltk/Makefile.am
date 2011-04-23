@@ -12,7 +12,8 @@ AUTOMAKE_OPTIONS=1.7
 
 lib_LTLIBRARIES = libgltk.la
 libgltk_la_SOURCES = gltk.h \
-			 gltkmarshal.c gltkmarshal.h \
+			 gltkmarshal.h gltkmarshal.c \
+			 gltkstructs.c gltkstructs.h \
 		     gltkwindow.c gltkwindow.h \
 			 gltkscreen.c gltkscreen.h \
 			 gltkminiscreen.c gltkminiscreen.h \
@@ -24,6 +25,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkbox.c gltkbox.h \
 			 gltkhbox.c gltkhbox.h \
 			 gltkvbox.c gltkvbox.h \
+			 gltktable.c gltktable.h \
 			 gltkbin.c gltkbin.h \
 			 gltklist.c gltklist.h \
 			 gltkspinnermodel.c gltkspinnermodel.h \
@@ -34,6 +36,7 @@ libgltk_la_SOURCES = gltk.h \
 			 gltkkeyboard.c gltkkeyboard.h \
 			 gltkentry.c gltkentry.h \
 			 gltkslidebutton.c gltkslidebutton.h \
+			 gltkconfigbutton.c gltkconfigbutton.h \
 			 gltkevents.c gltkevents.h
 
 libgltk_la_LDFLAGS = -g -version-info 1:1:0

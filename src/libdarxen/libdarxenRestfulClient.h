@@ -79,60 +79,70 @@ typedef struct {
 	char* data;
 } RadarData;
 
+
 GType					darxen_restful_client_get_type	() G_GNUC_CONST;
 DarxenRestfulClient*	darxen_restful_client_new		();
 
-/* Public functions here */
-int						darxen_restful_client_connect		(DarxenRestfulClient* self, GError** error);
-int						darxen_restful_client_disconnect	(DarxenRestfulClient* self, GError** error);
+int						darxen_restful_client_connect				(	DarxenRestfulClient* self,
+																		GError** error);
+
+int						darxen_restful_client_disconnect			(	DarxenRestfulClient* self,
+																		GError** error);
 
 
-DarxenPoller*			darxen_restful_client_add_poller	(	DarxenRestfulClient* self, 
-																const gchar* site, 
-																const gchar* product, 
-																GError** error);
-int						darxen_restful_client_remove_poller	(	DarxenRestfulClient* self, 
-																const gchar* site, 
-																const gchar* product, 
-																GError** error);
+DarxenPoller*			darxen_restful_client_add_poller			(	DarxenRestfulClient* self, 
+																		const gchar* site, 
+																		const gchar* product, 
+																		GError** error);
 
-RadarPoller*			darxen_restful_client_list_pollers	(	DarxenRestfulClient* self, 
-																int* size, 
-																GError** error);
+int						darxen_restful_client_remove_poller			(	DarxenRestfulClient* self, 
+																		const gchar* site, 
+																		const gchar* product, 
+																		GError** error);
 
-
-gboolean				darxen_restful_client_search_data	(	DarxenRestfulClient* self, 
-																const gchar* site, 
-																const gchar* product, 
-																const gchar* startId, 
-																const gchar* endId, 
-																int* searchId, 
-																int* count,
-																GError** error);
-
-gchar**					darxen_restful_client_read_search	(	DarxenRestfulClient* self,
-																int searchId, 
-																int start, 
-																int count, 
-																GError** error);
-
-gboolean				darxen_restful_client_free_search	(	DarxenRestfulClient* self, 
-																int searchId, 
-																GError** error);
-
-char*					darxen_restful_client_read_data		(	DarxenRestfulClient* self,
-																const gchar* site,
-																const gchar* product,
-																const gchar* id,
-																size_t* len,
-																GError** error);
+RadarPoller*			darxen_restful_client_list_pollers			(	DarxenRestfulClient* self, 
+																		int* size, 
+																		GError** error);
 
 
+gint*					darxen_restful_client_search_data_range		(	DarxenRestfulClient* self,
+																		const gchar* site,
+																		const gchar* product,
+																		int year,
+																		int month,
+																		int day,
+																		int* count,
+																		GError** error);
 
-//RadarDataInfo*			darxen_restful_client_get_data		(DarxenRestfulClient* self, int len);
+gboolean				darxen_restful_client_search_data			(	DarxenRestfulClient* self, 
+																		const gchar* site, 
+																		const gchar* product, 
+																		const gchar* startId, 
+																		const gchar* endId, 
+																		int* searchId, 
+																		int* count,
+																		GError** error);
+
+gchar**					darxen_restful_client_read_search			(	DarxenRestfulClient* self,
+																		int searchId, 
+																		int start, 
+																		int count, 
+																		GError** error);
+
+gboolean				darxen_restful_client_free_search			(	DarxenRestfulClient* self, 
+																		int searchId, 
+																		GError** error);
 
 
-GQuark			darxen_restful_client_error_quark	();
+char*					darxen_restful_client_read_data				(	DarxenRestfulClient* self,
+																		const gchar* site,
+																		const gchar* product,
+																		const gchar* id,
+																		size_t* len,
+																		GError** error);
+
+
+GQuark					darxen_restful_client_error_quark			();
 
 struct _DarxenPoller
 {

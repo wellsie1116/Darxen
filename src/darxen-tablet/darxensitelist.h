@@ -50,11 +50,25 @@ struct _DarxenSiteListClass
 	
 	/* signals */
 
-	void (*view_selected)	(	gchar* site,
-								gchar* view);
+	void (*view_selected)		(	DarxenSiteList* siteList,
+									gchar* site,
+									gchar* view);
 	
-	void (*view_config)		(	gchar* site,
-								gchar* view);
+	void (*view_config)			(	DarxenSiteList* siteList,
+									gchar* site,
+									gchar* view);
+
+	void (*save_view_config)	(	DarxenSiteList* siteList,
+									gchar* site,
+									gchar* view);
+	
+	void (*revert_view_config)	(	DarxenSiteList* siteList,
+									gchar* site,
+									gchar* view);
+
+	void (*view_destroyed)		(	DarxenSiteList* siteList,
+									gchar* site,
+									gchar* view);
 	/* virtual funcs */
 };
 
@@ -63,11 +77,13 @@ typedef enum
 	DARXEN_SITE_LIST_ERROR_FAILED
 } DarxenSiteListError;
 
-GType			darxen_site_list_get_type	() G_GNUC_CONST;
-GltkWidget*		darxen_site_list_new		();
+GType			darxen_site_list_get_type		() G_GNUC_CONST;
+GltkWidget*		darxen_site_list_new			();
 
-void			darxen_site_list_add_site	(DarxenSiteList* list, const gchar* site);
-void			darxen_site_list_add_view	(DarxenSiteList* list, const gchar* site, const gchar* view);
+void			darxen_site_list_add_site		(DarxenSiteList* list, const gchar* site);
+void			darxen_site_list_add_view		(DarxenSiteList* list, const gchar* site, const gchar* view);
+
+gchar*			darxen_site_list_free_site_data	(gpointer data);
 
 GQuark			darxen_site_list_error_quark	();
 

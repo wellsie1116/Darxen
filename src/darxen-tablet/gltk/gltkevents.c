@@ -48,7 +48,6 @@ gltk_event_type_get_type()
 			{ GLTK_PINCH, "GLTK_PINCH", "pinch"},
 			{ GLTK_ROTATE, "GLTK_ROTATE", "rotate"},
 			{ GLTK_CLICK, "GLTK_CLICK", "click"},
-			{ GLTK_SLIDE, "GLTK_SLIDE", "slide"},
 			{ 0, NULL, NULL }
 		};   
 		etype = g_enum_register_static (g_intern_static_string ("GltkEventType"), values);
@@ -101,8 +100,6 @@ gltk_event_new(GltkEventType type)
 			break;
 		case GLTK_CLICK:
 			break;
-		case GLTK_SLIDE:
-			break;
 	}
 	return event;
 }
@@ -147,9 +144,6 @@ gltk_event_copy(GltkEvent* event)
 		case GLTK_CLICK:
 			newEvent->click = event->click;
 			break;
-		case GLTK_SLIDE:
-			newEvent->slide = event->slide;
-			break;
 	}
 	return newEvent;
 }
@@ -177,14 +171,12 @@ gltk_event_free(GltkEvent* event)
 			break;
 		case GLTK_CLICK:
 			break;
-		case GLTK_SLIDE:
-			break;
 	}
 	g_free(event);
 }
 
 gboolean
-	gltk_accum_event(	GSignalInvocationHint* ihint,
+gltk_accum_event(	GSignalInvocationHint* ihint,
 					GValue* return_accu,
 					const GValue* handler_return,
 					gpointer data)
@@ -192,5 +184,16 @@ gboolean
 	gboolean handlerReturn = g_value_get_boolean(handler_return);
 	g_value_set_boolean(return_accu, handlerReturn);
 	return !handlerReturn;
+}
+
+gboolean
+gltk_accum_find_widget(	GSignalInvocationHint* ihint,
+						GValue* return_accu,
+						const GValue* handler_return,
+						gpointer data)
+{
+	gpointer val = g_value_get_pointer(handler_return);
+	g_value_set_pointer(return_accu, val);
+	return !val;
 }
 

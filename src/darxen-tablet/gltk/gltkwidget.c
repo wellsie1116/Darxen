@@ -42,8 +42,18 @@ enum
 	ROTATE_EVENT,
 	CLICK_EVENT,
 	RENDER,
+	FIND_DROP_TARGET,
+	DROP_ITEM,
 
    	LAST_SIGNAL
+};
+
+enum
+{
+	PROP_0,
+	PROP_TARGET_TYPE,
+
+	N_PROPERTIES
 };
 
 typedef struct _GltkWidgetPrivate		GltkWidgetPrivate;
@@ -51,17 +61,23 @@ struct _GltkWidgetPrivate
 {
 	GltkAllocation allocation;
 
+	gchar* targetType;
 	gboolean isVisible;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
 
 static void gltk_widget_dispose(GObject* gobject);
 static void gltk_widget_finalize(GObject* gobject);
 
+static void	gltk_widget_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_widget_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
+
 static void	gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size);
 static void	gltk_widget_real_size_allocate(GltkWidget* widget, GltkAllocation* allocation);
 static gboolean	gltk_widget_real_event(GltkWidget* widget, GltkEvent* event);
+static GltkWidget* gltk_widget_real_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 
 static void	gltk_widget_set_screen_default(GltkWidget* widget, GltkScreen* screen);
 static void gltk_widget_render_default(GltkWidget* widget);
@@ -182,8 +198,30 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 						g_cclosure_user_marshal_NONE__NONE,
 						G_TYPE_NONE, 0);
 
+	signals[FIND_DROP_TARGET] = 
+		g_signal_new(	"find-drop-target",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, find_drop_target),
+						gltk_accum_find_widget, NULL,
+						g_cclosure_user_marshal_POINTER__STRING_BOXED,
+						G_TYPE_POINTER, 2,
+						G_TYPE_STRING, GLTK_TYPE_RECTANGLE);
+	
+	signals[DROP_ITEM] = 
+		g_signal_new(	"drop-item",
+						G_TYPE_FROM_CLASS(klass),
+						G_SIGNAL_RUN_LAST,
+						G_STRUCT_OFFSET(GltkWidgetClass, drop_item),
+						NULL, NULL,
+						g_cclosure_user_marshal_NONE__STRING_POINTER,
+						G_TYPE_NONE, 2,
+						G_TYPE_STRING, G_TYPE_POINTER);
+	
 	gobject_class->dispose = gltk_widget_dispose;
 	gobject_class->finalize = gltk_widget_finalize;
+	gobject_class->set_property = gltk_widget_set_property;
+	gobject_class->get_property = gltk_widget_get_property;
 
 	klass->size_request = gltk_widget_real_size_request;
 	klass->size_allocate = gltk_widget_real_size_allocate;
@@ -198,6 +236,18 @@ gltk_widget_class_init(GltkWidgetClass* klass)
 	klass->render = gltk_widget_render_default;
 
 	klass->set_screen = gltk_widget_set_screen_default;
+	klass->find_drop_target = gltk_widget_real_find_drop_target;
+	klass->drop_item = NULL;
+
+	klass->set_screen = gltk_widget_set_screen_default;
+	klass->render = gltk_widget_render_default;
+	
+	properties[PROP_TARGET_TYPE] = 
+		g_param_spec_string(	"target-type", "Target Type",
+								"A string representing the type of drop target this widget supports",
+								NULL, G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 
@@ -214,18 +264,19 @@ gltk_widget_init(GltkWidget* self)
 	self->sizeRequest.height = -1;
 
 	priv->allocation = initialAllocation;
+	priv->targetType = NULL;
 	priv->isVisible = TRUE;
 }
 
 static void
 gltk_widget_dispose(GObject* gobject)
 {
-	GltkWidget* self = GLTK_WIDGET(gobject);
+	GltkWidget* widget = GLTK_WIDGET(gobject);
 
-	if (self->parentWidget)
+	if (widget->parentWidget)
 	{
-		g_object_unref(G_OBJECT(self->parentWidget));
-		self->parentWidget = NULL;
+		g_object_remove_weak_pointer(G_OBJECT(widget->parentWidget), (gpointer*)&widget->parentWidget);
+		widget->parentWidget = NULL;
 	}
 
 	G_OBJECT_CLASS(gltk_widget_parent_class)->dispose(gobject);
@@ -261,7 +312,7 @@ gltk_widget_set_parent(GltkWidget* widget, GltkWidget* parent)
 	g_return_if_fail(widget != parent);
 	g_return_if_fail(!widget->parentWidget);
 
-	g_object_ref(parent);
+	g_object_add_weak_pointer(G_OBJECT(parent), (gpointer*)&widget->parentWidget);
 	widget->parentWidget = parent;
 }
 
@@ -271,7 +322,7 @@ gltk_widget_unparent(GltkWidget* widget)
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
 	g_return_if_fail(GLTK_IS_WIDGET(widget->parentWidget));
 
-	g_object_unref(G_OBJECT(widget->parentWidget));
+	g_object_remove_weak_pointer(G_OBJECT(widget->parentWidget), (gpointer*)&widget->parentWidget);
 	widget->parentWidget = NULL;
 }
 
@@ -313,7 +364,17 @@ gltk_widget_set_size_request(GltkWidget* widget, GltkSize size)
 void
 gltk_widget_size_request(GltkWidget* widget, GltkSize* size)
 {
-	g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+	USING_PRIVATE(widget);
+
+	if (!priv->isVisible)
+	{
+		size->width = 0;
+		size->height = 0;
+	}
+	else
+	{
+		g_signal_emit(G_OBJECT(widget), signals[SIZE_REQUEST], 0, size);
+	}
 	
 	if (widget->sizeRequest.width > -1)
 		size->width = widget->sizeRequest.width;
@@ -325,6 +386,17 @@ void
 gltk_widget_size_allocate(GltkWidget* widget, GltkAllocation allocation)
 {
 	g_signal_emit(G_OBJECT(widget), signals[SIZE_ALLOCATE], 0, &allocation);
+}
+
+void
+gltk_widget_update_allocation(GltkWidget* widget, GltkAllocation allocation)
+{
+	USING_PRIVATE(widget);
+
+	g_return_if_fail(priv->allocation.width == allocation.width
+			&& priv->allocation.height == allocation.height);
+
+	priv->allocation = allocation;
 }
 
 GltkAllocation
@@ -372,13 +444,38 @@ gltk_widget_layout(GltkWidget* widget)
 		gltk_screen_layout(widget->screen);
 }
 
+GltkWidget*
+gltk_widget_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	g_return_val_if_fail(GLTK_IS_WIDGET(widget), NULL);
+	g_return_val_if_fail(type, NULL);
+
+	GltkWidget* res = NULL;
+	g_object_ref(widget);
+	g_signal_emit(widget, signals[FIND_DROP_TARGET], 0, type, bounds, &res);
+	g_object_unref(widget);
+	return res;
+}
+
+void
+gltk_widget_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	g_return_if_fail(type);
+
+	g_object_ref(widget);
+	g_signal_emit(widget, signals[DROP_ITEM], 0, type, data);
+	g_object_unref(widget);
+}
+
 void
 gltk_widget_render(GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_WIDGET(widget));
+	USING_PRIVATE(widget);
 
-	g_signal_emit(widget, signals[RENDER], 0);
-	//GLTK_WIDGET_GET_CLASS(widget)->render(widget);
+	if (priv->isVisible)
+		g_signal_emit(widget, signals[RENDER], 0);
 }
 
 gboolean
@@ -399,6 +496,40 @@ gltk_widget_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_widget_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkWidget* self = GLTK_WIDGET(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_TARGET_TYPE:
+			if (priv->targetType)
+				g_free(priv->targetType);
+			priv->targetType = g_value_dup_string(value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_widget_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkWidget* self = GLTK_WIDGET(object);
+	USING_PRIVATE(self);
+
+	switch (property_id)
+	{
+		case PROP_TARGET_TYPE:
+			g_value_set_string(value, priv->targetType);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 
 static void
 gltk_widget_real_size_request(GltkWidget* widget, GltkSize* size)
@@ -456,12 +587,31 @@ gltk_widget_real_event(GltkWidget* widget, GltkEvent* event)
 		if (!returnValue)
 			returnValue = eventReturnValue;
 
-		//only send long touches to 1 widget
-		if (returnValue && event->type == GLTK_LONG_TOUCH)
-			break;
+		//only send certain events to 1 widget
+		if (returnValue)
+			switch (event->type)
+			{
+				case GLTK_LONG_TOUCH:
+				case GLTK_DRAG:
+					return returnValue;
+				default:
+					break;
+			}
 	}
 
 	return returnValue;
+}
+
+static GltkWidget*
+gltk_widget_real_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	USING_PRIVATE(widget);
+
+	//g_debug("My targetType: %s", priv->targetType);
+
+	if (priv->targetType && !g_strcmp0(type, priv->targetType))
+		return widget;
+	return NULL;
 }
 
 static void

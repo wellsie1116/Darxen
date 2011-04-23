@@ -41,12 +41,12 @@ typedef struct _DarxenViewConfigClass		DarxenViewConfigClass;
 
 struct _DarxenViewConfig
 {
-	GltkVBox parent;
+	GltkTable parent;
 };
 
 struct _DarxenViewConfigClass
 {
-	GltkVBoxClass parent_class;
+	GltkTableClass parent_class;
 	
 	/* signals */
 	void	(*site_changed)	(	);
@@ -62,7 +62,8 @@ typedef enum
 GType				darxen_view_config_get_type	() G_GNUC_CONST;
 GltkWidget*			darxen_view_config_new		(gchar* site, DarxenViewInfo* viewInfo);
 
-/* Public functions here */
+void				darxen_view_config_save		(DarxenViewConfig* viewConfig);
+void				darxen_view_config_revert	(DarxenViewConfig* viewConfig);
 
 GQuark			darxen_view_config_error_quark	();
 

@@ -14,6 +14,13 @@
   (gtype-id "GLTK_TYPE_WIDGET")
 )
 
+(define-object Table
+  (in-module "Gltk")
+  (parent "GltkWidget")
+  (c-name "GltkTable")
+  (gtype-id "GLTK_TYPE_TABLE")
+)
+
 (define-object Spacer
   (in-module "Gltk")
   (parent "GltkWidget")
@@ -75,6 +82,13 @@
   (parent "GltkButton")
   (c-name "GltkSlideButton")
   (gtype-id "GLTK_TYPE_SLIDE_BUTTON")
+)
+
+(define-object ConfigButton
+  (in-module "Gltk")
+  (parent "GltkSlideButton")
+  (c-name "GltkConfigButton")
+  (gtype-id "GLTK_TYPE_CONFIG_BUTTON")
 )
 
 (define-object Entry
@@ -166,6 +180,15 @@
   (gtype-id "GLTK_TYPE_BUTTON_ERROR")
   (values
     '("failed" "GLTK_BUTTON_ERROR_FAILED")
+  )
+)
+
+(define-enum ConfigButtonError
+  (in-module "Gltk")
+  (c-name "GltkConfigButtonError")
+  (gtype-id "GLTK_TYPE_CONFIG_BUTTON_ERROR")
+  (values
+    '("failed" "GLTK_CONFIG_BUTTON_ERROR_FAILED")
   )
 )
 
@@ -367,6 +390,18 @@
   )
 )
 
+(define-method insert_widget
+  (of-object "GltkBox")
+  (c-name "gltk_box_insert_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+    '("int" "index")
+    '("gboolean" "expand")
+    '("gboolean" "fill")
+  )
+)
+
 (define-method append_widget
   (of-object "GltkBox")
   (c-name "gltk_box_append_widget")
@@ -438,6 +473,34 @@
 
 
 
+;; From gltkconfigbutton.h
+
+(define-function gltk_config_button_get_type
+  (c-name "gltk_config_button_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_config_button_new
+  (c-name "gltk_config_button_new")
+  (is-constructor-of "GltkConfigButton")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "text")
+    '("const-gchar*" "editText")
+  )
+)
+
+(define-function gltk_config_button_error_quark
+  (c-name "gltk_config_button_error_quark")
+  (return-type "GQuark")
+  (parameters
+  )
+)
+
+
+
 ;; From gltkdialog.h
 
 (define-function gltk_dialog_get_type
@@ -487,6 +550,15 @@
   (of-object "GltkEntry")
   (c-name "gltk_entry_get_text")
   (return-type "const-gchar*")
+)
+
+(define-method set_text
+  (of-object "GltkEntry")
+  (c-name "gltk_entry_set_text")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "text")
+  )
 )
 
 (define-function gltk_entry_error_quark
@@ -544,6 +616,17 @@
 
 (define-function gltk_accum_event
   (c-name "gltk_accum_event")
+  (return-type "gboolean")
+  (parameters
+    '("GSignalInvocationHint*" "ihint")
+    '("GValue*" "return_accu")
+    '("const-GValue*" "handler_return")
+    '("gpointer" "data")
+  )
+)
+
+(define-function gltk_accum_find_widget
+  (c-name "gltk_accum_find_widget")
   (return-type "gboolean")
   (parameters
     '("GSignalInvocationHint*" "ihint")
@@ -720,6 +803,17 @@
   )
 )
 
+(define-method insert_item
+  (of-object "GltkList")
+  (c-name "gltk_list_insert_item")
+  (return-type "GltkListItem*")
+  (parameters
+    '("GltkWidget*" "widget")
+    '("int" "index")
+    '("gpointer" "data")
+  )
+)
+
 (define-method add_item
   (of-object "GltkList")
   (c-name "gltk_list_add_item")
@@ -734,6 +828,15 @@
   (of-object "GltkList")
   (c-name "gltk_list_remove_item")
   (return-type "none")
+  (parameters
+    '("GltkListItem*" "item")
+  )
+)
+
+(define-method get_index
+  (of-object "GltkList")
+  (c-name "gltk_list_get_index")
+  (return-type "gint")
   (parameters
     '("GltkListItem*" "item")
   )
@@ -864,12 +967,31 @@
   )
 )
 
+(define-method swap_widget_pressed
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_swap_widget_pressed")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
 (define-method set_widget_unpressed
   (of-object "GltkScreen")
   (c-name "gltk_screen_set_widget_unpressed")
   (return-type "none")
   (parameters
     '("GltkWidget*" "widget")
+  )
+)
+
+(define-method find_drop_target
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_find_drop_target")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "type")
+    '("GltkRectangle*" "bounds")
   )
 )
 
@@ -1001,6 +1123,16 @@
   )
 )
 
+(define-method set_selected_index
+  (of-object "GltkSpinner")
+  (c-name "gltk_spinner_set_selected_index")
+  (return-type "none")
+  (parameters
+    '("int" "level")
+    '("int" "index")
+  )
+)
+
 (define-method set_selected_item
   (of-object "GltkSpinner")
   (c-name "gltk_spinner_set_selected_item")
@@ -1009,6 +1141,12 @@
     '("int" "level")
     '("const-gchar*" "id")
   )
+)
+
+(define-method reload_base_items
+  (of-object "GltkSpinner")
+  (c-name "gltk_spinner_reload_base_items")
+  (return-type "none")
 )
 
 (define-function gltk_spinner_error_quark
@@ -1058,6 +1196,12 @@
   (parameters
     '("int" "levels")
   )
+)
+
+(define-method clear_toplevel
+  (of-object "GltkSpinnerModel")
+  (c-name "gltk_spinner_model_clear_toplevel")
+  (return-type "none")
 )
 
 (define-method add_toplevel
@@ -1111,6 +1255,151 @@
   (c-name "gltk_spinner_model_error_quark")
   (return-type "GQuark")
   (parameters
+  )
+)
+
+
+
+;; From gltkstructs.h
+
+(define-method init
+  (of-object "GltkColor")
+  (c-name "gltk_color_init")
+  (return-type "none")
+  (parameters
+    '("float" "r")
+    '("float" "g")
+    '("float" "b")
+  )
+)
+
+(define-method get_array
+  (of-object "GltkColor")
+  (c-name "gltk_color_get_array")
+  (return-type "const-float*")
+)
+
+(define-function gltk_rectangle_get_type
+  (c-name "gltk_rectangle_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_rectangle_new
+  (c-name "gltk_rectangle_new")
+  (is-constructor-of "GltkRectangle")
+  (return-type "GltkRectangle*")
+  (parameters
+    '("int" "x")
+    '("int" "y")
+    '("int" "width")
+    '("int" "height")
+  )
+)
+
+(define-method copy
+  (of-object "GltkRectangle")
+  (c-name "gltk_rectangle_copy")
+  (return-type "GltkRectangle*")
+)
+
+(define-method free
+  (of-object "GltkRectangle")
+  (c-name "gltk_rectangle_free")
+  (return-type "none")
+)
+
+(define-method intersects
+  (of-object "GltkRectangle")
+  (c-name "gltk_rectangle_intersects")
+  (return-type "gboolean")
+  (parameters
+    '("const-GltkRectangle*" "r2")
+  )
+)
+
+
+
+;; From gltktable.h
+
+(define-function gltk_table_get_type
+  (c-name "gltk_table_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gltk_table_new
+  (c-name "gltk_table_new")
+  (is-constructor-of "GltkTable")
+  (return-type "GltkWidget*")
+  (parameters
+    '("int" "cols")
+    '("int" "rows")
+  )
+)
+
+(define-method set_col_options
+  (of-object "GltkTable")
+  (c-name "gltk_table_set_col_options")
+  (return-type "none")
+  (parameters
+    '("int" "i")
+    '("GltkTableCellAlign" "align")
+    '("gboolean" "expand")
+    '("int" "padding")
+  )
+)
+
+(define-method set_row_options
+  (of-object "GltkTable")
+  (c-name "gltk_table_set_row_options")
+  (return-type "none")
+  (parameters
+    '("int" "i")
+    '("GltkTableCellAlign" "align")
+    '("gboolean" "expand")
+    '("int" "padding")
+  )
+)
+
+(define-method set_col_padding
+  (of-object "GltkTable")
+  (c-name "gltk_table_set_col_padding")
+  (return-type "none")
+  (parameters
+    '("int" "padding")
+  )
+)
+
+(define-method set_row_padding
+  (of-object "GltkTable")
+  (c-name "gltk_table_set_row_padding")
+  (return-type "none")
+  (parameters
+    '("int" "padding")
+  )
+)
+
+(define-method insert_widget
+  (of-object "GltkTable")
+  (c-name "gltk_table_insert_widget")
+  (return-type "none")
+  (parameters
+    '("GltkWidget*" "widget")
+    '("int" "x")
+    '("int" "y")
+  )
+)
+
+(define-method remove_widget
+  (of-object "GltkTable")
+  (c-name "gltk_table_remove_widget")
+  (return-type "none")
+  (parameters
+    '("int" "x")
+    '("int" "y")
   )
 )
 
@@ -1274,6 +1563,15 @@
   )
 )
 
+(define-method update_allocation
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_update_allocation")
+  (return-type "none")
+  (parameters
+    '("GltkAllocation" "allocation")
+  )
+)
+
 (define-method get_allocation
   (of-object "GltkWidget")
   (c-name "gltk_widget_get_allocation")
@@ -1296,6 +1594,26 @@
   (of-object "GltkWidget")
   (c-name "gltk_widget_layout")
   (return-type "none")
+)
+
+(define-method find_drop_target
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_find_drop_target")
+  (return-type "GltkWidget*")
+  (parameters
+    '("const-gchar*" "type")
+    '("const-GltkRectangle*" "bounds")
+  )
+)
+
+(define-method drop_item
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_drop_item")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "type")
+    '("const-gpointer" "data")
+  )
 )
 
 (define-method render
@@ -1410,6 +1728,15 @@
   (of-object "GltkWindow")
   (c-name "gltk_window_set_widget_pressed")
   (return-type "gboolean")
+  (parameters
+    '("GltkWidget*" "widget")
+  )
+)
+
+(define-method swap_widget_pressed
+  (of-object "GltkWindow")
+  (c-name "gltk_window_swap_widget_pressed")
+  (return-type "none")
   (parameters
     '("GltkWidget*" "widget")
   )

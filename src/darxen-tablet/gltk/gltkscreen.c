@@ -230,6 +230,16 @@ gltk_screen_set_widget_pressed(GltkScreen* screen, GltkWidget* widget)
 }
 
 void
+gltk_screen_swap_widget_pressed(GltkScreen* screen, GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+	g_return_if_fail(priv->window);
+
+	gltk_window_swap_widget_pressed(priv->window, widget);
+}
+
+void
 gltk_screen_set_widget_unpressed(GltkScreen* screen, GltkWidget* widget)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
@@ -237,6 +247,16 @@ gltk_screen_set_widget_unpressed(GltkScreen* screen, GltkWidget* widget)
 	g_return_if_fail(priv->window);
 
 	gltk_window_set_widget_unpressed(priv->window, widget);
+}
+
+GltkWidget*
+gltk_screen_find_drop_target(GltkScreen* screen, const gchar* type, GltkRectangle* bounds)
+{
+	g_return_val_if_fail(GLTK_IS_SCREEN(screen), NULL);
+	USING_PRIVATE(screen);
+	g_return_val_if_fail(priv->widget, NULL);
+
+	return gltk_widget_find_drop_target(priv->widget, type, bounds);
 }
 
 
@@ -335,5 +355,4 @@ gltk_screen_get_root(GltkScreen* screen)
 
 	return priv->widget;
 }
-
 

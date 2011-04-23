@@ -24,6 +24,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "gltkstructs.h"
 #define GLTK_TYPE_EVENT					(gltk_event_get_type())
 #define GLTK_TYPE_EVENT_TYPE			(gltk_event_type_get_type())
 #define GLTK_TYPE_TOUCH_EVENT_TYPE		(gltk_touch_event_type_get_type())
@@ -46,8 +47,6 @@ typedef struct _GltkEventRotate			GltkEventRotate;
 
 typedef struct _GltkEventClick			GltkEventClick;
 
-typedef struct _GltkEventSlide			GltkEventSlide;
-
 typedef union  _GltkEvent				GltkEvent;
 
 enum _GltkEventType
@@ -58,8 +57,7 @@ enum _GltkEventType
 	GLTK_MULTI_DRAG,
 	GLTK_PINCH,
 	GLTK_ROTATE,
-	GLTK_CLICK,
-	GLTK_SLIDE
+	GLTK_CLICK
 };
 
 
@@ -154,13 +152,6 @@ struct _GltkEventClick
 	GltkEventType type;
 };
 
-struct _GltkEventSlide
-{
-	GltkEventType type;
-
-	gboolean dirRight;
-};
-
 union _GltkEvent
 {
 	GltkEventType type;
@@ -172,7 +163,6 @@ union _GltkEvent
 	GltkEventPinch pinch;
 	GltkEventRotate rotate;
 	GltkEventClick click;
-	GltkEventSlide slide;
 };
 
 GType		gltk_event_get_type				()	G_GNUC_CONST;
@@ -188,6 +178,10 @@ gboolean	gltk_accum_event				(	GSignalInvocationHint* ihint,
 												const GValue* handler_return,
 												gpointer data);
 
+gboolean	gltk_accum_find_widget			(	GSignalInvocationHint* ihint,
+												GValue* return_accu,
+												const GValue* handler_return,
+												gpointer data);
 
 #endif
 

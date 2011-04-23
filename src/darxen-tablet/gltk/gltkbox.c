@@ -48,6 +48,7 @@ static void gltk_box_finalize(GObject* gobject);
 static void gltk_box_set_screen(GltkWidget* widget, GltkScreen* screen);
 static void gltk_box_render(GltkWidget* widget);
 static gboolean gltk_box_event(GltkWidget* widget, GltkEvent* event);
+static GltkWidget* gltk_box_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 
 static void
 gltk_box_class_init(GltkBoxClass* klass)
@@ -63,6 +64,7 @@ gltk_box_class_init(GltkBoxClass* klass)
 	gltkwidget_class->set_screen = gltk_box_set_screen;
 	gltkwidget_class->render = gltk_box_render;
 	gltkwidget_class->event = gltk_box_event;
+	gltkwidget_class->find_drop_target = gltk_box_find_drop_target;
 }
 
 static void
@@ -86,6 +88,8 @@ gltk_box_dispose(GObject* gobject)
 		{
 			GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
 
+			gltk_widget_unparent(child->widget);
+			gltk_widget_set_screen(child->widget, NULL);
 			g_object_unref(G_OBJECT(child->widget));
 			g_free(child);
 
@@ -113,8 +117,12 @@ gltk_box_new()
 }
 
 void
-gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill)
+gltk_box_insert_widget(GltkBox* box, GltkWidget* widget, int index, gboolean expand, gboolean fill)
 {
+	g_return_if_fail(GLTK_IS_BOX(box));
+	g_return_if_fail(GLTK_IS_WIDGET(box));
+	g_return_if_fail(index >= 0 && index <= g_list_length(box->children));
+
 	GltkBoxChild* child = g_new(GltkBoxChild, 1);
 	child->widget = widget;
 	child->expand = expand;
@@ -125,11 +133,23 @@ gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboole
 		box->expandCount++;
 	box->childrenCount++;
 
-	box->children = g_list_append(box->children, child);
+	box->children = g_list_insert(box->children, child, index);
 
 	gltk_widget_set_parent(widget, GLTK_WIDGET(box));
 	if (GLTK_WIDGET(box)->screen)
 		gltk_widget_set_screen(widget, GLTK_WIDGET(box)->screen);
+
+	gltk_widget_layout(GLTK_WIDGET(box));
+}
+
+void
+gltk_box_append_widget(GltkBox* box, GltkWidget* widget, gboolean expand, gboolean fill)
+{
+	g_return_if_fail(GLTK_IS_BOX(box));
+
+	int index = g_list_length(box->children);
+
+	gltk_box_insert_widget(box, widget, index, expand, fill);
 }
 
 void
@@ -151,6 +171,7 @@ gltk_box_remove_widget(GltkBox* box, GltkWidget* widget)
 			g_object_unref(G_OBJECT(child->widget));
 			g_free(child);
 			g_list_free(pChildren);
+			gltk_widget_layout(GLTK_WIDGET(box));
 			return;
 		}
 	
@@ -286,5 +307,33 @@ gltk_box_event(GltkWidget* widget, GltkEvent* event)
 	}
 
 	return returnValue;
+}
+
+static GltkWidget*
+gltk_box_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
+{
+	GltkWidget* res = NULL;
+	GList* pChildren = GLTK_BOX(widget)->children;
+	while (pChildren)
+	{
+		GltkBoxChild* child = (GltkBoxChild*)pChildren->data;
+		GltkAllocation childAllocation = gltk_widget_get_allocation(child->widget);
+
+		if (gltk_rectangle_intersects(bounds, (GltkRectangle*)&childAllocation))
+		{
+			GltkRectangle* childBounds = gltk_rectangle_copy(bounds);
+			childBounds->x -= childAllocation.x;
+			childBounds->y -= childAllocation.y;
+			res = gltk_widget_find_drop_target(child->widget, type, childBounds);
+			gltk_rectangle_free(childBounds);
+		}
+		if (res)
+			return res;
+
+		pChildren = pChildren->next;
+	}
+	//TODO add to everyone else that forwards events (table)
+
+	return GLTK_WIDGET_CLASS(gltk_box_parent_class)->find_drop_target(widget, type, bounds);
 }
 

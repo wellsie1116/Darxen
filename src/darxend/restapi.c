@@ -40,8 +40,6 @@
 #include <curl/curl.h>
 
 #define PORT 4889
-#define PAGE "<html><head><title>libmicrohttpd demo</title>"\
-			 "</head><body>libmicrohttpd demo</body></html>"
 
 #define PAGE_AUTHENTICATE "<html><body>Please authenticate</body></html>"
 #define PAGE_FAIL "<html><body>This isn't the server you are looking for</body></html>"
@@ -326,6 +324,56 @@ static int handle_request(  void* cls,
 			{
 				ret = respond_client_fail(connection, "Invalid ID or file not found");
 			}
+		}
+		else if (len >= 4 && len <= 7 && !strcmp(params[0], "cache") && !strcmp(params[1], "range"))
+		{
+			char* site = params[2];
+			char* product = params[3];
+			int year =  (len >= 5) ? atoi(params[4]) : -1;
+			int month = (len >= 6) ? atoi(params[5]) : -1;
+			int day =   (len >= 7) ? atoi(params[6]) : -1;
+
+			int count;
+			gint* vals = radar_data_manager_get_search_range(site, product, year, month, day, &count);
+
+			JsonArray* array = json_array_new();
+			int i;
+			for (i = 0; i < count; i++)
+				json_array_add_int_element(array, vals[i]);
+
+			JsonNode* node = json_node_new(JSON_NODE_ARRAY);
+			json_node_set_array(node, array);
+
+			JsonGenerator* gen = json_generator_new();
+			json_generator_set_root(gen, node);
+			gsize size;
+			gchar* dat = json_generator_to_data(gen, &size);
+
+			g_object_unref(gen);
+			json_array_unref(array);
+
+			ret = respond_json(connection, dat, size, NULL);
+			g_free(dat);
+			g_free(vals);
+
+			//switch (len)
+			//{
+			//	case 4:
+			//		//get valid years
+			//		break;
+			//	case 5:
+			//		//get valid months for a year
+			//		break;
+			//	case 6:
+			//		//get valid days for a month and year
+			//		break;
+			//	case 7:
+			//		//get valid times for month, day, and year
+			//		break;
+			//}
+
+
+
 		}
 		else if (len==4 && !strcmp(params[0], "cache"))
 		{

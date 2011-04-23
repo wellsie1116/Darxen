@@ -78,7 +78,10 @@ void			gltk_screen_close_window			(GltkScreen* screen);
 void			gltk_screen_invalidate				(GltkScreen* screen);
 void			gltk_screen_layout					(GltkScreen* screen);
 gboolean		gltk_screen_set_widget_pressed		(GltkScreen* screen, GltkWidget* widget);
+void			gltk_screen_swap_widget_pressed		(GltkScreen* screen, GltkWidget* widget);
 void			gltk_screen_set_widget_unpressed	(GltkScreen* screen, GltkWidget* widget);
+
+GltkWidget*		gltk_screen_find_drop_target		(GltkScreen* screen, const gchar* type, GltkRectangle* bounds);
 
 GQuark			gltk_screen_error_quark	();
 

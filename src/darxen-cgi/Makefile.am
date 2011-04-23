@@ -12,8 +12,8 @@ bin_PROGRAMS=darxencgi
 darxencgi_SOURCES= request.c \
 	darxencgi.c \
 	../libdarxen/libdarxen.la
-darxencgi_CFLAGS = -Wall -I../libdarxen $(gobject_CFLAGS) $(glib_CFLAGS) $(gsoap_CFLAGS)
-darxencgi_LDADD = $(gobject_LIBS) $(glib_LIBS) $(gsoap_LIBS) ../libdarxen/libdarxen.la -lpthread # -lwsock32
+darxencgi_CFLAGS = -Wall -I../libdarxen $(gobject_CFLAGS) $(glib_CFLAGS) $(curl_CFLAGS)
+darxencgi_LDADD = $(gobject_LIBS) $(glib_LIBS) $(curl_LIBS) $(libshp_LIBS) ../libdarxen/libdarxen.la -lpthread # -lwsock32
 # ../libdarxen/libdarxen.la
 
 #AM_LDFLAGS = -export-dynamic

@@ -1,4 +1,4 @@
-/* darxenmainview.h
+/* darxenaddviewdialog.h
  *
  * Copyright (C) 2011 - Kevin Wells <kevin@darxen.org>
  *
@@ -18,14 +18,14 @@
  * along with darxen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DARXENMAINVIEW_H_O5P8NIU7
-#define DARXENMAINVIEW_H_O5P8NIU7
+#ifndef DARXENADDVIEWDIALOG_H_8AZ6ABXS
+#define DARXENADDVIEWDIALOG_H_8AZ6ABXS
 
 #include <gltk/gltk.h>
 
-GltkWidget*		darxen_main_view_get_root();
+#include "darxenconfig.h"
 
-void			darxen_main_view_readd_site(const gchar* name);
+void darxen_add_view_dialog_show(GltkScreen* parent);
 
 #endif
 

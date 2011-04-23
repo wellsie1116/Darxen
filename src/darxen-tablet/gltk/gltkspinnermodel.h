@@ -71,31 +71,33 @@ typedef enum
 	GLTK_SPINNER_MODEL_ERROR_FAILED
 } GltkSpinnerModelError;
 
-GltkSpinnerModelItem*	gltk_spinner_model_item_new		(	const gchar* id, const gchar* text);
-GltkSpinnerModelItem*	gltk_spinner_model_item_clone	(	GltkSpinnerModelItem* item);
-void					gltk_spinner_model_item_free	(	GltkSpinnerModelItem* item);
+GltkSpinnerModelItem*	gltk_spinner_model_item_new			(	const gchar* id, const gchar* text);
+GltkSpinnerModelItem*	gltk_spinner_model_item_clone		(	GltkSpinnerModelItem* item);
+void					gltk_spinner_model_item_free		(	GltkSpinnerModelItem* item);
 
-GType					gltk_spinner_model_get_type		(	) G_GNUC_CONST;
-GltkSpinnerModel*		gltk_spinner_model_new			(	int levels);
+GType					gltk_spinner_model_get_type			(	) G_GNUC_CONST;
+GltkSpinnerModel*		gltk_spinner_model_new				(	int levels);
 
-void					gltk_spinner_model_add_toplevel	(	GltkSpinnerModel* model,
-															const gchar* id,
-															const gchar* text);
+void					gltk_spinner_model_clear_toplevel	(	GltkSpinnerModel* model);
 
-GltkSpinnerModelItem*	gltk_spinner_model_get_toplevel	(	GltkSpinnerModel* model,
-															int index);
+void					gltk_spinner_model_add_toplevel		(	GltkSpinnerModel* model,
+																const gchar* id,
+																const gchar* text);
 
-GList*					gltk_spinner_model_get_items	(	GltkSpinnerModel* model,
-															int level,
-															int index);
+GltkSpinnerModelItem*	gltk_spinner_model_get_toplevel		(	GltkSpinnerModel* model,
+																int index);
 
-GList*					gltk_spinner_model_clone_items	(	GltkSpinnerModel* model,
-															GList* items);
+GList*					gltk_spinner_model_get_items		(	GltkSpinnerModel* model,
+																int level,
+																int index);
 
-void					gltk_spinner_model_free_items	(	GltkSpinnerModel* model,
-															GList* items);
+GList*					gltk_spinner_model_clone_items		(	GltkSpinnerModel* model,
+																GList* items);
 
-GQuark					gltk_spinner_model_error_quark	(	);
+void					gltk_spinner_model_free_items		(	GltkSpinnerModel* model,
+																GList* items);
+
+GQuark					gltk_spinner_model_error_quark		(	);
 
 G_END_DECLS
 

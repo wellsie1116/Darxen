@@ -81,6 +81,7 @@ void			gltk_window_close					(GltkWindow* window);
 
 void			gltk_window_invalidate				(GltkWindow* window);
 gboolean		gltk_window_set_widget_pressed		(GltkWindow* window, GltkWidget* widget);
+void			gltk_window_swap_widget_pressed		(GltkWindow* window, GltkWidget* widget);
 void			gltk_window_set_widget_unpressed	(GltkWindow* window, GltkWidget* widget);
 
 GQuark			gltk_window_error_quark	();

@@ -56,6 +56,7 @@ darxen_radar_sites_init()
 				strcpy(info->chrCity, (char*)xmlNodeListGetString(doc, site->children, 1));
 			site = site->next;
 		}
+		//uppercase site id
 		for (i = 0; i < 4; i++)
 			if ((int)info->chrID[i] > 96 && (int)info->chrID[i] < 123)
 				info->chrID[i] = (unsigned char)((int)info->chrID[i] - 32);

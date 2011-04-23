@@ -27,6 +27,7 @@
 #include <GL/glu.h>
 
 #include <gltk/gltkmarshal.h>
+#include <gltk/gltkstructs.h>
 #include <gltk/gltkevents.h>
 #include <gltk/gltkfonts.h>
 #include <gltk/gltkwidget.h>
@@ -39,6 +40,7 @@
 #include <gltk/gltkbox.h>
 #include <gltk/gltkhbox.h>
 #include <gltk/gltkvbox.h>
+#include <gltk/gltktable.h>
 #include <gltk/gltkbin.h>
 #include <gltk/gltklist.h>
 #include <gltk/gltkspinnermodel.h>
@@ -48,6 +50,7 @@
 #include <gltk/gltkbutton.h>
 #include <gltk/gltktogglebutton.h>
 #include <gltk/gltkslidebutton.h>
+#include <gltk/gltkconfigbutton.h>
 #include <gltk/gltkentry.h>
 
 

@@ -191,7 +191,7 @@ motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 static gboolean
 expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 {
-	g_message("Expose");
+	//g_message("Expose");
 
 	GdkGLContext *glcontext = gtk_widget_get_gl_context(darea);
 	GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(darea);
@@ -218,7 +218,7 @@ expose(GtkWidget *darea, GdkEventExpose *event, gpointer user_data)
 static gboolean
 configure(GtkWidget *darea, GdkEventConfigure *event, gpointer user_data)
 {
-	g_message("Configure");
+	//g_message("Configure");
 	gltk_window_set_size(glWindow, event->width, event->height);
 
 	GdkGLContext *glcontext = gtk_widget_get_gl_context(darea);

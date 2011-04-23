@@ -54,6 +54,7 @@ struct _ViewPair
 {
 	DarxenView* view;
 	DarxenViewConfig* config;
+	GltkWidget* configScrollable;
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
@@ -76,6 +77,7 @@ static void				config_viewNameChanged		(	DarxenConfig* config,
 
 static void				config_viewUpdated			(	DarxenConfig* config,
 														const gchar* site,
+														const gchar* viewName,
 														DarxenViewInfo* viewInfo,
 														DarxenPanelManager* manager);
 
@@ -151,11 +153,26 @@ darxen_panel_manager_create_view(DarxenPanelManager* manager, gchar* site, Darxe
 
 	pair->view = (DarxenView*)darxen_view_new(site, viewInfo);
 	pair->config = (DarxenViewConfig*)darxen_view_config_new(site, viewInfo);
-	//g_signal_connect(pair->config, "site-changed", (GCallback)viewConfig_siteChanged, manager);
-	g_object_ref_sink(G_OBJECT(pair->view));
-	g_object_ref_sink(G_OBJECT(pair->config));
+	pair->configScrollable = gltk_scrollable_new();
+	gltk_scrollable_set_widget(GLTK_SCROLLABLE(pair->configScrollable), GLTK_WIDGET(pair->config));
+	g_object_ref_sink(pair->view);
+	g_object_ref_sink(pair->config);
+	g_object_ref_sink(pair->configScrollable);
 
 	g_hash_table_insert(priv->viewMap, site_view_pair_new(site, viewInfo->name), pair);
+}
+
+void
+darxen_panel_manager_destroy_view(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	g_hash_table_remove(priv->viewMap, &siteViewPair);
 }
 
 void
@@ -197,8 +214,42 @@ darxen_panel_manager_view_view_config(DarxenPanelManager* manager, gchar* site, 
 	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
 	g_return_if_fail(pair);
 	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+	
+	gltk_bin_set_widget(GLTK_BIN(manager), pair->configScrollable);
+}
 
-	gltk_bin_set_widget(GLTK_BIN(manager), (GltkWidget*)pair->config);
+void
+darxen_panel_manager_save_view_config(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+	
+	darxen_view_config_save(pair->config);
+}
+
+void
+darxen_panel_manager_revert_view_config(DarxenPanelManager* manager, gchar* site, gchar* view)
+{
+	g_return_if_fail(DARXEN_IS_PANEL_MANAGER(manager));
+	g_return_if_fail(site);
+	g_return_if_fail(view);
+	USING_PRIVATE(manager);
+	SiteViewPair siteViewPair;
+	site_view_pair_init(&siteViewPair, site, view);
+
+	ViewPair* pair = (ViewPair*)g_hash_table_lookup(priv->viewMap, &siteViewPair);
+	g_return_if_fail(pair);
+	g_return_if_fail(GLTK_IS_WIDGET(pair->config));
+	
+	darxen_view_config_revert(pair->config);
 }
 
 GQuark
@@ -251,6 +302,7 @@ view_pair_free(ViewPair* pair)
 {
 	g_object_unref(G_OBJECT(pair->view));
 	g_object_unref(G_OBJECT(pair->config));
+	g_object_unref(G_OBJECT(pair->configScrollable));
 }
 
 //static void
@@ -286,9 +338,10 @@ config_viewNameChanged(	DarxenConfig* config,
 static void				
 config_viewUpdated(	DarxenConfig* config,
 					const gchar* site,
+					const gchar* viewName,
 					DarxenViewInfo* viewInfo,
 					DarxenPanelManager* manager)
 {
-	g_critical("TODO: Update view in general (not here?)");
+	//nothing useful to do here
 }
 

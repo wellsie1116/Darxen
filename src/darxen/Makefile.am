@@ -22,8 +22,8 @@ darxen_SOURCES = DarxenCommon.c DarxenCommon.h \
 	darxen.c \
 	../libdarxen/libdarxen.la
 
-darxen_CFLAGS = -Wall -I../libdarxen $(gtkglext_CFLAGS) $(libglade_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS)
-darxen_LDADD = $(gtkglext_LIBS) $(libglade_LIBS) $(libxml_LIBS) $(gsoap_LIBS) ../libdarxen/libdarxen.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
+darxen_CFLAGS = -Wall -I../libdarxen $(gtkglext_CFLAGS) $(libglade_CFLAGS) $(libxml_CFLAGS) $(curl_CFLAGS)
+darxen_LDADD = $(gtkglext_LIBS) $(libglade_LIBS) $(libxml_LIBS) $(curl_LIBS) ../libdarxen/libdarxen.la -lpthread $(libshp_LIBS) -lshp # -lwsock32
 darxen_LDFLAGS = -g
 
 AM_LDFLAGS = -export-dynamic

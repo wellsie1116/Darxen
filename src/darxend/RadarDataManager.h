@@ -37,6 +37,7 @@ void		radar_data_manager_iter_pollers			(DarxendClient* client, PollerIterFunc c
 
 int			radar_data_manager_search_past_data		(char* site, char* product, int frames);
 
+gint*		radar_data_manager_get_search_range		(char* site, char* product, int year, int month, int day, int* count);
 int			radar_data_manager_search				(char* site, char* product, DateTime* start, DateTime* end);
 int			radar_data_manager_get_search_size		(int searchID);
 DateTime*	radar_data_manager_get_search_records	(int searchID, int start, int count);

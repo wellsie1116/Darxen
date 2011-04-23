@@ -34,6 +34,7 @@ ignore-type
   GltkSpinnerError
   GltkSpinnerModelError
   GltkToggleButtonError
+  GltkConfigButtonError
   GltkVBoxError
   GltkWidgetError
   GltkWindowError
@@ -96,7 +97,6 @@ _wrap_gltk_event_tp_getattr(PyObject *self, char *attr)
 	case GLTK_MULTI_DRAG:
 	case GLTK_PINCH:
 	case GLTK_ROTATE:
-	case GLTK_SLIDE:
 		//FIXME These should not be opaque
         if (!strcmp(attr, "__members__"))
             return Py_BuildValue("[s]", "type");

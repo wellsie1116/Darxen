@@ -44,7 +44,7 @@ libdarxen_test_SOURCES = libdarxen_test.c \
 			 libdarxen.la
 
 libdarxen_test_CFLAGS = -g -Wall $(glib_CFLAGS) $(gobject_CFLAGS) $(libxml_CFLAGS) $(gsoap_CFLAGS) $(curl_CFLAGS) $(json_CFLAGS)
-libdarxen_test_LDADD = $(glib_LIBS) $(gobject_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(curl_LIBS) $(net_LIBS) $(json_LIBS) libdarxen.la -lpthread # -lwsock32
+libdarxen_test_LDADD = $(glib_LIBS) $(gobject_LIBS) $(libxml_LIBS) $(gsoap_LIBS) $(curl_LIBS) $(net_LIBS) $(json_LIBS) $(libshp_LIBS) libdarxen.la -lpthread # -lwsock32
 # ../shared/libdarxenshared.la
 
 tests: libdarxen_test

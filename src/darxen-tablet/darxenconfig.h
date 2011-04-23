@@ -88,6 +88,8 @@ struct _DarxenConfig
 
 	DarxenRestfulClient* client;
 	GList* sites;
+
+	gboolean allowRotation;
 };
 
 struct _DarxenConfigClass
@@ -95,6 +97,22 @@ struct _DarxenConfigClass
 	GObjectClass parent_class;
 	
 	/* signals */
+	void (*site_added)			(	DarxenConfig* config,
+									const gchar* site,
+									int index);
+
+	void (*site_deleted)		(	DarxenConfig* config,
+									const gchar* site);
+	
+	void (*view_added)			(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view,
+									int index);
+
+	void (*view_deleted)		(	DarxenConfig* config,
+									const gchar* site,
+									const gchar* view);
+
 	void (*view_name_changed)	(	DarxenConfig* config,
 									gchar* site,
 									DarxenViewInfo* viewInfo,
@@ -102,6 +120,7 @@ struct _DarxenConfigClass
 
 	void (*view_updated)		(	DarxenConfig* config,
 									gchar* site,
+									gchar* viewName,
 									DarxenViewInfo* viewInfo);
 
 	/* virtual funcs */
@@ -115,6 +134,9 @@ typedef enum
 GType					darxen_config_get_type			(	) G_GNUC_CONST;
 DarxenConfig*			darxen_config_get_instance		(	);
 
+void					darxen_config_load_settings		(	DarxenConfig* config);
+void					darxen_config_save_settings		(	DarxenConfig* config);
+
 GList*					darxen_config_get_sites			(	DarxenConfig* config);
 
 void					darxen_config_set_client		(	DarxenConfig* config, 
@@ -122,16 +144,49 @@ void					darxen_config_set_client		(	DarxenConfig* config,
 
 DarxenRestfulClient*	darxen_config_get_client		(	DarxenConfig* config);
 
+void					darxen_config_add_site			(	DarxenConfig* config,
+															const gchar* site,
+															int index);
+
+void					darxen_config_move_site			(	DarxenConfig* config,
+															const gchar* site,
+															int oldIndex,
+															int newIndex);
+
+void					darxen_config_delete_site		(	DarxenConfig* config,
+															const gchar* site);
+
+DarxenViewInfo*			darxen_config_get_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view);
+
+void					darxen_config_add_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view,
+															int index);
+
+void					darxen_config_move_view			(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view,
+															int oldIndex,
+															int newIndex);
+
+void					darxen_config_delete_view		(	DarxenConfig* config,
+															const gchar* site,
+															const gchar* view);
 
 gboolean				darxen_config_rename_view		(	DarxenConfig* config,
 															const gchar* site,
-															DarxenViewInfo* viewInfo,
+															const DarxenViewInfo* viewInfo,
 															const gchar* newName);
 
 void					darxen_config_view_updated		(	DarxenConfig* config,
 															const gchar* site,
+															const gchar* viewName,
 															DarxenViewInfo* viewInfo);
 															
+DarxenViewInfo*			darxen_view_info_copy			(	const DarxenViewInfo* viewInfo);
+void					darxen_view_info_free			(	DarxenViewInfo* viewInfo);
 
 
 GQuark					darxen_config_error_quark		();

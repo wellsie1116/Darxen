@@ -62,7 +62,9 @@ GType			gltk_spinner_get_type			() G_GNUC_CONST;
 GltkWidget*		gltk_spinner_new				(GltkSpinnerModel* model);
 
 const gchar*	gltk_spinner_get_selected_item	(GltkSpinner* spinner, int level);
+void			gltk_spinner_set_selected_index	(GltkSpinner* spinner, int level, int index);
 void			gltk_spinner_set_selected_item	(GltkSpinner* spinner, int level, const gchar* id);
+void			gltk_spinner_reload_base_items	(GltkSpinner* spinner);
 
 GQuark			gltk_spinner_error_quark		();
 

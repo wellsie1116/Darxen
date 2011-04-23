@@ -26,8 +26,16 @@
 #include <glib.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+void cleanup_client()
+{
+	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
+
+	darxen_restful_client_disconnect(client, NULL);
+}
 
 int main(int argc, char *argv[])
 {
@@ -59,6 +67,8 @@ int main(int argc, char *argv[])
 
 	int res;
 	res = initialize_gui(&argc, &argv);
+
+	atexit(cleanup_client);
 
 	run_gui();
 

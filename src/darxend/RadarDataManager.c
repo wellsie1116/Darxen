@@ -221,6 +221,61 @@ radar_data_manager_search_past_data(char* site, char* product, int frames)
 	return 0;
 }
 
+gint*
+radar_data_manager_get_search_range(char* site, char* product, int year, int month, int day, int* count)
+{
+	char chrYear[7];
+	char chrMonth[4];
+	char chrDay[4];
+	sprintf(chrYear, "%i", year);
+	sprintf(chrMonth, "%i", month);
+	sprintf(chrDay, "%i", day);
+
+	gchar* path = g_build_filename("archives", "level3", site, product,
+			year > 0 ? chrYear : NULL,
+			month > 0 ? chrMonth : NULL,
+			day > 0 ? chrDay : NULL,
+			NULL);
+
+	gchar* abspath = settings_get_path(path);
+	g_free(path);
+	GDir* dir = g_dir_open(abspath, 0, NULL);
+	if (!dir)
+	{
+		g_free(abspath);
+		*count = 0;
+		return NULL;
+	}
+
+	const gchar* filename;
+	GSList* items = NULL;
+	while ((filename = g_dir_read_name(dir)))
+	{
+		int id = atoi(filename);
+		items = g_slist_prepend(items, GINT_TO_POINTER(id));
+	}
+	g_dir_close(dir);
+	g_free(abspath);
+
+	items = g_slist_sort(items, treeIntComparer);
+	int len = g_slist_length(items);
+	if (count)
+		*count = len;
+
+	gint* res = g_new(gint, len);
+	GSList* pItems = items;
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		res[i] = GPOINTER_TO_INT(pItems->data);
+		pItems = pItems->next;
+	}
+	g_slist_free(items);
+
+	return res;
+}
+
+
 int
 radar_data_manager_search(char* site, char* product, DateTime* start, DateTime* end)
 {

@@ -67,6 +67,7 @@ static void		config_viewNameChanged	(	DarxenConfig* config,
 
 static void		config_viewUpdated		(	DarxenConfig* config,
 											const gchar* site,
+											const gchar* viewName,
 											DarxenViewInfo* viewInfo,
 											DarxenView* view);
 
@@ -101,6 +102,8 @@ darxen_view_dispose(GObject* gobject)
 {
 	DarxenView* self = DARXEN_VIEW(gobject);
 	USING_PRIVATE(self);
+
+	g_debug("view disposing");
 
 	if (priv->label)
 	{
@@ -148,11 +151,12 @@ darxen_view_new(const gchar* site, DarxenViewInfo* viewInfo)
 
 	GltkWidget* hboxHeader = gltk_hbox_new(0);
 	{
-		gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
-		priv->label = gltk_label_new(desc);
+		//gchar* desc = g_strdup_printf("View entited: %s", viewInfo->name);
+		priv->label = gltk_label_new(viewInfo->name);
+		gltk_label_set_font_size(GLTK_LABEL(priv->label), 24);
 		g_object_ref(priv->label);
 		gltk_box_append_widget(GLTK_BOX(hboxHeader), priv->label, TRUE, TRUE);
-		g_free(desc);
+		//g_free(desc);
 
 		GltkWidget* hboxAnimation = gltk_hbox_new(3);
 		{
@@ -295,6 +299,7 @@ config_viewNameChanged(	DarxenConfig* config,
 static void		
 config_viewUpdated(	DarxenConfig* config,
 					const gchar* site,
+					const gchar* viewName,
 					DarxenViewInfo* viewInfo,
 					DarxenView* view)
 {

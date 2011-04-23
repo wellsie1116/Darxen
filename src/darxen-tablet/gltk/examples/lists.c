@@ -57,14 +57,26 @@ create_label_list()
 	return label_widget(list, "The three labels below are\ncontained in a list so that they\ncan be reordered dynamically.");
 }
 
+static void
+btn_clicked(GltkWidget* button, GltkEventClick* event, GltkListItem* item)
+{
+	gltk_list_remove_item(item->list, item);
+}
+
 GltkWidget* 
 create_button_list()
 {
 	GltkWidget* list = gltk_list_new();
 
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 1"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 2"), NULL);
-	gltk_list_add_item(GLTK_LIST(list), gltk_button_new("Button 3"), NULL);
+	const gchar* names[] = {"Button 1", "Button 2", "Button 3"};
+	int i;
+	for (i = 0; i < 3; i++)
+	{
+		GltkListItem* item;
+		GltkWidget* btn = gltk_button_new(names[i]);
+		item = gltk_list_add_item(GLTK_LIST(list), btn, (gpointer)names[i]);
+		g_signal_connect(G_OBJECT(btn), "click-event", (GCallback)btn_clicked, item);
+	}
 
 	return label_widget(list, "Buttons can be added to\nlists also.");
 }
@@ -92,19 +104,64 @@ create_composite_list()
 	return label_widget(list, "Any widget can be added to a list.\nThis includes composite widgets and\neven additional lists.");
 }
 
+void
+list_drop_item(GltkWidget* widget, const gchar* type, const GltkListItem* item)
+{
+	g_assert(!g_strcmp0(type, "DndDemo"));
+	g_debug("An item was dropped");
+}
+
+GltkWidget*
+create_dnd_list(const gchar* prefix, gboolean deletable, const gchar* lbl)
+{
+	GltkWidget* list = gltk_list_new();
+	g_object_set(list,	"target-type", "DndDemo", 
+						"deletable", deletable, NULL);
+
+	int i;
+	for (i = 0; i < 5; i++)
+	{
+		gchar* label = g_strdup_printf("Item %s-%i", prefix, i);
+		gltk_list_add_item(GLTK_LIST(list), gltk_label_new(label), NULL);
+	}
+
+	GltkWidget* hbox = gltk_hbox_new(0);
+	gltk_box_append_widget(GLTK_BOX(hbox), list, FALSE, FALSE);
+
+	g_signal_connect(G_OBJECT(list), "drop-item", G_CALLBACK(list_drop_item), NULL);
+
+	return label_widget(hbox, lbl);
+}
+
 GltkWindow*
 create_window()
 {
 	GltkScreen* screen = gltk_screen_new();
 	GltkWindow* window = gltk_window_new();
 
-	GltkWidget* hbox = gltk_hbox_new(0);
 
-	gltk_box_append_widget(GLTK_BOX(hbox), create_label_list(), TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(hbox), create_button_list(), TRUE, FALSE);
-	gltk_box_append_widget(GLTK_BOX(hbox), create_composite_list(), TRUE, FALSE);
+	GltkWidget* vbox = gltk_vbox_new(5);
+	{
+		GltkWidget* hboxBasic = gltk_hbox_new(0);
+		{
+			gltk_box_append_widget(GLTK_BOX(hboxBasic), create_label_list(), TRUE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hboxBasic), create_button_list(), TRUE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hboxBasic), create_composite_list(), TRUE, FALSE);
+		}
 
-	gltk_screen_set_root(screen, hbox);
+		GltkWidget* hboxDND = gltk_hbox_new(0);
+		{
+			static const gchar* lbl1 = "Drag and drop list with prefix A\nItems from this list cannot be deleted";
+			static const gchar* lbl2 = "Drag and drop list with prefix B\nItems from this list can be deleted";
+			gltk_box_append_widget(GLTK_BOX(hboxDND), create_dnd_list("A", FALSE, lbl1), TRUE, FALSE);
+			gltk_box_append_widget(GLTK_BOX(hboxDND), create_dnd_list("B", TRUE, lbl2), TRUE, FALSE);
+		}
+
+		gltk_box_append_widget(GLTK_BOX(vbox), hboxBasic, FALSE, FALSE);
+		gltk_box_append_widget(GLTK_BOX(vbox), hboxDND, FALSE, FALSE);
+	}
+
+	gltk_screen_set_root(screen, vbox);
 	gltk_window_push_screen(window, screen);
 
 	return window;
