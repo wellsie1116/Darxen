@@ -113,11 +113,7 @@ gltk_slide_button_finalize(GObject* gobject)
 GltkWidget*
 gltk_slide_button_new(const char* text)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_SLIDE_BUTTON, NULL);
-	GltkButton* button = GLTK_BUTTON(gobject);
-
-	button->text = g_strdup(text);
-
+	GObject *gobject = g_object_new(GLTK_TYPE_SLIDE_BUTTON, "text", text, NULL);
 	return (GltkWidget*)gobject;
 }
 

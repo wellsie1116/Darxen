@@ -123,10 +123,7 @@ gltk_button_finalize(GObject* gobject)
 GltkWidget*
 gltk_button_new(const gchar* text)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_BUTTON, NULL);
-	GltkButton* self = GLTK_BUTTON(gobject);
-
-	self->text = g_strdup(text);
+	GObject *gobject = g_object_new(GLTK_TYPE_BUTTON, "text", text, NULL);
 
 	return (GltkWidget*)gobject;
 }

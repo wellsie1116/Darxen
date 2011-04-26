@@ -60,7 +60,7 @@ typedef enum
 } GltkConfigButtonError;
 
 GType			gltk_config_button_get_type	() G_GNUC_CONST;
-GltkWidget*		gltk_config_button_new		(const gchar* text, const gchar* editText);
+GltkWidget*		gltk_config_button_new		(const gchar* text, const gchar* displayText);
 
 /* Public functions here */
 

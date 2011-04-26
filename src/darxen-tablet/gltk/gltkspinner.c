@@ -49,6 +49,7 @@ enum
 enum
 {
 	PROP_0,
+	PROP_MODEL,
 	PROP_VISIBLE_ITEMS,
 
 	N_PROPERTIES
@@ -123,6 +124,11 @@ gltk_spinner_class_init(GltkSpinnerClass* klass)
 
 	klass->item_selected = NULL;
 	
+	properties[PROP_MODEL] = 
+		g_param_spec_object(	"model", "Model", "The SpinnerModel to access for items",
+								GLTK_TYPE_SPINNER_MODEL,
+								G_PARAM_CONSTRUCT | G_PARAM_CONSTRUCT_ONLY);
+
 	properties[PROP_VISIBLE_ITEMS] = 
 		g_param_spec_int(	"visible-items", "Visible Items", "Number of items that are visible (3 or 5)",
 							3, 5,
@@ -144,6 +150,9 @@ gltk_spinner_init(GltkSpinner* self)
 
 	priv->heightChanged = TRUE;
 	priv->itemHeight = 20;
+	
+	GLTK_BIN(self)->border.width = BORDER_WIDTH;
+	GLTK_BIN(self)->border.height = BORDER_HEIGHT;
 }
 
 static void
@@ -190,43 +199,7 @@ gltk_spinner_finalize(GObject* gobject)
 GltkWidget*
 gltk_spinner_new(GltkSpinnerModel* model)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER, NULL);
-	GltkSpinner* self = GLTK_SPINNER(gobject);
-
-	USING_PRIVATE(self);
-
-	GLTK_BIN(self)->border.width = BORDER_WIDTH;
-	GLTK_BIN(self)->border.height = BORDER_HEIGHT;
-
-	priv->hbox = gltk_hbox_new(1);
-
-	g_object_ref(model);
-	priv->model = model;
-
-	//initialize the wheels
-	priv->wheels = g_new(Wheel, priv->model->levels);
-	int i;
-	for (i = 0; i < priv->model->levels; i++)
-	{
-		Wheel* wheel = priv->wheels + i;
-
-		wheel->vbox = gltk_vbox_new(0);
-		wheel->scrollable = gltk_scrollable_new();
-		g_object_ref(wheel->vbox);
-		g_object_ref(wheel->scrollable);
-		gltk_scrollable_set_widget(GLTK_SCROLLABLE(wheel->scrollable), wheel->vbox);
-		gltk_box_append_widget(GLTK_BOX(priv->hbox), wheel->scrollable, TRUE, TRUE);
-
-		g_signal_connect(wheel->scrollable, "touch-event", (GCallback)scrollable_touch_event, self);
-		
-		wheel->items = NULL;
-		wheel->index = 0;
-	}
-
-	//load our toplevel items from the model 
-	load_items(self, 0, gltk_spinner_model_clone_items(priv->model, priv->model->toplevel)); 
-
-	gltk_bin_set_widget(GLTK_BIN(self), priv->hbox);
+	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER, "model", model);
 
 	return (GltkWidget*)gobject;
 }
@@ -344,6 +317,39 @@ gltk_spinner_set_property(GObject* object, guint property_id, const GValue* valu
 
 	switch (property_id)
 	{
+		case PROP_MODEL:
+		{
+			GltkSpinnerModel* model = GLTK_SPINNER_MODEL(g_value_get_object(value));
+			priv->hbox = gltk_hbox_new(1);
+
+			g_object_ref(model);
+			priv->model = model;
+
+			//initialize the wheels
+			priv->wheels = g_new(Wheel, priv->model->levels);
+			int i;
+			for (i = 0; i < priv->model->levels; i++)
+			{
+				Wheel* wheel = priv->wheels + i;
+
+				wheel->vbox = gltk_vbox_new(0);
+				wheel->scrollable = gltk_scrollable_new();
+				g_object_ref(wheel->vbox);
+				g_object_ref(wheel->scrollable);
+				gltk_scrollable_set_widget(GLTK_SCROLLABLE(wheel->scrollable), wheel->vbox);
+				gltk_box_append_widget(GLTK_BOX(priv->hbox), wheel->scrollable, TRUE, TRUE);
+
+				g_signal_connect(wheel->scrollable, "touch-event", (GCallback)scrollable_touch_event, self);
+				
+				wheel->items = NULL;
+				wheel->index = 0;
+			}
+
+			//load our toplevel items from the model 
+			load_items(self, 0, gltk_spinner_model_clone_items(priv->model, priv->model->toplevel)); 
+
+			gltk_bin_set_widget(GLTK_BIN(self), priv->hbox);
+		} break;
 		case PROP_VISIBLE_ITEMS:
 		{
 			priv->visibleItems = g_value_get_int(value);

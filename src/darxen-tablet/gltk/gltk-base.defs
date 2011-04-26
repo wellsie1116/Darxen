@@ -440,15 +440,6 @@
   )
 )
 
-(define-function gltk_button_new
-  (c-name "gltk_button_new")
-  (is-constructor-of "GltkButton")
-  (return-type "GltkWidget*")
-  (parameters
-    '("const-gchar*" "text")
-  )
-)
-
 (define-method get_text
   (of-object "GltkButton")
   (c-name "gltk_button_get_text")
@@ -479,16 +470,6 @@
   (c-name "gltk_config_button_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_config_button_new
-  (c-name "gltk_config_button_new")
-  (is-constructor-of "GltkConfigButton")
-  (return-type "GltkWidget*")
-  (parameters
-    '("const-gchar*" "text")
-    '("const-gchar*" "editText")
   )
 )
 
@@ -1057,15 +1038,6 @@
   )
 )
 
-(define-function gltk_slide_button_new
-  (c-name "gltk_slide_button_new")
-  (is-constructor-of "GltkSlideButton")
-  (return-type "GltkWidget*")
-  (parameters
-    '("const-gchar*" "text")
-  )
-)
-
 (define-function gltk_slide_button_error_quark
   (c-name "gltk_slide_button_error_quark")
   (return-type "GQuark")
@@ -1102,15 +1074,6 @@
   (c-name "gltk_spinner_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_spinner_new
-  (c-name "gltk_spinner_new")
-  (is-constructor-of "GltkSpinner")
-  (return-type "GltkWidget*")
-  (parameters
-    '("GltkSpinnerModel*" "model")
   )
 )
 
@@ -1327,16 +1290,6 @@
   (c-name "gltk_table_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_table_new
-  (c-name "gltk_table_new")
-  (is-constructor-of "GltkTable")
-  (return-type "GltkWidget*")
-  (parameters
-    '("int" "cols")
-    '("int" "rows")
   )
 )
 
