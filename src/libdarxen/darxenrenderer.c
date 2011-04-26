@@ -423,8 +423,14 @@ darxen_renderer_render(DarxenRenderer *renderer)
  * Private Functions *
  *********************/
 
+static gboolean
+is_velocity_data(const ProductsLevel3Data* data)
+{
+	return data->chrWmoHeader[23] == 'V';
+}
+
 static const char*
-get_palette_path(ProductsLevel3Data* data)
+get_palette_path(const ProductsLevel3Data* data)
 {
 	switch (data->chrWmoHeader[23])
 	{
@@ -1363,10 +1369,14 @@ darxen_renderer_render_radial_data(DarxenRenderer *renderer, ProductsLevel3Radia
 						if ((startRange && color < i) || 
 								(startRange && (range == objData->intNumRangeBins-1) && range++))
 						{
-							glVertex2f((startRange - 1) * kmPerRangeBin * CosX1, (startRange - 1) * kmPerRangeBin * SinY1);
-							glVertex2f((range) * kmPerRangeBin * CosX1, (range) * kmPerRangeBin * SinY1);
-							glVertex2f((range) * kmPerRangeBin * CosX2, (range) * kmPerRangeBin * SinY2);
-							glVertex2f((startRange - 1) * kmPerRangeBin * CosX2, (startRange - 1) * kmPerRangeBin * SinY2);
+							glVertex2f(	(startRange - 1) * kmPerRangeBin * CosX1,
+										(startRange - 1) * kmPerRangeBin * SinY1);
+							glVertex2f(	(range) * kmPerRangeBin * CosX1,
+										(range) * kmPerRangeBin * SinY1);
+							glVertex2f(	(range) * kmPerRangeBin * CosX2,
+										(range) * kmPerRangeBin * SinY2);
+							glVertex2f(	(startRange - 1) * kmPerRangeBin * CosX2, 
+										(startRange - 1) * kmPerRangeBin * SinY2);
 							startRange = 0;
 						}
 					}
