@@ -114,6 +114,8 @@ struct _DarxenRendererPrivate
 
 	gboolean dirty;
 
+	gboolean doPartialLoad;
+
 	gboolean hasSizeChanged;
 	gboolean hasDataChanged;
 
@@ -168,6 +170,8 @@ darxen_renderer_init(DarxenRenderer *renderer)
 	renderer->transform[15] = 1.0f;
 
 	renderer->scale				= initialScale;
+	
+	renderer->loadPass			= FALSE;
 
 	priv->objData				= NULL;
 	priv->siteName				= NULL;
@@ -176,6 +180,8 @@ darxen_renderer_init(DarxenRenderer *renderer)
 	priv->height				= 0;
 
 	priv->dirty					= TRUE;
+
+	priv->doPartialLoad			= FALSE;
 
 	priv->hasSizeChanged		= TRUE;
 	priv->hasDataChanged		= TRUE;
@@ -286,6 +292,16 @@ darxen_renderer_set_smoothing(DarxenRenderer* renderer, gboolean smoothing)
 		priv->hasDataChanged = TRUE;
 
 	priv->product.smoothing = smoothing;
+}
+
+void
+darxen_renderer_set_partial_load(DarxenRenderer* renderer, gboolean partial)
+{
+	g_return_if_fail(DARXEN_IS_RENDERER(renderer));
+
+	USING_PRIVATE(renderer);
+
+	priv->doPartialLoad = partial;
 }
 
 void
@@ -410,9 +426,13 @@ darxen_renderer_render(DarxenRenderer *renderer)
 	timer = g_timer_new();
 	g_timer_start(timer);
 
+	renderer->loadPass = TRUE;
+
 	darxen_renderer_render_internal(renderer);
 	
 	priv->dirty = FALSE;
+	if (priv->doPartialLoad)
+		priv->dirty = !renderer->loadPass;
 
 	g_timer_stop(timer);
 	//g_debug("Render Time: %f", g_timer_elapsed(timer, NULL));
@@ -549,7 +569,7 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(priv->siteName);
 
 	GSList* pShapefileInfos = priv->product.shapefiles;
-	while (pShapefileInfos)
+	while (pShapefileInfos && renderer->loadPass)
 	{
 		ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
 		DarxenShapefile* shapefile = shapefileInfo->shapefile;
@@ -598,6 +618,7 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -618,6 +639,7 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -638,6 +660,7 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -662,6 +685,7 @@ darxen_renderer_render_underlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -686,7 +710,7 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 	DarxenRadarSiteInfo* siteInfo = darxen_radar_sites_get_site_info(priv->siteName);
 
 	GSList* pShapefileInfos = priv->product.shapefiles;
-	while (pShapefileInfos)
+	while (pShapefileInfos && renderer->loadPass)
 	{
 		ShapefileInfo* shapefileInfo = (ShapefileInfo*)pShapefileInfos->data;
 		DarxenShapefile* shapefile = shapefileInfo->shapefile;
@@ -735,6 +759,7 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POLYGONS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -755,6 +780,7 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_LINES] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -775,6 +801,7 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_POINTS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -799,6 +826,7 @@ darxen_renderer_render_overlay(DarxenRenderer *renderer)
 						glEndList();
 
 						shapefileInfo->dspDataLevels[dataLevel][SHAPEFILE_PART_TEXT_LABELS] = list;
+						renderer->loadPass = FALSE;
 					}
 					else
 					{
@@ -822,6 +850,9 @@ static void
 darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 {
 	USING_PRIVATE(renderer);
+
+	if (!renderer->loadPass)
+		return;
 
 	const DarxenPalette* palette;
 	gint i;

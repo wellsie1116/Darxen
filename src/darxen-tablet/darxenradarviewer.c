@@ -82,6 +82,9 @@ static void	config_viewUpdated(	DarxenConfig* config,
 								const gchar* viewName,
 								DarxenViewInfo* viewInfo,
 								DarxenRadarViewer* viewer);
+
+static void	spawn_render	(DarxenRadarViewer* viewer);
+
 static void
 darxen_radar_viewer_class_init(DarxenRadarViewerClass* klass)
 {
@@ -468,6 +471,8 @@ darxen_radar_viewer_render(GltkWidget* widget)
 		{
 			glLoadIdentity();
 			darxen_renderer_render(priv->renderer);
+			if (!priv->renderer->loadPass)
+				spawn_render(DARXEN_RADAR_VIEWER(widget));
 		}
 		glPopMatrix();
 
@@ -545,6 +550,7 @@ set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
 
 	priv->renderer = darxen_renderer_new(priv->site, viewInfo->productCode, viewInfo->shapefiles);
 	darxen_renderer_set_smoothing(priv->renderer, viewInfo->smoothing);
+	darxen_renderer_set_partial_load(priv->renderer, TRUE);
 
 	DarxenRestfulClient* client = darxen_config_get_client(darxen_config_get_instance());
 	switch (viewInfo->sourceType)
@@ -645,5 +651,18 @@ config_viewUpdated(	DarxenConfig* config,
 		return;
 
 	set_view_info(viewer, viewInfo);
+}
+
+static gboolean
+spawn_render_callback(DarxenRadarViewer* viewer)
+{
+	gltk_widget_invalidate(GLTK_WIDGET(viewer));
+	return FALSE;
+}
+
+static void
+spawn_render(DarxenRadarViewer* viewer)
+{
+	g_idle_add((GSourceFunc)spawn_render_callback, viewer);
 }
 
