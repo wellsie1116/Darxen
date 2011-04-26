@@ -40,6 +40,8 @@ struct _GltkScreenPrivate
 {
 	GltkWidget* widget;
 	GltkWindow* window;
+
+	gboolean pendingLayout;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -90,6 +92,8 @@ gltk_screen_init(GltkScreen* self)
 	self->maximized = TRUE;
 
 	priv->widget = NULL;
+	priv->window = NULL;
+	priv->pendingLayout = FALSE;
 }
 
 static void
@@ -213,8 +217,9 @@ void
 gltk_screen_layout(GltkScreen* screen)
 {
 	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
 
-	GLTK_SCREEN_GET_CLASS(screen)->layout(screen);
+	priv->pendingLayout = TRUE;
 
 	gltk_screen_invalidate(screen);
 }
@@ -335,6 +340,12 @@ gltk_screen_render(GltkWidget* widget)
 
 	if (!priv->widget)
 		return;
+
+	if (priv->pendingLayout)
+	{
+		GLTK_SCREEN_GET_CLASS(GLTK_SCREEN(widget))->layout(GLTK_SCREEN(widget));
+		priv->pendingLayout = FALSE;
+	}
 
 	if (GLTK_SCREEN(widget)->maximized)
 	{
