@@ -827,7 +827,7 @@ darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 	gint i;
 	int intBorderWidth = 2;
 	int intBoxSize = 20;
-	char *chrMessage = (char*)malloc(sizeof(char) * 25);
+	char chrMessage[50];
 	DarxenGLFont* font = darxen_rendering_common_font_cache_get_font(priv->fonts, "courier new 12");
 
 	palette = darxen_palette_get_from_file(get_palette_path(priv->objData));
@@ -853,16 +853,56 @@ darxen_renderer_shared_render_overlay_legend(DarxenRenderer *renderer)
 				(float)(intBoxSize + intBorderWidth));
 	}
 
-	sprintf(chrMessage, "VCP %i\nMX: %idBZ",	priv->objData->objDescription.intVolCovPat,
-												priv->objData->objDescription.intProdCodes[3]);
 	GLfloat textColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-	darxen_rendering_common_draw_string	(	chrMessage,
-											TEXT_ORIGIN_UPPER_LEFT, 
-											5.0f, 
-											(float)(intBoxSize + 2 * intBorderWidth + 5),
-											font,
-											textColor,
-											TRUE);
+	if (is_velocity_data(priv->objData))
+	{
+		int x;
+		for (x = 0; x < 16; x++)
+			printf("Code %i: %i\n", x, priv->objData->objDescription.intProdCodes[x]);
+		sprintf(chrMessage, "VCP %i", priv->objData->objDescription.intVolCovPat);
+		darxen_rendering_common_draw_string	(	chrMessage,
+												TEXT_ORIGIN_UPPER_LEFT, 
+												5.0f, 
+												(float)(intBoxSize + 2 * intBorderWidth + 5),
+												font,
+												textColor,
+												TRUE);
+		sprintf(chrMessage, "MN: %i", (int)(short)priv->objData->objDescription.intProdCodes[3]);
+		darxen_rendering_common_draw_string	(	chrMessage,
+												TEXT_ORIGIN_UPPER_LEFT, 
+												5.0f, 
+												1.3*font->height+(float)(intBoxSize + 2 * intBorderWidth + 5),
+												font,
+												textColor,
+												TRUE);
+		sprintf(chrMessage, "MX: %i", (int)(short)priv->objData->objDescription.intProdCodes[4]);
+		darxen_rendering_common_draw_string	(	chrMessage,
+												TEXT_ORIGIN_UPPER_LEFT, 
+												5.0f, 
+												2.6*font->height+(float)(intBoxSize + 2 * intBorderWidth + 5),
+												font,
+												textColor,
+												TRUE);
+	}
+	else
+	{
+		sprintf(chrMessage, "VCP %i", priv->objData->objDescription.intVolCovPat);
+		darxen_rendering_common_draw_string	(	chrMessage,
+												TEXT_ORIGIN_UPPER_LEFT, 
+												5.0f, 
+												(float)(intBoxSize + 2 * intBorderWidth + 5),
+												font,
+												textColor,
+												TRUE);
+		sprintf(chrMessage, "MX: %i", priv->objData->objDescription.intProdCodes[3]);
+		darxen_rendering_common_draw_string	(	chrMessage,
+												TEXT_ORIGIN_UPPER_LEFT, 
+												5.0f, 
+												1.3*font->height+(float)(intBoxSize + 2 * intBorderWidth + 5),
+												font,
+												textColor,
+												TRUE);
+	}
 
 	darxen_rendering_common_draw_string	(	darxen_conversions_format_date_time(
 												priv->objData->objDescription.objScanDate, 
