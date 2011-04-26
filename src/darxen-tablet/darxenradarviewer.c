@@ -517,6 +517,93 @@ compare_radar_data(RenderData* rd1, RenderData* rd2, gpointer user_data)
 	return (d1->objHeader.intTime > d2->objHeader.intTime);
 }
 
+typedef struct 
+{
+	DarxenRadarViewer* viewer;
+	DarxenRestfulClient* client;
+	int searchId;
+	int searchIndex;
+	int searchCount;
+} LoadDataInfo;
+
+static void
+free_load_data_info(LoadDataInfo* dataInfo)
+{
+	USING_PRIVATE(dataInfo->viewer);
+
+	//free the search
+	if (!darxen_restful_client_free_search(dataInfo->client, dataInfo->searchId, NULL))
+	{
+		g_error("Failed to free search for %s/%s in view %s", priv->site, priv->viewInfo->productCode, priv->viewInfo->name);
+	}
+
+	g_object_unref(dataInfo->viewer);
+	g_free(dataInfo);
+}
+
+static gboolean
+load_initial_data(LoadDataInfo* dataInfo)
+{
+	USING_PRIVATE(dataInfo->viewer);
+
+	int searchCount = MIN(2, dataInfo->searchCount);
+
+	//get the search results
+	gchar** ids;
+	if (!(ids = darxen_restful_client_read_search(	dataInfo->client, 
+													dataInfo->searchId, 
+													dataInfo->searchIndex,
+												   	searchCount,
+													NULL)))
+	{
+		g_error("Failed to retrieve search records for %s/%s in view %s", priv->site, priv->viewInfo->productCode, priv->viewInfo->name);
+	}
+
+	//read the search records
+	int i;
+	for (i = 0; i < searchCount; i++)
+	{
+		size_t len;
+		char* data = darxen_restful_client_read_data(dataInfo->client, priv->site, priv->viewInfo->productCode, ids[i], &len, NULL);
+
+		if (!data)
+		{
+			g_warning("Failed to download data %s/%s with id %s", priv->site, priv->viewInfo->productCode, ids[i]);
+			continue;
+		}
+
+		FILE* f = tmpfile();
+		fwrite(data, 1, len, f);
+		fseek(f, 0, SEEK_SET);
+		ProductsLevel3Data* parsed;
+		if (!(parsed = parser_lvl3_parse_file(f)))
+		{
+			g_critical("Failed to parse level 3 data");
+			free(data);
+			continue;
+		}
+		fclose(f);
+		//printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
+		RenderData* renderData = g_new(RenderData, 1);
+		renderData->id = g_strdup(ids[i]);
+		renderData->data = parsed;
+
+		g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
+		
+		free(data);
+	}
+	g_strfreev(ids);
+
+	//load the first frame to show the first set of loaded data
+	if (dataInfo->searchIndex == 0)
+		darxen_radar_viewer_frame_first(dataInfo->viewer);
+
+	dataInfo->searchCount -= searchCount;
+	dataInfo->searchIndex += searchCount;
+	
+	return dataInfo->searchCount > 0;
+}
+
 static void
 set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
 {
@@ -570,56 +657,18 @@ set_view_info(DarxenRadarViewer* viewer, DarxenViewInfo* viewInfo)
 				g_error("Search failed for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
 			}
 
-			//get the search results
-			gchar** ids;
-			if (!(ids = darxen_restful_client_read_search(client, searchId, 0, searchCount, &error)))
-			{
-				g_error("Failed to retrieve search records for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
-			}
+			LoadDataInfo* dataInfo = g_new(LoadDataInfo, 1);
+			g_object_ref(viewer);
+			dataInfo->viewer = viewer;
+			dataInfo->client = client;
+			dataInfo->searchId = searchId;
+			dataInfo->searchIndex = 0;
+			dataInfo->searchCount = searchCount;
 
-			//read the search records
-			int i;
-			for (i = 0; i < searchCount; i++)
-			{
-				size_t len;
-				char* data = darxen_restful_client_read_data(client, priv->site, viewInfo->productCode, ids[i], &len, &error);
-
-				if (!data)
-				{
-					g_warning("Failed to download data %s/%s with id %s", priv->site, viewInfo->productCode, ids[i]);
-					continue;
-				}
-
-				FILE* f = tmpfile();
-				fwrite(data, 1, len, f);
-				fseek(f, 0, SEEK_SET);
-				ProductsLevel3Data* parsed;
-				if (!(parsed = parser_lvl3_parse_file(f)))
-				{
-					g_critical("Failed to parse level 3 data");
-					free(data);
-					continue;
-				}
-				fclose(f);
-				//printf("Header: %s\n", parsed->chrWmoHeader);fflush(stdout);
-				RenderData* renderData = g_new(RenderData, 1);
-				renderData->id = g_strdup(ids[i]);
-				renderData->data = parsed;
-
-				g_queue_insert_sorted(priv->data, renderData, (GCompareDataFunc)compare_radar_data, NULL);
-				
-				free(data);
-			}
-			g_strfreev(ids);
-
-			//free the search
-			if (!darxen_restful_client_free_search(client, searchId, &error))
-			{
-				g_error("Failed to free search for %s/%s in view %s", priv->site, viewInfo->productCode, viewInfo->name);
-			}
-
-			darxen_radar_viewer_frame_first(viewer);
-
+			g_idle_add_full(	G_PRIORITY_DEFAULT_IDLE + 50, 
+								(GSourceFunc)load_initial_data, 
+								dataInfo, 
+								(GDestroyNotify)free_load_data_info);
 		} break;
 
 		case DARXEN_VIEW_SOURCE_LIVE:
