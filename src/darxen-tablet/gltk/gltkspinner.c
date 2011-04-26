@@ -127,7 +127,7 @@ gltk_spinner_class_init(GltkSpinnerClass* klass)
 	properties[PROP_MODEL] = 
 		g_param_spec_object(	"model", "Model", "The SpinnerModel to access for items",
 								GLTK_TYPE_SPINNER_MODEL,
-								G_PARAM_CONSTRUCT | G_PARAM_CONSTRUCT_ONLY);
+								G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	properties[PROP_VISIBLE_ITEMS] = 
 		g_param_spec_int(	"visible-items", "Visible Items", "Number of items that are visible (3 or 5)",
@@ -199,7 +199,7 @@ gltk_spinner_finalize(GObject* gobject)
 GltkWidget*
 gltk_spinner_new(GltkSpinnerModel* model)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER, "model", model);
+	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER, "model", model, NULL);
 
 	return (GltkWidget*)gobject;
 }
