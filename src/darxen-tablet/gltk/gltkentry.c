@@ -119,13 +119,7 @@ gltk_entry_finalize(GObject* gobject)
 GltkWidget*
 gltk_entry_new(const char* text)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_ENTRY, NULL);
-	//GltkEntry* self = GLTK_ENTRY(gobject);
-
-	//USING_PRIVATE(self);
-	
-	GLTK_BUTTON(gobject)->text = g_strdup(text);
-
+	GObject *gobject = g_object_new(GLTK_TYPE_ENTRY, "text", text, NULL);
 	return (GltkWidget*)gobject;
 }
 

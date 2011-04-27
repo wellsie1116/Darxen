@@ -79,10 +79,8 @@ gltk_vbox_finalize(GObject* gobject)
 GltkWidget*
 gltk_vbox_new(int spacing)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_VBOX, NULL);
+	GObject *gobject = g_object_new(GLTK_TYPE_VBOX, "spacing", spacing, NULL);
 	
-	GLTK_BOX(gobject)->spacing = spacing;
-
 	return (GltkWidget*)gobject;
 }
 

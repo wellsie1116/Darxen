@@ -34,6 +34,14 @@ enum
 	LAST_SIGNAL
 };
 
+enum
+{
+	PROP_0,
+	PROP_LEVELS,
+
+	N_PROPERTIES
+};
+
 typedef struct _GltkSpinnerModelPrivate		GltkSpinnerModelPrivate;
 struct _GltkSpinnerModelPrivate
 {
@@ -41,6 +49,10 @@ struct _GltkSpinnerModelPrivate
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
+
+static void	gltk_spinner_model_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_spinner_model_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
 
 static void gltk_spinner_model_dispose(GObject* gobject);
 static void gltk_spinner_model_finalize(GObject* gobject);
@@ -64,8 +76,17 @@ gltk_spinner_model_class_init(GltkSpinnerModelClass* klass)
 						G_TYPE_POINTER, 2,
 						G_TYPE_INT, G_TYPE_INT);
 	
+	gobject_class->set_property = gltk_spinner_model_set_property;
+	gobject_class->get_property = gltk_spinner_model_get_property;
 	gobject_class->dispose = gltk_spinner_model_dispose;
 	gobject_class->finalize = gltk_spinner_model_finalize;
+
+	properties[PROP_LEVELS] = 
+		g_param_spec_int(	"levels", "Levels", "The number of levels this model contains",
+							1, 100,
+							1, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 static void
@@ -94,11 +115,7 @@ gltk_spinner_model_finalize(GObject* gobject)
 GltkSpinnerModel*
 gltk_spinner_model_new(int levels)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER_MODEL, NULL);
-	GltkSpinnerModel* self = GLTK_SPINNER_MODEL(gobject);
-
-	self->levels = levels;
-
+	GObject *gobject = g_object_new(GLTK_TYPE_SPINNER_MODEL, "levels", levels, NULL);
 	return (GltkSpinnerModel*)gobject;
 }
 
@@ -218,6 +235,37 @@ gltk_spinner_model_error_quark()
 /*********************
  * Private Functions *
  *********************/
+
+static void
+gltk_spinner_model_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkSpinnerModel* self = GLTK_SPINNER_MODEL(object);
+
+	switch (property_id)
+	{
+		case PROP_LEVELS:
+		{
+			self->levels = g_value_get_int(value);
+		} break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_spinner_model_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkSpinnerModel* self = GLTK_SPINNER_MODEL(object);
+
+	switch (property_id)
+	{
+		case PROP_LEVELS:
+			g_value_set_int(value, self->levels);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 
 static gint
 find_model_item(GltkSpinnerModelItem* i1, const gchar* id)

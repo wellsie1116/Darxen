@@ -74,12 +74,57 @@
   )
 )
 
+(define-function gltk_spinner_model_new
+  (c-name "gltk_spinner_model_new")
+  (is-constructor-of "GltkSpinnerModel")
+  (return-type "GltkSpinnerModel*")
+  (properties
+    '("levels" (argname "levels"))
+  )
+)
+
 (define-function gltk_spinner_new
   (c-name "gltk_spinner_new")
   (is-constructor-of "GltkSpinner")
   (return-type "GltkWidget*")
   (properties
     '("model" (argname "model"))
+  )
+)
+
+(define-function gltk_entry_new
+  (c-name "gltk_entry_new")
+  (is-constructor-of "GltkEntry")
+  (return-type "GltkWidget*")
+  (properties
+	'("text", (argname "text"))
+  )
+)
+
+(define-function gltk_hbox_new
+  (c-name "gltk_hbox_new")
+  (is-constructor-of "GltkHbox")
+  (return-type "GltkWidget*")
+  (properties
+	'("spacing" (argname "spacing"))
+  )
+)
+
+(define-function gltk_vbox_new
+  (c-name "gltk_vbox_new")
+  (is-constructor-of "GltkVbox")
+  (return-type "GltkWidget*")
+  (properties
+	'("spacing" (argname "spacing"))
+  )
+)
+
+(define-function gltk_box_new
+  (c-name "gltk_box_new")
+  (is-constructor-of "GltkBox")
+  (return-type "GltkWidget*")
+  (properties
+	'("spacing" (argname "spacing"))
   )
 )
 

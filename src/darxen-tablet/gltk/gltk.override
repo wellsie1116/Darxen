@@ -45,7 +45,12 @@ new-constructor GLTK_TYPE_TABLE
 new-constructor GLTK_TYPE_BUTTON
 new-constructor GLTK_TYPE_SLIDE_BUTTON
 new-constructor GLTK_TYPE_CONFIG_BUTTON
+new-constructor GLTK_TYPE_SPINNER_MODEL
 new-constructor GLTK_TYPE_SPINNER
+new-constructor GLTK_TYPE_ENTRY
+new-constructor GLTK_TYPE_HBOX
+new-constructor GLTK_TYPE_VBOX
+new-constructor GLTK_TYPE_BOX
 %%
 override gltk_window_new kwargs
 static int

@@ -382,14 +382,6 @@
   )
 )
 
-(define-function gltk_box_new
-  (c-name "gltk_box_new")
-  (is-constructor-of "GltkBox")
-  (return-type "GltkWidget*")
-  (parameters
-  )
-)
-
 (define-method insert_widget
   (of-object "GltkBox")
   (c-name "gltk_box_insert_widget")
@@ -515,15 +507,6 @@
   (c-name "gltk_entry_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_entry_new
-  (c-name "gltk_entry_new")
-  (is-constructor-of "GltkEntry")
-  (return-type "GltkWidget*")
-  (parameters
-    '("const-char*" "text")
   )
 )
 
@@ -659,15 +642,6 @@
   (c-name "gltk_hbox_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_hbox_new
-  (c-name "gltk_hbox_new")
-  (is-constructor-of "GltkHbox")
-  (return-type "GltkWidget*")
-  (parameters
-    '("int" "spacing")
   )
 )
 
@@ -1152,15 +1126,6 @@
   )
 )
 
-(define-function gltk_spinner_model_new
-  (c-name "gltk_spinner_model_new")
-  (is-constructor-of "GltkSpinnerModel")
-  (return-type "GltkSpinnerModel*")
-  (parameters
-    '("int" "levels")
-  )
-)
-
 (define-method clear_toplevel
   (of-object "GltkSpinnerModel")
   (c-name "gltk_spinner_model_clear_toplevel")
@@ -1406,15 +1371,6 @@
   (c-name "gltk_vbox_get_type")
   (return-type "GType")
   (parameters
-  )
-)
-
-(define-function gltk_vbox_new
-  (c-name "gltk_vbox_new")
-  (is-constructor-of "GltkVbox")
-  (return-type "GltkWidget*")
-  (parameters
-    '("int" "spacing")
   )
 )
 

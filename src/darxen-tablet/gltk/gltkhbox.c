@@ -79,9 +79,7 @@ gltk_hbox_finalize(GObject* gobject)
 GltkWidget*
 gltk_hbox_new(int spacing)
 {
-	GObject *gobject = g_object_new(GLTK_TYPE_HBOX, NULL);
-
-	GLTK_BOX(gobject)->spacing = spacing;
+	GObject *gobject = g_object_new(GLTK_TYPE_HBOX, "spacing", spacing, NULL);
 
 	return (GltkWidget*)gobject;
 }

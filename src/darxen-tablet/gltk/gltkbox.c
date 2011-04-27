@@ -33,6 +33,14 @@ enum
 	LAST_SIGNAL
 };
 
+enum
+{
+	PROP_0,
+	PROP_SPACING,
+
+	N_PROPERTIES
+};
+
 typedef struct _GltkBoxPrivate		GltkBoxPrivate;
 
 struct _GltkBoxPrivate
@@ -41,6 +49,10 @@ struct _GltkBoxPrivate
 };
 
 //static guint signals[LAST_SIGNAL] = {0,};
+static GParamSpec* properties[N_PROPERTIES] = {0,};
+
+static void	gltk_box_set_property	(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec);
+static void	gltk_box_get_property	(GObject* object, guint property_id, GValue* value, GParamSpec* pspec);
 
 static void gltk_box_dispose(GObject* gobject);
 static void gltk_box_finalize(GObject* gobject);
@@ -58,6 +70,8 @@ gltk_box_class_init(GltkBoxClass* klass)
 
 	g_type_class_add_private(klass, sizeof(GltkBoxPrivate));
 	
+	gobject_class->set_property = gltk_box_set_property;
+	gobject_class->get_property = gltk_box_get_property;
 	gobject_class->dispose = gltk_box_dispose;
 	gobject_class->finalize = gltk_box_finalize;
 
@@ -65,6 +79,13 @@ gltk_box_class_init(GltkBoxClass* klass)
 	gltkwidget_class->render = gltk_box_render;
 	gltkwidget_class->event = gltk_box_event;
 	gltkwidget_class->find_drop_target = gltk_box_find_drop_target;
+
+	properties[PROP_SPACING] = 
+		g_param_spec_int(	"spacing", "Spacing", "The amount of spacing between widgets",
+							0, 1000,
+							0, G_PARAM_READWRITE);
+
+	g_object_class_install_properties(gobject_class, N_PROPERTIES, properties);
 }
 
 static void
@@ -192,6 +213,36 @@ gltk_box_error_quark()
  * Private Functions *
  *********************/
 
+static void
+gltk_box_set_property(GObject* object, guint property_id, const GValue* value, GParamSpec* pspec)
+{
+	GltkBox* self = GLTK_BOX(object);
+
+	switch (property_id)
+	{
+		case PROP_SPACING:
+			self->spacing = g_value_get_int(value);
+			gltk_widget_layout(GLTK_WIDGET(object));
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
+
+static void
+gltk_box_get_property(GObject* object, guint property_id, GValue* value, GParamSpec* pspec)
+{
+	GltkBox* self = GLTK_BOX(object);
+
+	switch (property_id)
+	{
+		case PROP_SPACING:
+			g_value_set_int(value, self->spacing);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+}
 static void
 gltk_box_set_screen(GltkWidget* widget, GltkScreen* screen)
 {
