@@ -89,6 +89,7 @@ struct _DarxenConfig
 	DarxenRestfulClient* client;
 	GList* sites;
 
+	gboolean fullscreen;
 	gboolean allowRotation;
 };
 

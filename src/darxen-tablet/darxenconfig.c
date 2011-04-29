@@ -197,6 +197,7 @@ darxen_config_load_settings(DarxenConfig* config)
 		g_message("Failed to load configuration, loading defaults.  Details: %s", error->message);
 
 		config->allowRotation = TRUE;
+		config->allowRotation = TRUE;
 		
 		//load some test data
 		DarxenSiteInfo* site;
@@ -288,6 +289,7 @@ darxen_config_load_settings(DarxenConfig* config)
 	JsonNode* rootNode = json_parser_get_root(parser);
 	JsonObject* root = json_node_get_object(rootNode);
 
+	config->fullscreen = json_object_get_boolean_member(root, "fullscreen");
 	config->allowRotation = json_object_get_boolean_member(root, "allowRotation");
 
 	JsonArray* sites = json_object_get_array_member(root, "sites");
@@ -431,6 +433,7 @@ darxen_config_save_settings(DarxenConfig* config)
 	}
 
 	json_object_set_boolean_member(root, "allowRotation", config->allowRotation);
+	json_object_set_boolean_member(root, "fullscreen", config->fullscreen);
 	json_object_set_array_member(root, "sites", sites);
 
 	JsonNode* rootNode = json_node_new(JSON_NODE_OBJECT);

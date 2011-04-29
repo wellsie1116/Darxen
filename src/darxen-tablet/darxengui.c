@@ -38,6 +38,19 @@ static GltkWindow* glWindow;
 
 static DarxenPanelManager* panelManager;
 
+static void
+hide_cursor(GtkWidget* root)
+{
+	gchar bits[] = { 0 };
+	GdkColor color = { 0, 0, 0, 0 };
+	GdkPixmap *pixmap;
+	GdkCursor *cursor;
+
+	pixmap = gdk_bitmap_create_from_data(NULL, bits, 1, 1);
+	cursor = gdk_cursor_new_from_pixmap(pixmap, pixmap, &color, &color, 0, 0);
+	gdk_window_set_cursor(root->window, cursor);
+}
+
 //BEGIN GTK Events
 static void
 gesture_callback(	GtkWidget* widget,
@@ -522,9 +535,14 @@ int initialize_gui(int* argc, char** argv[])
 
 	glWindow = create_window();
 
-	gtk_window_maximize(GTK_WINDOW(window));
-	//gtk_window_fullscreen(GTK_WINDOW(window));
+	if (darxen_config_get_instance()->fullscreen)
+		gtk_window_fullscreen(GTK_WINDOW(window));
+	else
+		gtk_window_maximize(GTK_WINDOW(window));
+
 	gtk_widget_show_all(window);
+	
+	hide_cursor(darea);
 	
 	return 0;
 }

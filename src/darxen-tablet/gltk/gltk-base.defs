@@ -913,6 +913,12 @@
   (return-type "none")
 )
 
+(define-method flush_layout
+  (of-object "GltkScreen")
+  (c-name "gltk_screen_flush_layout")
+  (return-type "none")
+)
+
 (define-method set_widget_pressed
   (of-object "GltkScreen")
   (c-name "gltk_screen_set_widget_pressed")
@@ -1502,6 +1508,12 @@
 (define-method layout
   (of-object "GltkWidget")
   (c-name "gltk_widget_layout")
+  (return-type "none")
+)
+
+(define-method layout_now
+  (of-object "GltkWidget")
+  (c-name "gltk_widget_layout_now")
   (return-type "none")
 )
 
