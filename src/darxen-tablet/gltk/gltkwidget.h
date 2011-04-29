@@ -147,6 +147,7 @@ GltkAllocation	gltk_widget_get_allocation			(GltkWidget* widget);
 GltkAllocation	gltk_widget_get_global_allocation	(GltkWidget* widget);
 void			gltk_widget_invalidate				(GltkWidget* widget);
 void			gltk_widget_layout					(GltkWidget* widget);
+void			gltk_widget_layout_now				(GltkWidget* widget);
 
 GltkWidget*		gltk_widget_find_drop_target		(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds);
 void			gltk_widget_drop_item				(GltkWidget* widget, const gchar* type, const gpointer data);

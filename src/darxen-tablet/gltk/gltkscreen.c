@@ -224,6 +224,19 @@ gltk_screen_layout(GltkScreen* screen)
 	gltk_screen_invalidate(screen);
 }
 
+void
+gltk_screen_flush_layout(GltkScreen* screen)
+{
+	g_return_if_fail(GLTK_IS_SCREEN(screen));
+	USING_PRIVATE(screen);
+
+	if (priv->pendingLayout)
+	{
+		GLTK_SCREEN_GET_CLASS(screen)->layout(screen);
+		priv->pendingLayout = FALSE;
+	}
+}
+
 gboolean
 gltk_screen_set_widget_pressed(GltkScreen* screen, GltkWidget* widget)
 {

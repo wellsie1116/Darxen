@@ -437,6 +437,7 @@ gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
 	item->list = GLTK_LIST(widget);
 	item->priv->removed = FALSE;
 	gltk_screen_swap_widget_pressed(widget->screen, item->priv->bin);
+	gltk_screen_flush_layout(widget->screen);
 
 	//add the item to our items and vbox
 	gltk_box_append_widget(GLTK_BOX(widget), item->priv->bin, FALSE, FALSE);
@@ -444,6 +445,7 @@ gltk_list_drop_item(GltkWidget* widget, const gchar* type, const gpointer data)
 	
 	//set offset
 	{
+		gltk_screen_flush_layout(widget->screen);
 		GltkAllocation before = gltk_widget_get_global_allocation(oldItem->priv->bin);
 		GltkAllocation after = gltk_widget_get_global_allocation(item->priv->bin);
 

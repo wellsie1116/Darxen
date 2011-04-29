@@ -444,6 +444,17 @@ gltk_widget_layout(GltkWidget* widget)
 		gltk_screen_layout(widget->screen);
 }
 
+void
+gltk_widget_layout_now(GltkWidget* widget)
+{
+	g_return_if_fail(GLTK_IS_WIDGET(widget));
+
+	gltk_widget_layout(widget);
+
+	if (widget->screen)
+		gltk_screen_flush_layout(widget->screen);
+}
+
 GltkWidget*
 gltk_widget_find_drop_target(GltkWidget* widget, const gchar* type, const GltkRectangle* bounds)
 {
