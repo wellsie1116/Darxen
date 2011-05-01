@@ -78,7 +78,7 @@ darxen_add_view_dialog_show(GltkScreen* parent)
 		GltkWidget* lblSite = gltk_label_new("Site: ");
 		gltk_label_set_font_size(GLTK_LABEL(lblSite), 28);
 
-		GltkSpinnerModel* model = gltk_spinner_model_new(2);	
+		GltkSpinnerModel* model = gltk_spinner_model_new(1);	
 		GList* pSites = darxen_config_get_sites(NULL);
 		for (pSites = darxen_config_get_sites(NULL); pSites; pSites = pSites->next)
 		{
