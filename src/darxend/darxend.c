@@ -78,7 +78,7 @@ main (int argc, char *argv[])
 
 	char** sites = settings_get_path_vals("/Settings/Pollers/Site/@id");
 	char** psites = sites;
-	while (*psites)
+	while (psites && *psites)
 	{
 		gchar* site = g_ascii_strdown(*psites, -1);
 		gchar* sitepath = g_strdup_printf("/Settings/Pollers/Site[@id=\"%s\"]/Product/text()", site);

@@ -604,6 +604,14 @@
 
 ;; From gltkfonts.h
 
+(define-function gltk_fonts_cache_set_path
+  (c-name "gltk_fonts_cache_set_path")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "path")
+  )
+)
+
 (define-function gltk_fonts_cache_free
   (c-name "gltk_fonts_cache_free")
   (return-type "none")

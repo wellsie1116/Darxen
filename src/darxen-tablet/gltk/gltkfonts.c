@@ -20,6 +20,7 @@
 
 #include "gltkfonts.h"
 
+static gchar* fontPath = NULL;
 static GHashTable* fonts = NULL;
 
 static FT_Library library;
@@ -42,9 +43,16 @@ create_ftgl_font(const char* path, int size)
 	return ftglFont;
 }
 
+void
+gltk_fonts_cache_set_path(const gchar* path)
+{
+	fontPath = g_strdup(path);
+}
+
 GltkGLFont*
 gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 {
+	g_assert(fontPath);
 	if (!fonts)
 	{
 		fonts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_font);
@@ -58,11 +66,11 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 	{
 		font = g_slice_new(GltkGLFont);
 
-		font->font = renderable ? create_ftgl_font(path, size) : NULL;
+		font->font = renderable ? create_ftgl_font(fontPath, size) : NULL;
 		font->ascender = renderable ? ftglGetFontAscender(font->font) : 0;
 		font->descender = renderable ? ftglGetFontDescender(font->font) : 0;
 
-		int error = FT_New_Face(library, path, 0, &font->face);
+		int error = FT_New_Face(library, fontPath, 0, &font->face);
 		g_assert(!error);
 		error = FT_Set_Char_Size(font->face, 0, size*64, 0, 0);
 		g_assert(!error);
@@ -102,7 +110,7 @@ gltk_fonts_cache_get_font(const char* path, int size, gboolean renderable)
 	}
 	else if (!font->font && renderable)
 	{
-		font->font = create_ftgl_font(path, size);
+		font->font = create_ftgl_font(fontPath, size);
 		font->ascender = ftglGetFontAscender(font->font);
 		font->descender = ftglGetFontDescender(font->font);
 	}

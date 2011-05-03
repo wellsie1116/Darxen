@@ -46,6 +46,8 @@ struct _GltkGLFont
 
 #define 			GLTK_FONTS_BASE					"UnBatang.ttf"
 
+void				gltk_fonts_cache_set_path		(const gchar* path);
+
 void				gltk_fonts_cache_free			();
 GltkGLFont*			gltk_fonts_cache_get_font		(const char* path, int size, gboolean renderable);
 GltkGLFontBounds	gltk_fonts_measure_string		(GltkGLFont* font, const char* txt);

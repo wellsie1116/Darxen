@@ -28,6 +28,17 @@ darxen_tablet_LDFLAGS = -g
 
 AM_LDFLAGS = -export-dynamic
 
-SUBDIRS = gltk
-EXTRA_DIST = 
+# datadir=$(prefix)/@PACKAGE@/darxen-tablet
 
+shapefiledir=$(datadir)/@PACKAGE@/darxen-tablet/shapefiles
+shapefile_DATA= shapefiles/*
+
+palettesdir=$(datadir)/@PACKAGE@/darxen-tablet/palettes
+palettes_DATA= palettes/*
+
+darxen_tablet_datadir=$(datadir)/@PACKAGE@/darxen-tablet
+darxen_tablet_data_DATA=Shapefiles.xml Sites.xml UnBatang.ttf
+
+EXTRA_DIST = shapefiles
+
+SUBDIRS = gltk

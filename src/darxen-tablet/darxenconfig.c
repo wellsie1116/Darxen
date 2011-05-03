@@ -197,44 +197,12 @@ darxen_config_load_settings(DarxenConfig* config)
 		g_message("Failed to load configuration, loading defaults.  Details: %s", error->message);
 
 		config->allowRotation = TRUE;
-		config->allowRotation = TRUE;
+		config->fullscreen = TRUE;
 		
 		//load some test data
 		DarxenSiteInfo* site;
 		DarxenViewInfo* view;
 		DarxenShapefile* sf;
-
-		//KLOT
-		site = g_new(DarxenSiteInfo, 1);
-		site->name = g_strdup("klot");
-		site->views = NULL;
-
-		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Archived Reflectivity (0.5)");
-		view->productCode = g_strdup("N0R");
-		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("201102101939");
-		view->source.archive.endId = g_strdup("201102102304");
-		view->shapefiles = NULL;
-		ADD_SHAPEFILE("Counties");
-		ADD_SHAPEFILE("States");
-		ADD_SHAPEFILE("Lakes");
-		view->smoothing = FALSE;
-		site->views = g_list_append(site->views, view);
-
-		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Archived Reflectivity (1.0)");
-		view->productCode = g_strdup("N1R");
-		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("201101121416");
-		view->source.archive.endId = g_strdup("201101121456");
-		view->shapefiles = NULL;
-		ADD_SHAPEFILE("Counties");
-		ADD_SHAPEFILE("States");
-		view->smoothing = FALSE;
-		site->views = g_list_append(site->views, view);
-
-		config->sites = g_list_append(config->sites, site);
 
 		//KIND
 		site = g_new(DarxenSiteInfo, 1);
@@ -242,37 +210,11 @@ darxen_config_load_settings(DarxenConfig* config)
 		site->views = NULL;
 
 		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Live Reflectivity (0.5)");
+		view->name = g_strdup("Live Reflectivity");
 		view->productCode = g_strdup("N0R");
 		view->sourceType = DARXEN_VIEW_SOURCE_LIVE;
 		view->shapefiles = NULL;
 		ADD_SHAPEFILE("Counties");
-		ADD_SHAPEFILE("States");
-		ADD_SHAPEFILE("Lakes");
-		ADD_SHAPEFILE("Rivers");
-		ADD_SHAPEFILE("Sites");
-		view->smoothing = FALSE;
-		site->views = g_list_append(site->views, view);
-		
-		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Thunderstorm (3-18)");
-		view->productCode = g_strdup("N0R");
-		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("201103180000");
-		view->source.archive.endId = g_strdup("201103180250");
-		view->shapefiles = NULL;
-		ADD_SHAPEFILE("Counties");
-		ADD_SHAPEFILE("States");
-		view->smoothing = FALSE;
-		site->views = g_list_append(site->views, view);
-
-		view = g_new(DarxenViewInfo, 1);
-		view->name = g_strdup("Archived Reflectivity (1.0)");
-		view->productCode = g_strdup("N1R");
-		view->sourceType = DARXEN_VIEW_SOURCE_ARCHIVE;
-		view->source.archive.startId = g_strdup("201101121417");
-		view->source.archive.endId = g_strdup("201101121456");
-		view->shapefiles = NULL;
 		ADD_SHAPEFILE("States");
 		view->smoothing = FALSE;
 		site->views = g_list_append(site->views, view);

@@ -26,6 +26,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <libdarxenFileSupport.h>
+
 #include "darxenconfig.h"
 #include "darxenaddviewdialog.h"
 #include "darxensitelist.h"
@@ -478,6 +480,8 @@ static GltkWindow*
 create_window()
 {
 	GltkWindow* win;
+
+	gltk_fonts_cache_set_path(darxen_file_support_get_overridable_file_path("UnBatang.ttf"));
 
 	win = gltk_window_new();
 	g_signal_connect(G_OBJECT(win), "request-render", (GCallback)request_render, NULL);

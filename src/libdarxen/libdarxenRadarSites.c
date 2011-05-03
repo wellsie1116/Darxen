@@ -1,5 +1,6 @@
 
 #include "libdarxenRadarSites.h"
+#include "libdarxenFileSupport.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +32,8 @@ darxen_radar_sites_init()
 	DarxenRadarSiteInfo *info;
 	gint i;
 
-	doc = xmlReadFile("Sites.xml", NULL, XML_PARSE_NOBLANKS);
+	doc = xmlReadFile(darxen_file_support_get_overridable_file_path("Sites.xml"), 
+			NULL, XML_PARSE_NOBLANKS);
 
 	g_assert(doc);
 

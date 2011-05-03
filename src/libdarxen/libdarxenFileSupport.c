@@ -47,23 +47,39 @@ darxen_file_support_get_overridable_file_path(const char *filename)
 		g_free(overridableFilePath);
 
 	overridableFilePath = g_build_filename(darxen_file_support_get_app_path(), filename, NULL);
+	//g_debug("get_overridable_app_path: %s", overridableFilePath);
 	if (g_file_test(overridableFilePath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
 	{
-//		g_debug("get_overridable_app_path: %s", overridableFilePath);
 		return overridableFilePath;
 	}
 
 	g_free(overridableFilePath);
 	overridableFilePath = g_strdup(filename);
+	//g_debug("get_overridable_app_path: %s", overridableFilePath);
 	if (g_file_test(overridableFilePath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
 	{
-//		g_debug("get_overridable_app_path: %s", overridableFilePath);
 		return overridableFilePath;
 	}
 
 	g_free(overridableFilePath);
+
+	const gchar* const* dataDirs = g_get_system_data_dirs();
+	while (*dataDirs)
+	{
+		//TODO: PACKAGE instead of "darxen"
+		overridableFilePath = g_build_filename(*dataDirs, "darxen", g_get_prgname(), filename, NULL);
+		//g_debug("get_overridable_app_path: %s", overridableFilePath);
+		if (g_file_test(overridableFilePath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
+		{
+			return overridableFilePath;
+		}
+		g_free(overridableFilePath);
+
+		dataDirs++;
+	}
+
 	overridableFilePath = NULL;
-//	g_debug("get_overridable_app_path: %s", "null");
+	//g_debug("get_overridable_app_path: %s", "null");
 	return NULL;
 }
 

@@ -10,6 +10,8 @@
 
 .PHONY : dhtml
 
+SUBDIRS=reference/gltk
+
 doc: dhtml
 
 dhtml: Doxyfile

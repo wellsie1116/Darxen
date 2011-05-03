@@ -20,6 +20,8 @@
 
 #include "darxenpalettes.h"
 
+#include "libdarxenFileSupport.h"
+
 #include <json-glib/json-glib.h>
 #include <glib.h>
 
@@ -38,7 +40,8 @@ darxen_palette_get_from_file(const char* path)
 		res = g_new(DarxenPalette, 1);
 
 		JsonParser* parser = json_parser_new();
-		if (!json_parser_load_from_file(parser, path, &error))
+		const gchar* filepath = darxen_file_support_get_overridable_file_path(path);
+		if (!json_parser_load_from_file(parser, filepath, &error))
 		{
 			g_critical("Failed to load palette from %s", path);
 			return NULL;

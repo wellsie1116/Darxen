@@ -22,6 +22,7 @@
 #include "darxenconfig.h"
 
 #include <libdarxenRestfulClient.h>
+#include <libdarxenFileSupport.h>
 
 #include <glib.h>
 
@@ -41,6 +42,11 @@ int main(int argc, char *argv[])
 {
 	g_set_prgname("darxen-tablet");
 	g_type_init();
+
+	gchar* path = g_build_filename(darxen_file_support_get_app_path(), "shapefiles", "cache", NULL);
+	g_mkdir_with_parents(path, 488);
+	g_free(path);
+
 	DarxenRestfulClient* client = darxen_restful_client_new();
 	int id = darxen_restful_client_connect(client, NULL);
 	if (!id)
@@ -53,6 +59,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
+			execlp("darxend", "darxend", NULL);
 			execl("./darxend", "darxend", NULL);
 			execl("../darxend/darxend", "darxend", NULL);
 			fprintf(stderr, "Failed to spawn darxend process, aborting");

@@ -436,7 +436,14 @@ darxen_shapefiles_filter_shp(DarxenShapefile* shapefile, int dataLevel, const ch
 	g_free(shpFile);
 	g_free(dbfFile);
 
-	gchar* shapefilePath = g_build_filename(darxen_file_support_get_app_path(), "shapefiles", shapefile->file, NULL);
+	gchar* pathPart = g_strdup_printf("%s.shp", shapefile->file);
+	gchar* pathPart2 = g_build_filename("shapefiles", pathPart, NULL);
+	gchar* shapefilePath = darxen_file_support_get_overridable_file_path(pathPart2);
+		//g_build_filename(darxen_file_support_get_app_path(), "shapefiles", shapefile->file, NULL);
+	g_free(pathPart);
+	g_free(pathPart2);
+	g_assert(shapefilePath);
+	shapefilePath[strlen(shapefilePath)-4] = '\0';
 	hSHP = SHPOpen(shapefilePath, "rb");
 	if (!hSHP)
 	{

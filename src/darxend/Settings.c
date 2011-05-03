@@ -46,7 +46,10 @@ settings_init()
 		gchar* xml;
 		g_message("Settings file not found, loading defaults");
 		if (!g_file_get_contents("Defaults.xml", &xml, NULL, NULL))
-			g_error("Default Settings failed to load");
+		{
+			g_warning("Default Settings failed to load");
+			return;
+		}
 		if (!g_file_set_contents(settings_get_path("Settings.xml"), xml, -1, NULL))
 			g_warning("Failed to write settings file");
 		g_free(xml);
