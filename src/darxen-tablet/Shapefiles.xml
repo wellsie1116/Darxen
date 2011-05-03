@@ -63,51 +63,6 @@
 		</Lines>
 		<Polygons visible="false" />
 	</Shapefile>
-	
-	<Shapefile id="Cities">
-		<File>ci10nv09</File>
-		<TextLabels visible="true">
-			<Field>Name</Field>
-			<Font>
-				<Size>8</Size>
-				<Color>
-					<R>255</R>
-					<G>255</G>
-					<B>255</B>
-					<A>255</A>
-				</Color>
-			</Font>
-		</TextLabels>
-		<Points visible="true">
-			<Radius>5</Radius>
-			<Color>
-				<R>128</R>
-				<G>128</G>
-				<B>255</B>
-				<A>204</A>
-			</Color>
-		</Points>
-		<Lines visible="false" />
-		<Polygons visible="false" />
-		<DataLevels field="population" comparison-type="min"> <!--pop_1990-->
-			<DataLevel>
-				<Scale>0.0</Scale>
-				<Value>100000</Value>
-			</DataLevel>
-			<DataLevel>
-				<Scale>10</Scale>
-				<Value>1000</Value>
-			</DataLevel>
-			<DataLevel>
-				<Scale>100</Scale>
-				<Value>100</Value>
-			</DataLevel>
-			<DataLevel>
-				<Scale>1000</Scale>
-				<Value>0</Value>
-			</DataLevel>
-		</DataLevels>
-	</Shapefile>
 
 	<Shapefile id="Sites">
 		<File>radarSites</File>
