@@ -39,6 +39,6 @@ palettes_DATA= palettes/*
 darxen_tablet_datadir=$(datadir)/@PACKAGE@/darxen-tablet
 darxen_tablet_data_DATA=Shapefiles.xml Sites.xml UnBatang.ttf
 
-EXTRA_DIST = shapefiles
+EXTRA_DIST = shapefiles Shapefiles.xml Sites.xml UnBatang.ttf palettes
 
 SUBDIRS = gltk

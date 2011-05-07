@@ -23,5 +23,5 @@ autoheader
 echo "- automake."
 automake -a
 echo "- configuring."
-./configure --prefix=/usr/local "CFLAGS=-g -O0"
+./configure --enable-gtk-doc --prefix=/usr/local "CFLAGS=-g -O0"
 exit
