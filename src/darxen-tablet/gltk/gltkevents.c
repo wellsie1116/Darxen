@@ -113,9 +113,12 @@ gltk_event_copy(GltkEvent* event)
 	{
 		case GLTK_TOUCH:
 			newEvent->touch = event->touch;
-			newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
-			for (i = 0; i < event->touch.fingers; i++)
-				newEvent->touch.positions[i] = event->touch.positions[i];
+			if (newEvent->touch.fingers >= 0)
+			{
+				newEvent->touch.positions = g_new(GltkTouchPosition, event->touch.fingers);
+				for (i = 0; i < event->touch.fingers; i++)
+					newEvent->touch.positions[i] = event->touch.positions[i];
+			}
 			break;
 		case GLTK_LONG_TOUCH:
 			newEvent->longTouch = event->longTouch;
@@ -125,21 +128,30 @@ gltk_event_copy(GltkEvent* event)
 			break;
 		case GLTK_MULTI_DRAG:
 			newEvent->multidrag = event->multidrag;
-			newEvent->multidrag.positions = g_new(GltkTouchPosition, event->multidrag.fingers);
-			for (i = 0; i < event->touch.fingers; i++)
-				newEvent->multidrag.positions[i] = event->multidrag.positions[i];
+			if (newEvent->multidrag.fingers >= 0)
+			{
+				newEvent->multidrag.positions = g_new(GltkTouchPosition, event->multidrag.fingers);
+				for (i = 0; i < event->touch.fingers; i++)
+					newEvent->multidrag.positions[i] = event->multidrag.positions[i];
+			}
 			break;
 		case GLTK_PINCH:
 			newEvent->pinch = event->pinch;
-			newEvent->pinch.positions = g_new(GltkTouchPosition, event->pinch.fingers);
-			for (i = 0; i < event->touch.fingers; i++)
-				newEvent->pinch.positions[i] = event->pinch.positions[i];
+			if (newEvent->pinch.fingers >= 0)
+			{
+				newEvent->pinch.positions = g_new(GltkTouchPosition, event->pinch.fingers);
+				for (i = 0; i < event->touch.fingers; i++)
+					newEvent->pinch.positions[i] = event->pinch.positions[i];
+			}
 			break;
 		case GLTK_ROTATE:
 			newEvent->rotate = event->rotate;
-			newEvent->rotate.positions = g_new(GltkTouchPosition, event->rotate.fingers);
-			for (i = 0; i < event->touch.fingers; i++)
-				newEvent->rotate.positions[i] = event->rotate.positions[i];
+			if (newEvent->rotate.fingers >= 0)
+			{
+				newEvent->rotate.positions = g_new(GltkTouchPosition, event->rotate.fingers);
+				for (i = 0; i < event->touch.fingers; i++)
+					newEvent->rotate.positions[i] = event->rotate.positions[i];
+			}
 			break;
 		case GLTK_CLICK:
 			newEvent->click = event->click;

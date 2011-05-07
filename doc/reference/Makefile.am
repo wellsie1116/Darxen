@@ -1,4 +1,4 @@
-# Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+# Copyright (C) 2011 Kevin Wells <kevin@darxen.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,20 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-#!/bin/sh
-rm -f config.cache
-echo "- libtoolize."
-libtoolize
-echo "- gtkdocize."
-gtkdocize
-echo "- aclocal."
-aclocal -I m4
-echo "- autoconf."
-autoconf
-echo "- autoheader."
-autoheader
-echo "- automake."
-automake -a
-echo "- configuring."
-./configure "CFLAGS=-g -O0"
-exit
+EXTRA_DIST = 
+SUBDIRS = gltk

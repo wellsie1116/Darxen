@@ -117,14 +117,9 @@ gesture_callback(	GtkWidget* widget,
 				newEvent->multidrag.center.x = e->focus_x - offsetX;
 				newEvent->multidrag.center.y = e->focus_y - offsetY;
 
-				newEvent->multidrag.fingers = e->fingers;
-				newEvent->multidrag.positions = g_new(GltkTouchPosition, e->fingers);
-				int i;
-				for (i = 0; i < event->drag.fingers; i++)
-				{
-					newEvent->multidrag.positions[i].x = e->finger_x[i] - offsetX;
-					newEvent->multidrag.positions[i].y = e->finger_y[i] - offsetY;
-				}
+				newEvent->multidrag.fingers = -1;
+				//newEvent->multidrag.positions = g_new(GltkTouchPosition, e->fingers);
+				newEvent->multidrag.positions = NULL;
 
 				gltk_window_send_event(glWindow, newEvent);
 				gltk_event_free(newEvent);
@@ -147,14 +142,8 @@ gesture_callback(	GtkWidget* widget,
 				newEvent->pinch.center.x = e->focus_x - offsetX;
 				newEvent->pinch.center.y = e->focus_y - offsetY;
 
-				newEvent->pinch.fingers = e->fingers;
-				newEvent->pinch.positions = g_new(GltkTouchPosition, e->fingers);
-				int i;
-				for (i = 0; i < event->pinch.fingers; i++)
-				{
-					newEvent->pinch.positions[i].x = e->finger_x[i] - offsetX;
-					newEvent->pinch.positions[i].y = e->finger_y[i] - offsetY;
-				}
+				newEvent->pinch.fingers = -1;
+				newEvent->pinch.positions = NULL;
 
 				gltk_window_send_event(glWindow, newEvent);
 				gltk_event_free(newEvent);
@@ -176,14 +165,8 @@ gesture_callback(	GtkWidget* widget,
 				newEvent->rotate.center.x = e->focus_x - offsetX;
 				newEvent->rotate.center.y = e->focus_y - offsetY;
 
-				newEvent->rotate.fingers = e->fingers;
-				newEvent->rotate.positions = g_new(GltkTouchPosition, e->fingers);
-				int i;
-				for (i = 0; i < event->rotate.fingers; i++)
-				{
-					newEvent->rotate.positions[i].x = e->finger_x[i] - offsetX;
-					newEvent->rotate.positions[i].y = e->finger_y[i] - offsetY;
-				}
+				newEvent->rotate.fingers = -1;
+				newEvent->rotate.positions = NULL;
 
 				gltk_window_send_event(glWindow, newEvent);
 				gltk_event_free(newEvent);

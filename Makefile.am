@@ -8,10 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = reconf configure
+EXTRA_DIST = autogen.sh configure README
 SUBDIRS = m4 src doc
 
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+#DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 ACLOCAL_AMFLAGS=-I m4
 

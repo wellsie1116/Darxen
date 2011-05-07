@@ -8,11 +8,20 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-.PHONY : dhtml
-
-SUBDIRS=reference
-
-doc: dhtml
-
-dhtml: Doxyfile
-	doxygen
+#!/bin/sh
+rm -f config.cache
+echo "- libtoolize."
+libtoolize
+echo "- gtkdocize."
+gtkdocize
+echo "- aclocal."
+aclocal -I m4
+echo "- autoconf."
+autoconf
+echo "- autoheader."
+autoheader
+echo "- automake."
+automake -a
+echo "- configuring."
+./configure --prefix=/usr/local "CFLAGS=-g -O0"
+exit

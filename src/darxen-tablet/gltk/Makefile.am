@@ -68,5 +68,6 @@ gltk.c: gltk.defs gltk-base.defs gltk-types.defs gltk.override
 
 #AM_LDFLAGS = -export-dynamic
 
-EXTRA_DIST = 
+SUBDIRS = . examples
+EXTRA_DIST = gltkmarshal.list gltk.defs gltk-types.defs gltk.override
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
+--enable-gtk-doc --prefix=/usr/local # Copyright (C) 2008 Kevin Wells <kevin@darxen.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -115,17 +115,18 @@ AC_CONFIG_FILES([
    Makefile
    README
    doc/Makefile
+   doc/reference/Makefile
    doc/reference/gltk/Makefile
    m4/Makefile
    src/Makefile
    src/darxend/Makefile
    src/libdarxen/Makefile
-   src/darxen-cli/Makefile
-   src/darxen-cgi/Makefile
-   src/darxen/Makefile
    src/darxen-tablet/Makefile
    src/darxen-tablet/gltk/Makefile
    src/darxen-tablet/gltk/examples/Makefile
 ])
+   #src/darxen/Makefile
+   #src/darxen-cli/Makefile
+   #src/darxen-cgi/Makefile
 
 AC_OUTPUT

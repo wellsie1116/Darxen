@@ -60,9 +60,6 @@ struct _GltkWindowPrivate
 	gboolean pressedClickable;
 	GltkWidget* pressed;
 	GltkWidget* unpressed;
-
-	gboolean touchCount;
-	GltkTouchPosition* touchPositions;
 };
 
 static guint signals[LAST_SIGNAL] = {0,};
@@ -108,8 +105,6 @@ gltk_window_init(GltkWindow* self)
 	priv->longPressPending = 0;
 	priv->pressed = NULL;
 	priv->unpressed = NULL;
-
-	priv->touchCount = 0;
 }
 
 static void
@@ -239,24 +234,6 @@ gltk_window_render(GltkWindow* window)
 		pScreens = pScreens->next;
 	}
 
-	//render touch points
-	if (priv->touchCount)
-	{
-		glColor3f(0.2f, 0.2f, 1.0f);
-		GLUquadric* quadric = gluNewQuadric();
-		int i;
-		for (i = 0; i < priv->touchCount; i++)
-		{
-			//g_message("Touch position (%i): %i %i", i, priv->touchPositions[i].x, priv->touchPositions[i].y);
-			glPushMatrix();
-			{
-				glTranslatef(priv->touchPositions[i].x, priv->touchPositions[i].y, 0.0f);
-				gluDisk(quadric, 5.0, 20.0, 15, 5);
-			}
-			glPopMatrix();
-		}
-		gluDeleteQuadric(quadric);
-	}
 	if (!priv->rendered)
 	{
 		priv->rendered = TRUE;
@@ -274,59 +251,6 @@ gltk_window_send_event(GltkWindow* window, GltkEvent* event)
 	g_return_val_if_fail(g_queue_get_length(priv->screens), FALSE);
 
 	gboolean returnValue = FALSE;
-
-	if (event->type == GLTK_TOUCH)
-	{
-		if (priv->touchPositions)
-			g_free(priv->touchPositions);
-		priv->touchPositions = g_new(GltkTouchPosition, 1);
-		*priv->touchPositions = *event->touch.positions;
-		switch (event->touch.touchType)
-		{
-			case TOUCH_BEGIN:
-				priv->touchCount = 1;
-				break;
-			case TOUCH_END:
-				priv->touchCount = 0;
-				break;
-			default:
-				break;
-		}
-		gltk_window_invalidate(window);
-	}
-	else if (event->type == GLTK_MULTI_DRAG)
-	{
-		if (priv->touchPositions)
-			g_free(priv->touchPositions);
-		priv->touchPositions = g_new(GltkTouchPosition, event->multidrag.fingers);
-		int i;
-		for (i = 0; i < event->multidrag.fingers; i++)
-			priv->touchPositions[i] = event->multidrag.positions[i];
-		priv->touchCount = event->multidrag.fingers;
-		gltk_window_invalidate(window);
-	}
-	else if (event->type == GLTK_PINCH)
-	{
-		if (priv->touchPositions)
-			g_free(priv->touchPositions);
-		priv->touchPositions = g_new(GltkTouchPosition, event->pinch.fingers);
-		int i;
-		for (i = 0; i < event->pinch.fingers; i++)
-			priv->touchPositions[i] = event->pinch.positions[i];
-		priv->touchCount = event->pinch.fingers;
-		gltk_window_invalidate(window);
-	}
-	else if (event->type == GLTK_ROTATE)
-	{
-		if (priv->touchPositions)
-			g_free(priv->touchPositions);
-		priv->touchPositions = g_new(GltkTouchPosition, event->rotate.fingers);
-		int i;
-		for (i = 0; i < event->rotate.fingers; i++)
-			priv->touchPositions[i] = event->rotate.positions[i];
-		priv->touchCount = event->rotate.fingers;
-		gltk_window_invalidate(window);
-	}
 
 	if (event->type == GLTK_TOUCH && event->touch.touchType == TOUCH_BEGIN)
 		priv->pressedPosition = *event->touch.positions;
