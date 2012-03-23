@@ -16,16 +16,17 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.Matrix;
-import android.util.Log;
 import android.view.MotionEvent;
 
-public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer {
+public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, GestureSurface {
 
 	private DataFile mData;
 	private LatLon mPos;
 	private FloatBuffer mPosBuf;
+	
+	private GestureRecognizer mRecognizer = new GestureRecognizer(this);
 
-	private float[] mTransform = new float[16];
+	private float[] mTransform = new float[32];
 	
 	private FloatBuffer[] mRadialBuffers = new FloatBuffer[16];
 	private int[] mRadialSize = new int[16];
@@ -78,20 +79,21 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer {
 		
 		Matrix.setIdentityM(mTransform, 0);
 		RadialDataPacket packet = (RadialDataPacket)mData.description.symbologyBlock.packets[0];
-		scale(1.0f/packet.rangeBinCount*2);
+		scale(1.0f/packet.rangeBinCount);
 	}
 	
-	private void scale(float scale) {
-		Matrix.scaleM(mTransform, 0, scale, scale, 1.0f);
+	@Override
+	public void scale(float factor) {
+		Matrix.setIdentityM(mTransform, 16);
+		Matrix.scaleM(mTransform, 16, factor, factor, 1.0f);
+		Matrix.multiplyMM(mTransform, 0, mTransform, 16, mTransform, 0);
 	}
 	
-	private void translate(float dx, float dy) {
-		Log.d(C.TAG, "Translating by " + dx + ", " + dy);
-		float[] mat = new float[16];
-		Matrix.setIdentityM(mat, 0);
-		Matrix.translateM(mat, 0, dx, dy, 0.0f);
-		Matrix.multiplyMM(mTransform, 0, mat, 0, mTransform, 0);
-		//Matrix.translateM(mTransform, 0, dx, dy, 0.0f);
+	@Override
+	public void translate(float dx, float dy) {
+		Matrix.setIdentityM(mTransform, 16);
+		Matrix.translateM(mTransform, 16, dx, dy, 0.0f);
+		Matrix.multiplyMM(mTransform, 0, mTransform, 16, mTransform, 0);
 	}
 	
 	public void setLocation(LatLon pos) {
@@ -111,30 +113,9 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer {
 		}
 	}
 	
-	private float prevX;
-	private float prevY;
-	
 	@Override
 	public boolean onTouchEvent(MotionEvent e) {
-		//Log.d(C.TAG, "Motion event: " + e.getAction());
-    	if (e.getAction() == MotionEvent.ACTION_DOWN) {
-    		prevX = e.getX();
-    		prevY = e.getY();
-    		return true;
-    	}
-    	
-    	if (e.getPointerCount() == 1) {
-    		if (e.getAction() == MotionEvent.ACTION_MOVE) {
-    			float scaleFactor = (float)Math.min(getWidth(), getHeight()) / 2.0f;
-	    		float dx = (e.getX() - prevX) / scaleFactor;
-	    		float dy = -(e.getY() - prevY) / scaleFactor;
-	    		translate(dx, dy);
-	    		prevX = e.getX();
-	    		prevY = e.getY();
-	    		return true;
-    		}
-    	}
-    	return false;
+		return mRecognizer.onTouchEvent(e);
 	}
 
 	@Override
@@ -208,7 +189,9 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer {
 							startRange = range+1;
 						
 						if ((startRange != 0 && color < i) ||
-								(startRange != 0 && (range == packet.rangeBinCount) && range++ > 0)) {
+								(startRange != 0 && (range == packet.rangeBinCount-1))) {
+							if (range == packet.rangeBinCount-1)
+								range++;
 							Vertex v1 = new Vertex(
 									(startRange-1) * kmPerRangeBin * cosx1,
 									(startRange-1) * kmPerRangeBin * siny1);
