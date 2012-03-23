@@ -75,11 +75,16 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	}
 
 	public void setData(DataFile file) {
-		mData = file;
+		if (mData == null) {
+			//set the initial transform
+			Matrix.setIdentityM(mTransform, 0);
+			RadialDataPacket packet = (RadialDataPacket)file.description.symbologyBlock.packets[0];
+			scale(1.0f/packet.rangeBinCount);
+		}
 		
-		Matrix.setIdentityM(mTransform, 0);
-		RadialDataPacket packet = (RadialDataPacket)mData.description.symbologyBlock.packets[0];
-		scale(1.0f/packet.rangeBinCount);
+		mData = file;
+		for (int i = 0; i < mRadialBuffers.length; i++)
+			mRadialBuffers[i] = null;
 	}
 	
 	@Override
@@ -137,7 +142,7 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 		if (mPosBuf != null) {
 			gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 			gl.glVertexPointer(2, GL10.GL_FLOAT, 0, mPosBuf);
-			gl.glPointSize(5.0f);
+			gl.glPointSize(10.0f);
 			gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
 		}
 	}

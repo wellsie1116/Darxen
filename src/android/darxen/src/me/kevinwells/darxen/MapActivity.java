@@ -24,6 +24,8 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 public class MapActivity extends SherlockActivity {
 	
@@ -40,6 +42,33 @@ public class MapActivity extends SherlockActivity {
         mRadarView = new RadarView(this);
         ((FrameLayout)findViewById(R.id.container)).addView(mRadarView);
         
+        update();
+    }
+    
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+    	getSupportMenuInflater().inflate(R.menu.map, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.refresh:
+			update();
+			break;
+		default:
+			return false;
+		}
+		return true;
+	}
+	
+	private void update() {
         byte[] data;
         try {
         	data = getData();
@@ -68,12 +97,12 @@ public class MapActivity extends SherlockActivity {
 		}
         
         TextView title = (TextView)findViewById(R.id.title);
-        title.setText(new String(file.header));
+        title.setText(new String(file.header).replace('\n', ' '));
         
         mRadarView.setData(file);
-    }
-    
-    private byte[] getData() throws SocketException, IOException {
+	}
+
+	private byte[] getData() throws SocketException, IOException {
     	ByteArrayOutputStream fout = new ByteArrayOutputStream();
         
     	FTPClient ftpClient = new FTPClient();
