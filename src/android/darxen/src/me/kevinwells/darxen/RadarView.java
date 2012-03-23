@@ -186,11 +186,11 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 					for (int range = 0; range < radial.codes.length; range++) {
 						int color = radial.codes[range];
 						if (startRange == 0 && color == i)
-							startRange = range+1;
+							startRange = range;
 						
 						if ((startRange != 0 && color < i) ||
 								(startRange != 0 && (range == packet.rangeBinCount-1))) {
-							if (range == packet.rangeBinCount-1)
+							if (color >= i && range == packet.rangeBinCount-1)
 								range++;
 							Vertex v1 = new Vertex(
 									(startRange-1) * kmPerRangeBin * cosx1,
