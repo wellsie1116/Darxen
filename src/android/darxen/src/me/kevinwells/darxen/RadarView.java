@@ -30,6 +30,8 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	
 	private FloatBuffer[] mRadialBuffers = new FloatBuffer[16];
 	private int[] mRadialSize = new int[16];
+	
+	private Renderable mBackground;
 
 	private static Color[] REFLECTIVITY_PALETTE = new Color[] {
 			new Color(50.0f / 255.0f, 50.0f / 255.0f, 50.0f / 255.0f),
@@ -87,6 +89,10 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 			mRadialBuffers[i] = null;
 	}
 	
+	public void addLayer(Renderable layer) {
+		mBackground = layer;
+	}
+	
 	@Override
 	public void scale(float factor) {
 		Matrix.setIdentityM(mTransform, 16);
@@ -131,6 +137,10 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glLoadIdentity();
 		gl.glMultMatrixf(mTransform, 0);
+		
+		if (mBackground != null) {
+			mBackground.render(gl);
+		}
 		
 		RadialDataPacket packet = (RadialDataPacket)mData.description.symbologyBlock.packets[0];
 

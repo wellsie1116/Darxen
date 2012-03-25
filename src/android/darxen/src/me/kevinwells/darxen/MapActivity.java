@@ -3,11 +3,14 @@ package me.kevinwells.darxen;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.SocketException;
 
 import me.kevinwells.darxen.data.DataFile;
 import me.kevinwells.darxen.data.Level3Parser;
 import me.kevinwells.darxen.data.ParseException;
+import me.kevinwells.darxen.shp.Shapefile;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -18,6 +21,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -33,6 +37,8 @@ public class MapActivity extends SherlockActivity {
 	
     private LocationManager locationManager;
     private LocationListener locationListener;
+    
+    private ShapefileLayer mLayer;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,6 +105,12 @@ public class MapActivity extends SherlockActivity {
         TextView title = (TextView)findViewById(R.id.title);
         title.setText(new String(file.header).replace('\n', ' '));
         
+        if (mLayer == null) {
+        	new LoadShapefile(new LatLon(file.description.lat, file.description.lon),
+        			R.raw.states_shp, R.raw.states_dbf, R.raw.states_shx,
+        			"states.shp", "states.dbf", "states.shx").execute();
+        }
+        
         mRadarView.setData(file);
 	}
 
@@ -163,5 +175,77 @@ public class MapActivity extends SherlockActivity {
     	
     	mRadarView.onPause();
     }
+    
+	
+	private class LoadShapefile extends AsyncTask<Void, Void, ShapefileLayer> {
+		private LatLon mCenter;
+		
+		private int idShp;
+		private int idDbf;
+		private int idShx;
+		
+		private String nameShp;
+		private String nameDbf;
+		private String nameShx;
+		
+		public LoadShapefile(LatLon center, int idShp, int idDbf, int idShx, String nameShp,
+				String nameDbf, String nameShx) {
+			mCenter = center;
+			this.idShp = idShp;
+			this.idDbf = idDbf;
+			this.idShx = idShx;
+			this.nameShp = nameShp;
+			this.nameDbf = nameDbf;
+			this.nameShx = nameShx;
+		}
+
+		@Override
+		protected ShapefileLayer doInBackground(Void... params) {
+			
+			try {
+				saveResource(idShp, nameShp);
+				saveResource(idDbf, nameDbf);
+				saveResource(idShx, nameShx);
+			} catch (IOException e) {
+				Log.e(C.TAG, "Failed to save resource", e);
+				return null;
+			}
+			
+			Shapefile shapefile = new Shapefile();
+			shapefile.open(getFilesDir() + "/" + nameShp);
+			try {
+				return new ShapefileLayer(mCenter, shapefile);
+			} finally {
+				shapefile.close();
+				
+				deleteResource(nameShp);
+				deleteResource(nameDbf);
+				deleteResource(nameShx);
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(ShapefileLayer layer) {
+			mLayer = layer;
+			mRadarView.addLayer(layer);
+		}
+		
+		private void deleteResource(String name) {
+			deleteFile(name);
+		}
+
+		private void saveResource(int resource, String name) throws IOException {
+			InputStream fin = getResources().openRawResource(resource);
+			OutputStream fout = openFileOutput(name, MODE_PRIVATE);
+			byte[] buffer = new byte[8192];
+			int read;
+			while ((read = fin.read(buffer)) > 0) {
+				fout.write(buffer, 0, read);
+			}
+			fin.close();
+			fout.close();
+		}
+
+	}
     
 }
