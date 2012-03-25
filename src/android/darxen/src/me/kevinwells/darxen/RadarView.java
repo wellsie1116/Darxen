@@ -90,6 +90,8 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 		mData = file;
 		for (int i = 0; i < mRadialBuffers.length; i++)
 			mRadialBuffers[i] = null;
+		
+		updateLocation();
 	}
 	
 	public void addLayer(Renderable layer) {
@@ -112,19 +114,23 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	
 	public void setLocation(LatLon pos) {
 		mPos = pos;
-		
-		if (mPos != null) {
-			ByteBuffer vbb = ByteBuffer.allocateDirect(2 * 4);
-			vbb.order(ByteOrder.nativeOrder());
-			mPosBuf = vbb.asFloatBuffer();
+		updateLocation();
+	}
 	
-			Point2D p = mPos.project(new LatLon(mData.description.lat, mData.description.lon), null);
-			mPosBuf.put((float)p.x);
-			mPosBuf.put((float)p.y);
-			mPosBuf.position(0);
-		} else {
+	private void updateLocation() {
+		if (mData == null || mPos == null) {
 			mPosBuf = null;
+			return;
 		}
+		
+		ByteBuffer vbb = ByteBuffer.allocateDirect(2 * 4);
+		vbb.order(ByteOrder.nativeOrder());
+		mPosBuf = vbb.asFloatBuffer();
+
+		Point2D p = mPos.project(new LatLon(mData.description.lat, mData.description.lon), null);
+		mPosBuf.put((float)p.x);
+		mPosBuf.put((float)p.y);
+		mPosBuf.position(0);
 	}
 	
 	@Override

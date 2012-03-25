@@ -33,6 +33,7 @@ import com.actionbarsherlock.view.MenuItem;
 
 public class MapActivity extends SherlockActivity {
 	
+	private TextView mTitle;
 	private RadarView mRadarView;
 	
     private LocationManager locationManager;
@@ -47,6 +48,8 @@ public class MapActivity extends SherlockActivity {
 
         mRadarView = new RadarView(this);
         ((FrameLayout)findViewById(R.id.container)).addView(mRadarView);
+        
+        mTitle = (TextView)findViewById(R.id.title);
         
         update();
     }
@@ -75,61 +78,8 @@ public class MapActivity extends SherlockActivity {
 	}
 	
 	private void update() {
-        byte[] data;
-        try {
-        	data = getData();
-        } catch (SocketException e) {
-			Log.e(C.TAG, "Failed to download radar imagery", e);
-			finish();
-			return;
-		} catch (IOException e) {
-			Log.e(C.TAG, "Failed to download radar imagery", e);
-			finish();
-			return;
-		}
-        
-        Level3Parser parser = new Level3Parser();
-        DataFile file;
-        try {
-			file = parser.parse(new ByteArrayInputStream(data));
-		} catch (ParseException e) {
-			Log.e(C.TAG, "Failed to parse radar imagery", e);
-			finish();
-			return;
-		} catch (IOException e) {
-			Log.e(C.TAG, "Failed to parse radar imagery", e);
-			finish();
-			return;
-		}
-        
-        TextView title = (TextView)findViewById(R.id.title);
-        title.setText(new String(file.header).replace('\n', ' '));
-        
-        if (!mLayersLoaded) {
-        	new LoadShapefiles(new LatLon(file.description.lat, file.description.lon)).execute();
-        }
-        
-        mRadarView.setData(file);
+        new LoadRadar().execute();
 	}
-
-	private byte[] getData() throws SocketException, IOException {
-    	ByteArrayOutputStream fout = new ByteArrayOutputStream();
-        
-    	FTPClient ftpClient = new FTPClient();
-		ftpClient.connect("tgftp.nws.noaa.gov", 21);
-		if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode()))
-			throw new IOException("Failed to connect");
-		ftpClient.login("anonymous", "darxen");
-		
-		ftpClient.changeWorkingDirectory("SL.us008001/DF.of/DC.radar/DS.p19r0/SI.kind");
-		ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-		ftpClient.enterLocalPassiveMode();
-		ftpClient.retrieveFile("sn.last", fout);
-		fout.close();
-		ftpClient.disconnect();
-		
-        return fout.toByteArray();
-    }
 
     protected void onResume() {
     	super.onResume();
@@ -174,13 +124,78 @@ public class MapActivity extends SherlockActivity {
     	mRadarView.onPause();
     }
     
+    private class LoadRadar extends AsyncTask<Void, Void, DataFile> {
+
+		@Override
+		protected DataFile doInBackground(Void... params) {
+			byte[] data;
+	        try {
+	        	data = getData();
+	        } catch (SocketException e) {
+				Log.e(C.TAG, "Failed to download radar imagery", e);
+				return null;
+			} catch (IOException e) {
+				Log.e(C.TAG, "Failed to download radar imagery", e);
+				return null;
+			}
+	        
+	        Level3Parser parser = new Level3Parser();
+	        DataFile file;
+	        try {
+				file = parser.parse(new ByteArrayInputStream(data));
+			} catch (ParseException e) {
+				Log.e(C.TAG, "Failed to parse radar imagery", e);
+				return null;
+			} catch (IOException e) {
+				Log.e(C.TAG, "Failed to parse radar imagery", e);
+				return null;
+			}
+	        
+	        return file;
+		}
+		
+		@Override
+		protected void onPostExecute(DataFile data) {
+			if (data == null) {
+				finish();
+				return;
+			}
+
+	        mTitle.setText(new String(data.header).replace("\n", ""));
+			
+	        if (!mLayersLoaded) {
+	        	new LoadShapefiles(new LatLon(data.description.lat, data.description.lon)).execute();
+	        }
+			
+			mRadarView.setData(data);
+		}
+
+		private byte[] getData() throws SocketException, IOException {
+	    	ByteArrayOutputStream fout = new ByteArrayOutputStream();
+	        
+	    	FTPClient ftpClient = new FTPClient();
+			ftpClient.connect("tgftp.nws.noaa.gov", 21);
+			if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode()))
+				throw new IOException("Failed to connect");
+			ftpClient.login("anonymous", "darxen");
+			
+			ftpClient.changeWorkingDirectory("SL.us008001/DF.of/DC.radar/DS.p19r0/SI.kind");
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+			ftpClient.enterLocalPassiveMode();
+			ftpClient.retrieveFile("sn.last", fout);
+			fout.close();
+			ftpClient.disconnect();
+			
+	        return fout.toByteArray();
+	    }
+    }
+    
 	
 	private class LoadShapefiles extends AsyncTask<Void, Void, Void> {
 		private LatLon mCenter;
 	
 		public LoadShapefiles(LatLon center) {
 			mCenter = center;
-
 		}
 
 		private ShapefileLayer loadShapefile(ShapefileConfig config) {
