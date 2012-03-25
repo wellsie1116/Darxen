@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -31,7 +32,7 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	private FloatBuffer[] mRadialBuffers = new FloatBuffer[16];
 	private int[] mRadialSize = new int[16];
 	
-	private Renderable mBackground;
+	private List<Renderable> mBackground;
 
 	private static Color[] REFLECTIVITY_PALETTE = new Color[] {
 			new Color(50.0f / 255.0f, 50.0f / 255.0f, 50.0f / 255.0f),
@@ -71,6 +72,8 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	
 	public RadarView(Context context) {
 		super(context);
+		mBackground = new ArrayList<Renderable>();
+		
 		//setEGLContextClientVersion(2);
 		setRenderer(this);
 		Matrix.setIdentityM(mTransform, 0);
@@ -90,7 +93,7 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 	}
 	
 	public void addLayer(Renderable layer) {
-		mBackground = layer;
+		mBackground.add(layer);
 	}
 	
 	@Override
@@ -115,7 +118,7 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 			vbb.order(ByteOrder.nativeOrder());
 			mPosBuf = vbb.asFloatBuffer();
 	
-			Point2D p = mPos.project(new LatLon(mData.description.lat, mData.description.lon));
+			Point2D p = mPos.project(new LatLon(mData.description.lat, mData.description.lon), null);
 			mPosBuf.put((float)p.x);
 			mPosBuf.put((float)p.y);
 			mPosBuf.position(0);
@@ -138,8 +141,8 @@ public class RadarView extends GLSurfaceView implements GLSurfaceView.Renderer, 
 		gl.glLoadIdentity();
 		gl.glMultMatrixf(mTransform, 0);
 		
-		if (mBackground != null) {
-			mBackground.render(gl);
+		for (Renderable renderable : mBackground) {
+			renderable.render(gl);
 		}
 		
 		RadialDataPacket packet = (RadialDataPacket)mData.description.symbologyBlock.packets[0];

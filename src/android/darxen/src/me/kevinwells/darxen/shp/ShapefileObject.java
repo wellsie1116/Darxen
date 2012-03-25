@@ -2,6 +2,8 @@ package me.kevinwells.darxen.shp;
 
 public class ShapefileObject {
 	
+	public long hShape;
+	
 	//public int nSHPType;
 	//public int nShapeId;
 	public int nParts;
@@ -21,26 +23,41 @@ public class ShapefileObject {
 	//public double dfZMax;
 	//public double dfMMax;
 	//public int bMeasureIsUsed;
-	
-	public ShapefileObject(int nParts, int[] panPartStart, int[] panPartType,
-			int nVertices, double[] padfX, double[] padfY, double[] padfZ,
-			double dfXMin, double dfYMin, double dfXMax, double dfYMax) {
+
+	public ShapefileObject(int nParts, int nVertices, double dfXMin,
+			double dfYMin, double dfXMax, double dfYMax,
+			long hShape) {
 		this.nParts = nParts;
-		this.panPartStart = panPartStart;
-		this.panPartType = panPartType;
 		this.nVertices = nVertices;
-		this.padfX = padfX;
-		this.padfY = padfY;
-		this.padfZ = padfZ;
 		this.dfXMin = dfXMin;
 		this.dfYMin = dfYMin;
 		this.dfXMax = dfXMax;
 		this.dfYMax = dfYMax;
+		this.hShape = hShape;
 	}
 	
-	public boolean contains(double lat, double lon) {
-		return (dfYMin < lat && dfYMax > lat &&
-				dfXMin < lon && dfXMax > lon);
+	public native void load();
+	public native void close();
+	
+	private boolean doesIntersect(double r1, double r2, double s1, double s2) {
+		// Positive intersection
+		// A: |--------|            |--------|
+		// B:     |--------|          |----|
+				
+		// Negative intersection
+		// A: |--------|         
+		// B:          |--------|
+		return !((s1 <= r1) && (s2 <= r1)) ^ ((s1 >= r2) && (s2 >= r2));
+	}
+	
+	private static final double DISPLAY_RADIUS = 4.0;
+	
+	public boolean isNear(double lat, double lon) {
+		assert(dfXMin < dfXMax);
+		assert(dfYMin < dfYMax);
+		
+		return doesIntersect(dfXMin, dfXMax, lon-DISPLAY_RADIUS, lon+DISPLAY_RADIUS) &&
+				doesIntersect(dfYMin, dfYMax, lat-DISPLAY_RADIUS, lat+DISPLAY_RADIUS);
 	}
 	
 	public ShapefilePoint getPoint(int i, ShapefilePoint pt) {

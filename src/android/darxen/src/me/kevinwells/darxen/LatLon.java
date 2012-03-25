@@ -13,13 +13,18 @@ public class LatLon {
 		this.lon = lon;
 	}
 	
-	public Point2D project(LatLon center) {
+	public Point2D project(LatLon center, Point2D res) {
+		if (res == null)
+			res = new Point2D();
+		
 		Point3D geoCenter = projectToGeocentric(center);
 		Point3D geoOffset = projectToGeocentric(this);
 		
 		Point3D local = projectToLocal(center, geoCenter, geoOffset);
 		
-		return new Point2D(local.x, local.y);
+		res.x = local.x;
+		res.y = local.y;
+		return res;
 	}
 	
 	private static Point3D projectToGeocentric(LatLon pt) {

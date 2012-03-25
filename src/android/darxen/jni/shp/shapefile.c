@@ -60,28 +60,6 @@ void Java_me_kevinwells_darxen_shp_Shapefile_close(JNIEnv* env, jobject this)
 	setShapeHandle(env, this, NULL);
 }
 
-static jdoubleArray InitDoubleArray(JNIEnv* env, double* v, int n)
-{
-	jdoubleArray array = (*env)->NewDoubleArray(env, n);
-	double* arr = (*env)->GetDoubleArrayElements(env, array, NULL);
-	int i;
-	for (i = 0; i < n; i++)
-		arr[i] = v[i];
-	(*env)->ReleaseDoubleArrayElements(env, array, arr, 0);
-	return array;
-}
-
-static jintArray InitIntArray(JNIEnv* env, int* v, int n)
-{
-	jintArray array = (*env)->NewIntArray(env, n);
-	int* arr = (*env)->GetIntArrayElements(env, array, NULL);
-	int i;
-	for (i = 0; i < n; i++)
-		arr[i] = v[i];
-	(*env)->ReleaseIntArrayElements(env, array, arr, 0);
-	return array;
-}
-
 static jobject NewShapefile(JNIEnv* env, jobject this, SHPObject* shpObj)
 {
 	jclass shapefileClass = (*env)->FindClass(env, "me/kevinwells/darxen/shp/ShapefileObject");
@@ -89,18 +67,12 @@ static jobject NewShapefile(JNIEnv* env, jobject this, SHPObject* shpObj)
 		goto Exit;
 
 	jmethodID constructor = (*env)->GetMethodID(env, shapefileClass, "<init>",
-			"(I[I[II[D[D[DDDDD)V");
-
-	jintArray panPartStart = InitIntArray(env, shpObj->panPartStart, shpObj->nParts);
-	jintArray panPartType = InitIntArray(env, shpObj->panPartType, shpObj->nParts);
-	jdoubleArray padfX = InitDoubleArray(env, shpObj->padfX, shpObj->nVertices);
-	jdoubleArray padfY = InitDoubleArray(env, shpObj->padfY, shpObj->nVertices);
-	jdoubleArray padfZ = InitDoubleArray(env, shpObj->padfZ, shpObj->nVertices);
+			"(IIDDDDJ)V");
 
 	jobject res = (*env)->NewObject(env, shapefileClass, constructor, 
-			shpObj->nParts, panPartStart, panPartType, shpObj->nVertices,
-			padfX, padfY, padfZ,
-			shpObj->dfXMin, shpObj->dfYMin, shpObj->dfXMax, shpObj->dfYMax);
+			shpObj->nParts, shpObj->nVertices,
+			shpObj->dfXMin, shpObj->dfYMin, shpObj->dfXMax, shpObj->dfYMax,
+			(long)shpObj);
 
 	return res;
 
@@ -111,7 +83,7 @@ Exit:
 jobject Java_me_kevinwells_darxen_shp_Shapefile_get(JNIEnv* env, jobject this, int i)
 {
 	jobject res = NULL;
-    __android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Reading shape: %d", i);
+    //__android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Reading shape: %d", i);
 
 	SHPHandle hShp = getShapeHandle(env, this);
 	if (!hShp)
@@ -122,8 +94,6 @@ jobject Java_me_kevinwells_darxen_shp_Shapefile_get(JNIEnv* env, jobject this, i
 		goto Exit;
 
 	res = NewShapefile(env, this, shpObj);
-
-	SHPDestroyObject(shpObj);
 
 Exit:
 	return res;

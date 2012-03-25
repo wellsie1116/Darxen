@@ -38,7 +38,7 @@ public class MapActivity extends SherlockActivity {
     private LocationManager locationManager;
     private LocationListener locationListener;
     
-    private ShapefileLayer mLayer;
+    private boolean mLayersLoaded;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,10 +105,8 @@ public class MapActivity extends SherlockActivity {
         TextView title = (TextView)findViewById(R.id.title);
         title.setText(new String(file.header).replace('\n', ' '));
         
-        if (mLayer == null) {
-        	new LoadShapefile(new LatLon(file.description.lat, file.description.lon),
-        			R.raw.states_shp, R.raw.states_dbf, R.raw.states_shx,
-        			"states.shp", "states.dbf", "states.shx").execute();
+        if (!mLayersLoaded) {
+        	new LoadShapefiles(new LatLon(file.description.lat, file.description.lon)).execute();
         }
         
         mRadarView.setData(file);
@@ -177,57 +175,64 @@ public class MapActivity extends SherlockActivity {
     }
     
 	
-	private class LoadShapefile extends AsyncTask<Void, Void, ShapefileLayer> {
+	private class LoadShapefiles extends AsyncTask<Void, Void, Void> {
 		private LatLon mCenter;
-		
-		private int idShp;
-		private int idDbf;
-		private int idShx;
-		
-		private String nameShp;
-		private String nameDbf;
-		private String nameShx;
-		
-		public LoadShapefile(LatLon center, int idShp, int idDbf, int idShx, String nameShp,
-				String nameDbf, String nameShx) {
+	
+		public LoadShapefiles(LatLon center) {
 			mCenter = center;
-			this.idShp = idShp;
-			this.idDbf = idDbf;
-			this.idShx = idShx;
-			this.nameShp = nameShp;
-			this.nameDbf = nameDbf;
-			this.nameShx = nameShx;
+
 		}
 
-		@Override
-		protected ShapefileLayer doInBackground(Void... params) {
-			
+		private ShapefileLayer loadShapefile(ShapefileConfig config) {
+
 			try {
-				saveResource(idShp, nameShp);
-				saveResource(idDbf, nameDbf);
-				saveResource(idShx, nameShx);
+				saveResource(config.resShp, "temp.shp");
+				saveResource(config.resDbf, "temp.dbf");
+				saveResource(config.resShx, "temp.shx");
 			} catch (IOException e) {
 				Log.e(C.TAG, "Failed to save resource", e);
 				return null;
 			}
 			
 			Shapefile shapefile = new Shapefile();
-			shapefile.open(getFilesDir() + "/" + nameShp);
+			shapefile.open(getFilesDir() + "/" + "temp.shp");
 			try {
-				return new ShapefileLayer(mCenter, shapefile);
+				return new ShapefileLayer(mCenter, shapefile, config);
 			} finally {
 				shapefile.close();
 				
-				deleteResource(nameShp);
-				deleteResource(nameDbf);
-				deleteResource(nameShx);
+				deleteResource("temp.shp");
+				deleteResource("temp.dbf");
+				deleteResource("temp.shx");
 			}
+			
 		}
 		
 		@Override
-		protected void onPostExecute(ShapefileLayer layer) {
-			mLayer = layer;
-			mRadarView.addLayer(layer);
+		protected Void doInBackground(Void... params) {
+			ShapefileLayer layer;
+			
+			ShapefileConfig[] configs = new ShapefileConfig[] {
+					new ShapefileConfig(R.raw.states_shp, R.raw.states_dbf, R.raw.states_shx,
+							3.0f, new Color(1.0f, 1.0f, 1.0f)),
+					new ShapefileConfig(R.raw.counties_shp, R.raw.counties_dbf, R.raw.counties_shx,
+							1.0f, new Color(0.75f, 0.75f, 0.75f))
+			};
+			
+			for (ShapefileConfig config : configs) {
+				layer = loadShapefile(config);
+				if (layer == null)
+					continue;
+				
+				mRadarView.addLayer(layer);
+			}
+			
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void res) {
+			mLayersLoaded = true;
 		}
 		
 		private void deleteResource(String name) {
