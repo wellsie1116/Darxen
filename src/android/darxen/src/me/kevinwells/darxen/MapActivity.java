@@ -20,13 +20,17 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -122,7 +126,25 @@ public class MapActivity extends SherlockActivity {
 			}
 
 			@Override
-			public void onProviderDisabled(String provider) {}
+			public void onProviderDisabled(String provider) {
+				new AlertDialog.Builder(MapActivity.this)
+	        	.setTitle(R.string.location_services_title)
+	        	.setMessage(R.string.location_services_message)
+	        	.setCancelable(false)
+	        	.setPositiveButton(R.string.do_it, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+						startActivity(intent);
+					}
+				})
+				.setNegativeButton(R.string.quit, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				}).create().show();
+			}
 
 			@Override
 			public void onProviderEnabled(String provider) {}

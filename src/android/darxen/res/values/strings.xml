@@ -3,5 +3,9 @@
 
     <string name="app_name">Darxen</string>
     <string name="refresh">Refresh</string>
+    <string name="location_services_message">You need wireless network location services to be enabled to use this app</string>
+    <string name="location_services_title">Enable location services</string>
+    <string name="do_it">Do it</string>
+    <string name="quit">Quit</string>
 
 </resources>
