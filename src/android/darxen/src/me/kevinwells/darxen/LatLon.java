@@ -13,6 +13,19 @@ public class LatLon {
 		this.lon = lon;
 	}
 	
+	public double distanceTo(LatLon o) {
+		final double R = 6371.0; //km
+		double dLat = Math.toRadians(o.lat - lat);
+		double dLon = Math.toRadians(o.lon - lon);
+		double lat1 = Math.toRadians(lat);
+		double lat2 = Math.toRadians(o.lat);
+		
+		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+				Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+		return R * c;
+	}
+	
 	public Point2D project(LatLon center, Point2D res) {
 		if (res == null)
 			res = new Point2D();

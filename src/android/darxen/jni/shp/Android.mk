@@ -5,6 +5,6 @@ include $(CLEAR_VARS)
 LOCAL_LDLIBS := -llog
 
 LOCAL_MODULE    := shp
-LOCAL_SRC_FILES := shpopen.c shptree.c dbfopen.c safileio.c shapefile.c shapefileobject.c
+LOCAL_SRC_FILES := shpopen.c shptree.c dbfopen.c safileio.c shapefile.c shapefileobject.c dbffile.c
 
 include $(BUILD_SHARED_LIBRARY)

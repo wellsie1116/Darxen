@@ -6,10 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import me.kevinwells.darxen.data.DataFile;
 import me.kevinwells.darxen.data.Level3Parser;
 import me.kevinwells.darxen.data.ParseException;
+import me.kevinwells.darxen.shp.DbfFile;
+import me.kevinwells.darxen.shp.DbfFile.DbfRecord;
 import me.kevinwells.darxen.shp.Shapefile;
 
 import org.apache.commons.net.ftp.FTP;
@@ -39,7 +43,12 @@ public class MapActivity extends SherlockActivity {
     private LocationManager locationManager;
     private LocationListener locationListener;
     
+    private LatLon mPosition;
+    private List<RadarSite> mRadarSites;
+	
     private boolean mLayersLoaded;
+    
+    private RadarSite mRadarSite;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,7 +60,8 @@ public class MapActivity extends SherlockActivity {
         
         mTitle = (TextView)findViewById(R.id.title);
         
-        update();
+        //TODO load cached site from shared prefs
+        new LoadSites().execute();
     }
     
     @Override
@@ -78,7 +88,23 @@ public class MapActivity extends SherlockActivity {
 	}
 	
 	private void update() {
+		if (mRadarSite == null)
+			return;
+		
         new LoadRadar().execute();
+	}
+	
+	private void updateLocation(Location location) {
+		if (location == null)
+			return;
+		
+		boolean initSite = mPosition == null;
+		Log.v(C.TAG, location.toString());
+		mPosition = new LatLon(location.getLatitude(), location.getLongitude());
+		mRadarView.setLocation(mPosition);
+		
+		if (initSite)
+			initSite();
 	}
 
     protected void onResume() {
@@ -88,9 +114,7 @@ public class MapActivity extends SherlockActivity {
         locationListener = new LocationListener() {
 			@Override
 			public void onLocationChanged(Location location) {
-				Log.v(C.TAG, location.toString());
-				LatLon pos = new LatLon(location.getLatitude(), location.getLongitude());
-				mRadarView.setLocation(pos);
+				updateLocation(location);
 			}
 
 			@Override
@@ -108,6 +132,9 @@ public class MapActivity extends SherlockActivity {
 				}
 			}
 		};
+
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        updateLocation(location);
 		
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
@@ -124,13 +151,84 @@ public class MapActivity extends SherlockActivity {
     	mRadarView.onPause();
     }
     
+    private void initSite() {
+    	if (mRadarSites == null || mPosition == null)
+    		return;
+    	
+    	new FindSite().execute();
+    }
+    
+    private class LoadSites extends AsyncTask<Void, Void, Void> {
+
+    	private List<RadarSite> mRadarSites;
+    	
+		@Override
+		protected Void doInBackground(Void... params) {
+			
+			mRadarSites = new ArrayList<RadarSite>();
+			
+			try {
+				saveResource(R.raw.radars_dbf, "sites.dbf");
+			} catch (IOException e) {
+				return null;
+			}
+			
+			DbfFile sites = new DbfFile(getFilesDir() + "/sites.dbf");
+			for (DbfRecord site : sites) {
+				String name = site.getString(0).toUpperCase();
+				double lat = site.getDouble(1);
+				double lon = site.getDouble(2);
+				
+				mRadarSites.add(new RadarSite(name, new LatLon(lat, lon)));
+			}
+			sites.close();
+			
+			deleteResource("sites.dbf");
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void res) {
+			MapActivity.this.mRadarSites = mRadarSites;
+			initSite();
+		}
+    }
+    
+    private class FindSite extends AsyncTask<Void, Void, RadarSite> {
+
+		@Override
+		protected RadarSite doInBackground(Void... params) {
+			double[] distances = new double[mRadarSites.size()];
+			
+			for (int i = 0; i < mRadarSites.size(); i++)
+				distances[i] = mPosition.distanceTo(mRadarSites.get(i).center);
+			
+			double minValue = distances[0];
+			int minIndex = 0;
+			for (int i = 1; i < distances.length; i++) {
+				if (distances[i] < minValue) {
+					minValue = distances[i];
+					minIndex = i;
+				}
+			}
+			
+			return mRadarSites.get(minIndex);
+		}
+		
+		@Override
+		protected void onPostExecute(RadarSite radarSite) {
+			mRadarSite = radarSite;
+			update();
+		}
+    }
+    
     private class LoadRadar extends AsyncTask<Void, Void, DataFile> {
 
 		@Override
 		protected DataFile doInBackground(Void... params) {
 			byte[] data;
 	        try {
-	        	data = getData();
+	        	data = getData(mRadarSite);
 	        } catch (SocketException e) {
 				Log.e(C.TAG, "Failed to download radar imagery", e);
 				return null;
@@ -170,7 +268,7 @@ public class MapActivity extends SherlockActivity {
 			mRadarView.setData(data);
 		}
 
-		private byte[] getData() throws SocketException, IOException {
+		private byte[] getData(RadarSite radarSite) throws SocketException, IOException {
 	    	ByteArrayOutputStream fout = new ByteArrayOutputStream();
 	        
 	    	FTPClient ftpClient = new FTPClient();
@@ -179,7 +277,7 @@ public class MapActivity extends SherlockActivity {
 				throw new IOException("Failed to connect");
 			ftpClient.login("anonymous", "darxen");
 			
-			ftpClient.changeWorkingDirectory("SL.us008001/DF.of/DC.radar/DS.p19r0/SI.kind");
+			ftpClient.changeWorkingDirectory("SL.us008001/DF.of/DC.radar/DS.p19r0/SI." + radarSite.name.toLowerCase());
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 			ftpClient.enterLocalPassiveMode();
 			ftpClient.retrieveFile("sn.last", fout);
@@ -190,7 +288,6 @@ public class MapActivity extends SherlockActivity {
 	    }
     }
     
-	
 	private class LoadShapefiles extends AsyncTask<Void, Void, Void> {
 		private LatLon mCenter;
 	
@@ -249,23 +346,24 @@ public class MapActivity extends SherlockActivity {
 		protected void onPostExecute(Void res) {
 			mLayersLoaded = true;
 		}
-		
-		private void deleteResource(String name) {
-			deleteFile(name);
-		}
-
-		private void saveResource(int resource, String name) throws IOException {
-			InputStream fin = getResources().openRawResource(resource);
-			OutputStream fout = openFileOutput(name, MODE_PRIVATE);
-			byte[] buffer = new byte[8192];
-			int read;
-			while ((read = fin.read(buffer)) > 0) {
-				fout.write(buffer, 0, read);
-			}
-			fin.close();
-			fout.close();
-		}
 
 	}
+	
+	private void deleteResource(String name) {
+		deleteFile(name);
+	}
+
+	private void saveResource(int resource, String name) throws IOException {
+		InputStream fin = getResources().openRawResource(resource);
+		OutputStream fout = openFileOutput(name, MODE_PRIVATE);
+		byte[] buffer = new byte[8192];
+		int read;
+		while ((read = fin.read(buffer)) > 0) {
+			fout.write(buffer, 0, read);
+		}
+		fin.close();
+		fout.close();
+	}
+
     
 }
