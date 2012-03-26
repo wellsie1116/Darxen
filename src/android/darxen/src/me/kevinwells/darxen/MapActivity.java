@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import me.kevinwells.darxen.data.DataFile;
@@ -34,6 +35,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
@@ -66,6 +68,8 @@ public class MapActivity extends SherlockActivity {
         
         mTitle = (TextView)findViewById(R.id.title);
         
+        Prefs.unsetLastUpdateTime();
+        
         //TODO load cached site from shared prefs
         new LoadSites().execute();
     }
@@ -96,6 +100,11 @@ public class MapActivity extends SherlockActivity {
 	private void update() {
 		if (mRadarSite == null)
 			return;
+		
+		if (!DataPolicy.shouldUpdate(Prefs.getLastUpdateTime(), new Date())) {
+			Toast.makeText(this, "Patience, my young Padawan", Toast.LENGTH_SHORT).show();
+			return;
+		}
 		
 		setSupportProgressBarIndeterminateVisibility(true);
 		
@@ -252,16 +261,14 @@ public class MapActivity extends SherlockActivity {
 
 		@Override
 		protected DataFile doInBackground(Void... params) {
-			byte[] data;
-	        try {
-	        	data = getData(mRadarSite);
-	        } catch (SocketException e) {
-				Log.e(C.TAG, "Failed to download radar imagery", e);
-				return null;
-			} catch (IOException e) {
-				Log.e(C.TAG, "Failed to download radar imagery", e);
-				return null;
-			}
+			byte[] data = null;
+			do {
+		        try {
+		        	data = getData(mRadarSite);
+				} catch (IOException e) {
+					Log.e(C.TAG, "Failed to download radar imagery", e);
+				}
+			} while (data == null);
 	        
 	        Level3Parser parser = new Level3Parser();
 	        DataFile file;
@@ -296,6 +303,8 @@ public class MapActivity extends SherlockActivity {
 			if (mLayersLoaded) {
 				setSupportProgressBarIndeterminateVisibility(false);
 			}
+			
+			Prefs.setLastUpdateTime(new Date());
 		}
 
 		private byte[] getData(RadarSite radarSite) throws SocketException, IOException {
