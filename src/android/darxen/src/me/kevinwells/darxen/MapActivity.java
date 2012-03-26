@@ -34,6 +34,7 @@ import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.Window;
 
 public class MapActivity extends SherlockActivity {
 	
@@ -53,6 +54,7 @@ public class MapActivity extends SherlockActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main);
 
         mRadarView = new RadarView(this);
@@ -90,6 +92,8 @@ public class MapActivity extends SherlockActivity {
 	private void update() {
 		if (mRadarSite == null)
 			return;
+		
+		setSupportProgressBarIndeterminateVisibility(true);
 		
         new LoadRadar().execute();
 	}
@@ -266,6 +270,10 @@ public class MapActivity extends SherlockActivity {
 	        }
 			
 			mRadarView.setData(data);
+			
+			if (mLayersLoaded) {
+				setSupportProgressBarIndeterminateVisibility(false);
+			}
 		}
 
 		private byte[] getData(RadarSite radarSite) throws SocketException, IOException {
@@ -345,6 +353,8 @@ public class MapActivity extends SherlockActivity {
 		@Override
 		protected void onPostExecute(Void res) {
 			mLayersLoaded = true;
+
+			setSupportProgressBarIndeterminateVisibility(false);
 		}
 
 	}
