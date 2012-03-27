@@ -4,9 +4,9 @@ import java.io.IOException;
 
 public class MessageHeader {
 
+	@SuppressWarnings("unused")
 	public static MessageHeader parse(DataFileStream stream) throws ParseException, IOException {
 		MessageHeader res = new MessageHeader();
-		//FIXME wtf?
 		stream.skip(3);
 		
 		short messageCode = stream.readShort();

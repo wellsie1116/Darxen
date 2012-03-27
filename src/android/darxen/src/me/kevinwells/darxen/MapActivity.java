@@ -30,7 +30,6 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.MemoryFile;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.FrameLayout;
