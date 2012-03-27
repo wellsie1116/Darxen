@@ -4,7 +4,10 @@ include $(CLEAR_VARS)
 
 LOCAL_LDLIBS := -llog
 
+SHP_FILES := safileio.c dbfopen.c shpopen.c shptree.c
+WRAPPER_FILES := common.c dbffile.c hashtable.c inputstreamhooks.c shapefile.c shapefileobject.c
+
 LOCAL_MODULE    := shp
-LOCAL_SRC_FILES := shpopen.c shptree.c dbfopen.c safileio.c shapefile.c shapefileobject.c dbffile.c
+LOCAL_SRC_FILES := $(SHP_FILES) $(WRAPPER_FILES)
 
 include $(BUILD_SHARED_LIBRARY)

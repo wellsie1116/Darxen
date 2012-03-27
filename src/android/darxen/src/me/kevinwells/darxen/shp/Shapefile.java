@@ -1,16 +1,25 @@
 package me.kevinwells.darxen.shp;
 
+import java.io.InputStream;
+
 public class Shapefile {
 	
+	private int mInputId;
 	private long hShp;
+	
+	private InputStream fShp;
+	private InputStream fShx;
 	
 	private int entities;
 	private int shapeType;
 
-	public Shapefile() {
+	public Shapefile(InputStream fShp, InputStream fShx) {
+		this.fShp = fShp;
+		this.fShx = fShx;
+		init(fShp, fShx);
 	}
 	
-	public native String open(String path);
+	private native void init(InputStream fShp, InputStream fShx);
 	public native String close();
 	public native ShapefileObject get(int i);
 	

@@ -34,8 +34,10 @@ public class ShapefileObject {
 		this.dfXMax = dfXMax;
 		this.dfYMax = dfYMax;
 		this.hShape = hShape;
+		init();
 	}
 	
+	public native void init();
 	public native void load();
 	public native void close();
 	

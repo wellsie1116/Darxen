@@ -1,23 +1,20 @@
-#include <jni.h>
-#include <string.h>
-#include <android/log.h>
 
+#include "common.h"
 #include "shapefil.h"
+#include "inputstreamhooks.h"
 
-#define DEBUG_TAG "NDK_Darxen"
+static int getInt(JNIEnv* env, jobject this, const char* name)
+{
+	jclass klass = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, klass, name, "I");
+	return (*env)->GetIntField(env, this, fid);
+}
 
 static void setInt(JNIEnv* env, jobject this, const char* name, int value)
 {
 	jclass klass = (*env)->GetObjectClass(env, this);
 	jfieldID fid = (*env)->GetFieldID(env, klass, name, "I");
 	(*env)->SetIntField(env, this, fid, value);
-}
-
-static void setShapeHandle(JNIEnv* env, jobject this, SHPHandle handle)
-{
-	jclass klass = (*env)->GetObjectClass(env, this);
-	jfieldID fid = (*env)->GetFieldID(env, klass, "hShp", "J");
-	(*env)->SetLongField(env, this, fid, (long)handle);
 }
 
 static SHPHandle getShapeHandle(JNIEnv* env, jobject this)
@@ -28,16 +25,25 @@ static SHPHandle getShapeHandle(JNIEnv* env, jobject this)
 	return (SHPHandle)(void*)l;
 }
 
-void Java_me_kevinwells_darxen_shp_Shapefile_open(JNIEnv* env, jobject this, jstring path)
+static void setShapeHandle(JNIEnv* env, jobject this, SHPHandle handle)
 {
-    jboolean isCopy;
-    const char* sPath = (*env)->GetStringUTFChars(env, path, &isCopy);
+	jclass klass = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, klass, "hShp", "J");
+	(*env)->SetLongField(env, this, fid, (long)handle);
+}
 
-    __android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Opening shapefile: %s", sPath);
+void Java_me_kevinwells_darxen_shp_Shapefile_init(JNIEnv* env, jobject this, jobject fShp, jobject fShx)
+{
+	int id;
+	const char* shpPath = registerInputStream((*env)->NewGlobalRef(env, fShp), TYPE_SHP, &id);
+	addInputStream(id, (*env)->NewGlobalRef(env, fShx), TYPE_SHX);
+	setInt(env, this, "mInputId", id);
 
-	SHPHandle hShp = SHPOpen(sPath, "rb");
+    log_debug("Opening shapefile: %s", shpPath);
+
+	SHPHandle hShp = SHPOpenLL(shpPath, "rb", getInputStreamHooks());
 	if (!hShp)
-		goto Exit;
+		return;
 
 	int entities;
 	int shapeType;
@@ -46,18 +52,23 @@ void Java_me_kevinwells_darxen_shp_Shapefile_open(JNIEnv* env, jobject this, jst
 	setInt(env, this, "shapeType", shapeType);
 
 	setShapeHandle(env, this, hShp);
-
-Exit:
-    (*env)->ReleaseStringUTFChars(env, path, sPath);
 }
 
 void Java_me_kevinwells_darxen_shp_Shapefile_close(JNIEnv* env, jobject this)
 {
     __android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Closing shapefile");
 
+	int id = getInt(env, this, "mInputId");
 	SHPHandle hShp = getShapeHandle(env, this);
+	if (!hShp)
+		return;
+
 	SHPClose(hShp);
 	setShapeHandle(env, this, NULL);
+
+	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_SHP));
+	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_SHX));
+	setInt(env, this, "mInputId", 0);
 }
 
 static jobject NewShapefile(JNIEnv* env, jobject this, SHPObject* shpObj)

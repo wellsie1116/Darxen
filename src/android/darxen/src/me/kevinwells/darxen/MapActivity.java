@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +30,7 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.MemoryFile;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -69,7 +69,7 @@ public class MapActivity extends SherlockActivity {
         mTitle = (TextView)findViewById(R.id.title);
         
         Prefs.unsetLastUpdateTime();
-        
+
         //TODO load cached site from shared prefs
         new LoadSites().execute();
     }
@@ -202,13 +202,8 @@ public class MapActivity extends SherlockActivity {
 			
 			mRadarSites = new ArrayList<RadarSite>();
 			
-			try {
-				saveResource(R.raw.radars_dbf, "sites.dbf");
-			} catch (IOException e) {
-				return null;
-			}
-			
-			DbfFile sites = new DbfFile(getFilesDir() + "/sites.dbf");
+			InputStream fin = getResources().openRawResource(R.raw.radars_dbf);
+			DbfFile sites = new DbfFile(fin);
 			for (DbfRecord site : sites) {
 				String name = site.getString(0).toUpperCase();
 				double lat = site.getDouble(1);
@@ -216,9 +211,11 @@ public class MapActivity extends SherlockActivity {
 				
 				mRadarSites.add(new RadarSite(name, new LatLon(lat, lon)));
 			}
-			sites.close();
+			try {
+				sites.close();
+				fin.close();
+			} catch (IOException e) {}
 			
-			deleteResource("sites.dbf");
 			return null;
 		}
 		
@@ -335,28 +332,24 @@ public class MapActivity extends SherlockActivity {
 		}
 
 		private ShapefileLayer loadShapefile(ShapefileConfig config) {
-
-			try {
-				saveResource(config.resShp, "temp.shp");
-				saveResource(config.resDbf, "temp.dbf");
-				saveResource(config.resShx, "temp.shx");
-			} catch (IOException e) {
-				Log.e(C.TAG, "Failed to save resource", e);
-				return null;
-			}
 			
-			Shapefile shapefile = new Shapefile();
-			shapefile.open(getFilesDir() + "/" + "temp.shp");
+			InputStream fShp = getResources().openRawResource(config.resShp);
+			InputStream fShx = getResources().openRawResource(config.resShx);
+			
+			Shapefile shapefile = new Shapefile(fShp, fShx);
 			try {
 				return new ShapefileLayer(mCenter, shapefile, config);
 			} finally {
 				shapefile.close();
 				
-				deleteResource("temp.shp");
-				deleteResource("temp.dbf");
-				deleteResource("temp.shx");
+				try {
+					fShp.close();
+				} catch (IOException e) {}
+
+				try {
+					fShx.close();
+				} catch (IOException e) {}
 			}
-			
 		}
 		
 		@Override
@@ -389,22 +382,4 @@ public class MapActivity extends SherlockActivity {
 		}
 
 	}
-	
-	private void deleteResource(String name) {
-		deleteFile(name);
-	}
-
-	private void saveResource(int resource, String name) throws IOException {
-		InputStream fin = getResources().openRawResource(resource);
-		OutputStream fout = openFileOutput(name, MODE_PRIVATE);
-		byte[] buffer = new byte[8192];
-		int read;
-		while ((read = fin.read(buffer)) > 0) {
-			fout.write(buffer, 0, read);
-		}
-		fin.close();
-		fout.close();
-	}
-
-    
 }

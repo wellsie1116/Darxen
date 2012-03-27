@@ -1,21 +1,23 @@
 package me.kevinwells.darxen.shp;
 
+import java.io.InputStream;
 import java.util.Iterator;
 
 import me.kevinwells.darxen.shp.DbfFile.DbfRecord;
 
 public class DbfFile implements Iterable<DbfRecord> {
 	
+	private int mInputId;
 	private long hDbf;
 	
 	private int mFieldCount;
 	private int mRecordCount;
 	
-	public DbfFile(String path) {
-		init(path);
+	public DbfFile(InputStream fDbf) {
+		init(fDbf);
 	}
 
-	private native void init(String path);
+	private native void init(InputStream fDbf);
 	public native String close();
 	
 	public native boolean isNull(int record, int field);

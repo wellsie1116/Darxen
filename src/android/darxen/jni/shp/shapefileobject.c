@@ -1,10 +1,7 @@
-#include <jni.h>
-#include <string.h>
-#include <android/log.h>
+
+#include "common.h"
 
 #include "shapefil.h"
-
-#define DEBUG_TAG "NDK_Darxen"
 
 static void setInt(JNIEnv* env, jobject this, const char* name, int value)
 {
@@ -62,6 +59,10 @@ static jintArray InitIntArray(JNIEnv* env, int* v, int n)
 		arr[i] = v[i];
 	(*env)->ReleaseIntArrayElements(env, array, arr, 0);
 	return array;
+}
+
+void Java_me_kevinwells_darxen_shp_ShapefileObject_init(JNIEnv* env, jobject this)
+{
 }
 
 void Java_me_kevinwells_darxen_shp_ShapefileObject_load(JNIEnv* env, jobject this)

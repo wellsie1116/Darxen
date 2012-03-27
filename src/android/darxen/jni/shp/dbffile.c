@@ -1,23 +1,21 @@
-#include <jni.h>
-#include <string.h>
-#include <android/log.h>
+
+#include "common.h"
 
 #include "shapefil.h"
+#include "inputstreamhooks.h"
 
-#define DEBUG_TAG "NDK_Darxen"
+static int getInt(JNIEnv* env, jobject this, const char* name)
+{
+	jclass klass = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, klass, name, "I");
+	return (*env)->GetIntField(env, this, fid);
+}
 
 static void setInt(JNIEnv* env, jobject this, const char* name, int value)
 {
 	jclass klass = (*env)->GetObjectClass(env, this);
 	jfieldID fid = (*env)->GetFieldID(env, klass, name, "I");
 	(*env)->SetIntField(env, this, fid, value);
-}
-
-static void setDbfHandle(JNIEnv* env, jobject this, DBFHandle handle)
-{
-	jclass klass = (*env)->GetObjectClass(env, this);
-	jfieldID fid = (*env)->GetFieldID(env, klass, "hDbf", "J");
-	(*env)->SetLongField(env, this, fid, (long)handle);
 }
 
 static DBFHandle getDbfHandle(JNIEnv* env, jobject this)
@@ -28,15 +26,27 @@ static DBFHandle getDbfHandle(JNIEnv* env, jobject this)
 	return (DBFHandle)(void*)l;
 }
 
-void Java_me_kevinwells_darxen_shp_DbfFile_init(JNIEnv* env, jobject this, jstring path)
+static void setDbfHandle(JNIEnv* env, jobject this, DBFHandle handle)
 {
-    const char* sPath = (*env)->GetStringUTFChars(env, path, NULL);
+	jclass klass = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, klass, "hDbf", "J");
+	(*env)->SetLongField(env, this, fid, (long)handle);
+}
 
-    __android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Opening dbf file: %s", sPath);
+void Java_me_kevinwells_darxen_shp_DbfFile_init(JNIEnv* env, jobject this, jobject fDbf)
+{
+	int id;
+	const char* dbfPath = registerInputStream((*env)->NewGlobalRef(env, fDbf), TYPE_DBF, &id);
+	setInt(env, this, "mInputId", id);
 
-	DBFHandle hDbf = DBFOpen(sPath, "rb");
+    log_debug("Opening dbf file: %s", dbfPath);
+
+	DBFHandle hDbf = DBFOpenLL(dbfPath, "rb", getInputStreamHooks());
 	if (!hDbf)
-		goto Exit;
+	{
+		log_error("Failed to open dbf file");
+		return;
+	}
 
 	int fieldCount = DBFGetFieldCount(hDbf);
 	int recordCount = DBFGetRecordCount(hDbf);
@@ -44,21 +54,22 @@ void Java_me_kevinwells_darxen_shp_DbfFile_init(JNIEnv* env, jobject this, jstri
 	setInt(env, this, "mRecordCount", recordCount);
 
 	setDbfHandle(env, this, hDbf);
-
-Exit:
-    (*env)->ReleaseStringUTFChars(env, path, sPath);
 }
 
 void Java_me_kevinwells_darxen_shp_DbfFile_close(JNIEnv* env, jobject this)
 {
+	int id = getInt(env, this, "mInputId");
 	DBFHandle hDbf = getDbfHandle(env, this);
 	if (!hDbf)
 		return;
 
-    __android_log_print(ANDROID_LOG_DEBUG, DEBUG_TAG, "Closing dbf file");
+    log_debug("Closing dbf file");
 
 	DBFClose(hDbf);
 	setDbfHandle(env, this, NULL);
+	
+	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_DBF));
+	setInt(env, this, "mInputId", 0);
 }
 
 static void ThrowClosedException(JNIEnv* env)
