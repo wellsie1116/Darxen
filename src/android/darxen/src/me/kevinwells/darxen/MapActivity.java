@@ -139,7 +139,13 @@ public class MapActivity extends SherlockActivity {
 				new AlertDialog.Builder(MapActivity.this)
 	        	.setTitle(R.string.location_services_title)
 	        	.setMessage(R.string.location_services_message)
-	        	.setCancelable(false)
+	        	.setCancelable(true)
+	        	.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						finish();
+					}
+				})
 	        	.setPositiveButton(R.string.do_it, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
