@@ -18,7 +18,7 @@ public class DbfFile implements Iterable<DbfRecord> {
 	}
 
 	private native void init(InputStream fDbf);
-	public native String close();
+	public native void close();
 	
 	public native boolean isNull(int record, int field);
 	public native int getInt(int record, int field);

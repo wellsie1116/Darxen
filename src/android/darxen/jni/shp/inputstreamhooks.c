@@ -114,25 +114,28 @@ bool addInputStream(int id, jobject fin, ShapefileType type)
 	return true;
 }
 
-jobject unregisterInputStream(int id, ShapefileType type)
+bool unregisterInputStreams(JNIEnv* env, int id)
 {
 	HashTable* table = getLookupTable();
 	ShapefileStreams* file = (ShapefileStreams*)hash_table_lookup(table, idToKey(id));
 	if (!file)
 		return NULL;
 
-	jobject res = file->streams[type].fin;
-	file->streams[type].fin = NULL;
-	file->streams[type].pos = 0;
-
 	int i;
 	for (i = 0; i < TYPE_COUNT; i++)
+	{
 		if (file->streams[i].fin)
-			return res;
+		{
+			(*env)->DeleteGlobalRef(env, file->streams[i].fin);
+			if (file->streams[i].buffer)
+				log_error("Destroying open file!");
+			file->streams[i].fin = NULL;
+		}
+	}
 
 	hash_table_remove(table, idToKey(id));
 	free(file);
-	return res;
+	return true;
 }
 
 static SAFile InputStream_FOpen(const char* filename, const char* access)
@@ -145,11 +148,11 @@ static SAFile InputStream_FOpen(const char* filename, const char* access)
 	InputFileStream* fin;
 
 	if (!strcasecmp(".shp", ext))
-		fin = &file->streams[TYPE_SHP];
+		fin = &(file->streams[TYPE_SHP]);
 	else if (!strcasecmp(".shx", ext))
-		fin = &file->streams[TYPE_SHX];
+		fin = &(file->streams[TYPE_SHX]);
 	else if (!strcasecmp(".dbf", ext))
-		fin = &file->streams[TYPE_DBF];
+		fin = &(file->streams[TYPE_DBF]);
 	else
 		return NULL;
 
@@ -177,7 +180,6 @@ static SAOffset InputStream_FRead(void* p, SAOffset size, SAOffset nmemb, SAFile
 
 	size_t pos = 0;
 	size_t total = size*nmemb;
-	void* arr = (*env)->GetByteArrayElements(env, inputStream->buffer, NULL);
 	do
 	{
 		int read = total-pos;
@@ -185,10 +187,12 @@ static SAOffset InputStream_FRead(void* p, SAOffset size, SAOffset nmemb, SAFile
 			read = BUFFER_SIZE;
 		read = (*env)->CallIntMethod(env, inputStream->fin, method,
 				inputStream->buffer, 0, read);
+
+		void* arr = (*env)->GetByteArrayElements(env, inputStream->buffer, NULL);
 		memcpy(p + pos, arr, read);
 		pos += read;
+		(*env)->ReleaseByteArrayElements(env, inputStream->buffer, arr, JNI_ABORT);
 	} while (pos != total);
-	(*env)->ReleaseByteArrayElements(env, inputStream->buffer, arr, JNI_ABORT);
 
 	inputStream->pos += total;
 	res = nmemb;

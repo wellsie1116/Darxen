@@ -18,6 +18,6 @@ SAHooks* getInputStreamHooks();
 
 const char* registerInputStream(jobject fin, ShapefileType type, int* id);
 bool addInputStream(int id, jobject fin, ShapefileType type);
-jobject unregisterInputStream(int id, ShapefileType type);
+bool unregisterInputStreams(JNIEnv* env, int id);
 
 #endif

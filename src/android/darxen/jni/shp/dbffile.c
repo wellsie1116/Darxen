@@ -68,7 +68,7 @@ void Java_me_kevinwells_darxen_shp_DbfFile_close(JNIEnv* env, jobject this)
 	DBFClose(hDbf);
 	setDbfHandle(env, this, NULL);
 	
-	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_DBF));
+	unregisterInputStreams(env, id);
 	setInt(env, this, "mInputId", 0);
 }
 

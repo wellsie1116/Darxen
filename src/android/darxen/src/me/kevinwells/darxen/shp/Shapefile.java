@@ -20,7 +20,7 @@ public class Shapefile {
 	}
 	
 	private native void init(InputStream fShp, InputStream fShx);
-	public native String close();
+	public native void close();
 	public native ShapefileObject get(int i);
 	
 	public int getShapeCount() {

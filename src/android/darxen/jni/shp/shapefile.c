@@ -66,8 +66,7 @@ void Java_me_kevinwells_darxen_shp_Shapefile_close(JNIEnv* env, jobject this)
 	SHPClose(hShp);
 	setShapeHandle(env, this, NULL);
 
-	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_SHP));
-	(*env)->DeleteGlobalRef(env, unregisterInputStream(id, TYPE_SHX));
+	unregisterInputStreams(env, id);
 	setInt(env, this, "mInputId", 0);
 }
 
