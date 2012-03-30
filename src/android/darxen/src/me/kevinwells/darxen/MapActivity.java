@@ -29,10 +29,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -362,13 +362,17 @@ public class MapActivity extends SherlockActivity {
 		@Override
 		protected Void doInBackground(Void... params) {
 			ShapefileLayer layer;
+
+			List<ShapefileConfig> configs = new ArrayList<ShapefileConfig>();
 			
-			ShapefileConfig[] configs = new ShapefileConfig[] {
-					new ShapefileConfig(R.raw.states_shp, R.raw.states_dbf, R.raw.states_shx,
-							3.0f, new Color(1.0f, 1.0f, 1.0f)),
-					new ShapefileConfig(R.raw.counties_shp, R.raw.counties_dbf, R.raw.counties_shx,
-							1.0f, new Color(0.75f, 0.75f, 0.75f))
-			};
+			configs.add(new ShapefileConfig(R.raw.states_shp, R.raw.states_dbf, R.raw.states_shx,
+							3.0f, new Color(1.0f, 1.0f, 1.0f)));
+			
+			//froyo can't read resources >1MB, like county lines
+			if (Build.VERSION.SDK_INT > 8) {
+				configs.add(new ShapefileConfig(R.raw.counties_shp, R.raw.counties_dbf, R.raw.counties_shx,
+							1.0f, new Color(0.75f, 0.75f, 0.75f)));
+			}
 			
 			for (ShapefileConfig config : configs) {
 				layer = loadShapefile(config);
